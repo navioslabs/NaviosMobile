@@ -24,6 +24,7 @@ export declare const Mic: LucideIcon;
 export declare const Moon: LucideIcon;
 export declare const Navigation: LucideIcon;
 export declare const Package: LucideIcon;
+export declare const Plus: LucideIcon;
 export declare const Radio: LucideIcon;
 export declare const Rss: LucideIcon;
 export declare const Search: LucideIcon;

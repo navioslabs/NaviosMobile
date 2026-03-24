@@ -11,7 +11,7 @@ export default function MatchBadge({ score }: MatchBadgeProps) {
   return (
     <View className="flex-row items-center gap-[3px] rounded-pill bg-black/55 px-2 py-[3px]">
       <Zap size={10} color={color} />
-      <Text className="text-[10px] font-bold" style={{ color }}>{score}%</Text>
+      <Text style={{ fontSize: 11, fontWeight: "700", color }}>{score}%</Text>
     </View>
   );
 }

@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { View, Text, Pressable, Dimensions } from "react-native";
+import { View, Text, Pressable, StyleSheet } from "react-native";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import { Heart, MessageSquare, Share, Bookmark, Navigation } from "@/lib/icons";
+import { Heart, MessageSquare, Navigation } from "@/lib/icons";
 import type { ThemeTokens } from "@/constants/theme";
 import type { FeedPost } from "@/types";
 import { distLabel } from "@/lib/utils";
@@ -21,68 +21,62 @@ export default function FeedPostCard({ post, t, isDark }: FeedPostCardProps) {
   const [isLiked, setIsLiked] = useState(false);
 
   return (
-    <View className="mx-3.5 mb-3.5 rounded-[26px] overflow-hidden" style={{ shadowColor: isDark ? "#000" : "rgba(0,0,0,0.06)", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 4 }}>
+    <View style={{ marginHorizontal: 16, marginBottom: 16, borderRadius: 26, overflow: "hidden", shadowColor: isDark ? "#000" : "rgba(0,0,0,0.06)", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 4 }}>
       <View style={{ aspectRatio: 3 / 4 }}>
-        <Image source={{ uri: post.image }} className="w-full h-full" contentFit="cover" />
+        <Image source={{ uri: post.image }} style={StyleSheet.absoluteFill} contentFit="cover" />
         <LinearGradient
           colors={["rgba(0,0,0,0.3)", "rgba(0,0,0,0.15)", "rgba(0,0,0,0.85)"]}
           locations={[0, 0.35, 1]}
-          className="absolute inset-0"
+          style={StyleSheet.absoluteFill}
         />
 
         {/* Top-left: avatar + name + category */}
-        <View className="absolute top-3.5 left-3.5 flex-row items-center gap-2">
+        <View style={{ position: "absolute", top: 16, left: 16, flexDirection: "row", alignItems: "center", gap: 10 }}>
           <View>
-            <Image source={{ uri: post.user.avatar }} className="w-[34px] h-[34px] rounded-full" style={{ borderWidth: 2, borderColor: "rgba(255,255,255,0.5)" }} />
+            <Image source={{ uri: post.user.avatar }} style={{ width: 40, height: 40, borderRadius: 20, borderWidth: 2, borderColor: "rgba(255,255,255,0.5)" }} />
             {post.user.verified && (
-              <View className="absolute -bottom-px -right-px w-[13px] h-[13px] rounded-full bg-info items-center justify-center">
-                <Text className="text-white text-[7px] font-extrabold">✓</Text>
+              <View style={{ position: "absolute", bottom: -1, right: -1, width: 16, height: 16, borderRadius: 8, backgroundColor: "#4A9EFF", alignItems: "center", justifyContent: "center" }}>
+                <Text style={{ color: "#fff", fontSize: 8, fontWeight: "800" }}>✓</Text>
               </View>
             )}
           </View>
           <View>
-            <Text className="font-bold text-xs text-white">{post.user.name}</Text>
-            <View className="mt-0.5">
-              <CatPill cat={post.category} small />
+            <Text style={{ fontWeight: "700", fontSize: 14, color: "#fff" }}>{post.user.name}</Text>
+            <View style={{ marginTop: 2 }}>
+              <CatPill cat={post.category} />
             </View>
           </View>
         </View>
 
         {/* Top-right: time */}
-        <View className="absolute top-3.5 right-3.5">
-          <Text className="text-[11px] text-white/60">{post.time}</Text>
+        <View style={{ position: "absolute", top: 16, right: 16 }}>
+          <Text style={{ fontSize: 12, color: "rgba(255,255,255,0.6)" }}>{post.time}</Text>
         </View>
 
         {/* Right-center: distance */}
-        <View className="absolute right-3.5 top-1/2 -translate-y-1/2 flex-row items-center gap-1 bg-black/50 rounded-pill px-2.5 py-[5px]">
-          <Navigation size={11} color={t.accent} />
-          <Text className="text-[11px] font-bold text-white">{distLabel(post.distance)}</Text>
+        <View style={{ position: "absolute", right: 16, top: "50%", transform: [{ translateY: -14 }], flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "rgba(0,0,0,0.5)", borderRadius: 9999, paddingHorizontal: 12, paddingVertical: 6 }}>
+          <Navigation size={13} color={t.accent} />
+          <Text style={{ fontSize: 12, fontWeight: "700", color: "#fff" }}>{distLabel(post.distance)}</Text>
         </View>
 
         {/* Bottom: caption + urgency + actions */}
-        <View className="absolute bottom-0 left-0 right-0 p-3.5">
-          <Text className="text-[15px] font-bold text-white leading-5">{post.caption}</Text>
-          <View className="flex-row items-center gap-2 mt-1.5">
+        <View style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: 16 }}>
+          <Text style={{ fontSize: 16, fontWeight: "700", color: "#fff", lineHeight: 24 }}>{post.caption}</Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 8 }}>
             <UrgencyBar timeLeft={post.timeLeft} subColor={t.sub} />
             {post.crowd ? <CrowdTag crowd={post.crowd} /> : null}
           </View>
 
           {/* Actions */}
-          <View className="flex-row items-center gap-4 mt-2.5 pt-2.5" style={{ borderTopWidth: 1, borderTopColor: "rgba(255,255,255,0.12)" }}>
-            <Pressable onPress={() => setIsLiked(!isLiked)} className="flex-row items-center gap-1">
-              <Heart size={18} fill={isLiked ? t.red : "none"} color={isLiked ? t.red : "rgba(255,255,255,.7)"} />
-              <Text className="text-xs font-semibold" style={{ color: isLiked ? t.red : "rgba(255,255,255,.7)" }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 20, marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: "rgba(255,255,255,0.12)" }}>
+            <Pressable onPress={() => setIsLiked(!isLiked)} style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+              <Heart size={22} fill={isLiked ? t.red : "none"} color={isLiked ? t.red : "rgba(255,255,255,.7)"} />
+              <Text style={{ fontSize: 14, fontWeight: "600", color: isLiked ? t.red : "rgba(255,255,255,.7)" }}>
                 {post.likes + (isLiked ? 1 : 0)}
               </Text>
             </Pressable>
-            <Pressable className="flex-row items-center gap-1">
-              <MessageSquare size={18} color="rgba(255,255,255,.7)" />
-            </Pressable>
-            <Pressable className="flex-row items-center gap-1">
-              <Share size={18} color="rgba(255,255,255,.7)" />
-            </Pressable>
-            <Pressable className="flex-row items-center gap-1 ml-auto">
-              <Bookmark size={18} color="rgba(255,255,255,.7)" />
+            <Pressable style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+              <MessageSquare size={22} color="rgba(255,255,255,.7)" />
             </Pressable>
           </View>
         </View>

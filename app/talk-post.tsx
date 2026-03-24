@@ -4,12 +4,11 @@ import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { User, MapPin, Camera, ImageIcon, Send } from "@/lib/icons";
 import { makeTokens } from "@/constants/theme";
-import { useColorScheme } from "@/hooks/use-color-scheme";
+import { useThemeStore } from "@/stores/themeStore";
 
 /** つぶやき投稿画面 */
 export default function TalkPostScreen() {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
+  const { isDark } = useThemeStore();
   const t = makeTokens(isDark);
   const [msg, setMsg] = useState("");
 

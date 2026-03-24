@@ -3,7 +3,7 @@ import { View, Text, TextInput, Pressable, ScrollView } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Sparkles, Search, Mic, Zap, MapPin } from "@/lib/icons";
 import { makeTokens } from "@/constants/theme";
-import { useColorScheme } from "@/hooks/use-color-scheme";
+import { useThemeStore } from "@/stores/themeStore";
 import { FEED_POSTS } from "@/data/mockData";
 import PulseScoreCard from "@/components/features/ai/PulseScoreCard";
 import QuickActions from "@/components/features/ai/QuickActions";
@@ -11,8 +11,7 @@ import PulseEventCard from "@/components/features/ai/PulseEventCard";
 
 /** AI画面 */
 export default function AiScreen() {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
+  const { isDark } = useThemeStore();
   const t = makeTokens(isDark);
   const [query, setQuery] = useState("");
 
@@ -21,12 +20,24 @@ export default function AiScreen() {
   return (
     <ScrollView className="flex-1" style={{ backgroundColor: t.bg }} contentContainerClassName="p-5 pb-[100px]" showsVerticalScrollIndicator={false}>
       {/* Logo */}
-      <View className="items-center mb-6">
-        <LinearGradient colors={[t.accent, t.blue]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} className="w-14 h-14 rounded-[18px] items-center justify-center mb-3">
-          <Sparkles size={26} color="#fff" />
-        </LinearGradient>
-        <Text className="text-2xl font-extrabold tracking-tight" style={{ color: t.text }}>Navios AI</Text>
-        <Text className="text-xs mt-[3px]" style={{ color: t.sub }}>あなたの地域を、もっとスマートに</Text>
+      <View className="items-center mb-8">
+        <View className="relative mb-4">
+          {/* Glow背景 */}
+          <View
+            className="absolute -inset-3 rounded-[24px] opacity-30"
+            style={{ backgroundColor: t.accent, shadowColor: t.accent, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.6, shadowRadius: 20 }}
+          />
+          <LinearGradient
+            colors={[t.accent, t.blue]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            className="w-[68px] h-[68px] rounded-[20px] items-center justify-center"
+          >
+            <Sparkles size={32} color="#fff" />
+          </LinearGradient>
+        </View>
+        <Text className="text-[28px] font-extrabold tracking-tight" style={{ color: t.text }}>Navios AI</Text>
+        <Text className="text-sm mt-1" style={{ color: t.sub }}>あなたの地域を、もっとスマートに</Text>
       </View>
 
       {/* Search */}

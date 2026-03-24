@@ -17,8 +17,7 @@ export default function CatPill({ cat, small }: CatPillProps) {
     >
       <View className="w-[5px] h-[5px] rounded-full" style={{ backgroundColor: c.color }} />
       <Text
-        className={`font-bold tracking-wide ${small ? "text-[9px]" : "text-[10px]"}`}
-        style={{ color: c.color }}
+        style={{ fontSize: small ? 10 : 12, fontWeight: "700", letterSpacing: 0.3, color: c.color }}
       >
         {c.label}
       </Text>

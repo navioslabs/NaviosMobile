@@ -34,13 +34,17 @@ export default function DatePicker({ t, selectedDate, onSelectDate, getPostCount
 
   return (
     <View style={{ backgroundColor: t.surface, borderBottomColor: t.border, borderBottomWidth: 1 }}>
-      <View className="flex-row items-center gap-1 pt-2.5 pl-4 pb-1">
-        <Calendar size={13} color={t.accent} />
-        <Text className="text-xs font-bold" style={{ color: t.text }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 4, paddingTop: 10, paddingLeft: 16, paddingBottom: 4 }}>
+        <Calendar size={14} color={t.accent} />
+        <Text style={{ fontSize: 13, fontWeight: "700", color: t.text }}>
           {dateDays[selectedDate]?.month}月
         </Text>
       </View>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-1 px-4 pt-1 pb-3">
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ gap: 6, paddingHorizontal: 16, paddingTop: 4, paddingBottom: 12 }}
+      >
         {dateDays.map((dd) => {
           const active = selectedDate === dd.offset;
           const isToday = dd.offset === 0;
@@ -49,16 +53,26 @@ export default function DatePicker({ t, selectedDate, onSelectDate, getPostCount
             <Pressable
               key={dd.offset}
               onPress={() => onSelectDate(dd.offset)}
-              className={`w-12 items-center gap-0.5 rounded-[14px] py-2 ${active ? "bg-accent" : ""}`}
-              style={!active ? { borderWidth: 1, borderColor: isToday ? t.accent + "50" : t.border } : undefined}
+              style={{
+                width: 50,
+                alignItems: "center",
+                gap: 2,
+                borderRadius: 14,
+                paddingVertical: 8,
+                backgroundColor: active ? t.accent : "transparent",
+                borderWidth: active ? 0 : 1,
+                borderColor: active ? undefined : isToday ? t.accent + "50" : t.border,
+              }}
             >
-              <Text className="text-[9px] font-semibold" style={{ color: active ? "#000" : dd.isWeekend ? t.red : t.muted }}>
+              <Text style={{ fontSize: 10, fontWeight: "600", color: active ? "#000" : dd.isWeekend ? t.red : t.muted }}>
                 {dd.weekday}
               </Text>
-              <Text className="text-lg font-extrabold" style={{ color: active ? "#000" : t.text }}>
+              <Text style={{ fontSize: 20, fontWeight: "800", color: active ? "#000" : t.text }}>
                 {dd.day}
               </Text>
-              {count > 0 && <View className="w-[5px] h-[5px] rounded-full" style={{ backgroundColor: active ? "#000" : t.accent }} />}
+              {count > 0 && (
+                <View style={{ width: 5, height: 5, borderRadius: 2.5, backgroundColor: active ? "#000" : t.accent }} />
+              )}
             </Pressable>
           );
         })}

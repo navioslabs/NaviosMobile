@@ -1,15 +1,14 @@
 import { FlatList, View, Text } from "react-native";
 import { useCallback } from "react";
 import { makeTokens } from "@/constants/theme";
-import { useColorScheme } from "@/hooks/use-color-scheme";
+import { useThemeStore } from "@/stores/themeStore";
 import { CHAT_ROOMS } from "@/data/mockData";
 import type { ChatRoom } from "@/types";
 import TalkItem from "@/components/features/talk/TalkItem";
 
 /** Talk画面 */
 export default function TalkScreen() {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
+  const { isDark } = useThemeStore();
   const t = makeTokens(isDark);
 
   const renderItem = useCallback(

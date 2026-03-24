@@ -4,7 +4,7 @@ import { Calendar } from "@/lib/icons";
 import { makeTokens } from "@/constants/theme";
 import { FEED_POSTS } from "@/data/mockData";
 import type { FeedPost } from "@/types";
-import { useColorScheme } from "@/hooks/use-color-scheme";
+import { useThemeStore } from "@/stores/themeStore";
 import DatePicker from "@/components/features/feed/DatePicker";
 import CategoryChips from "@/components/features/feed/CategoryChips";
 import FeedPostCard from "@/components/features/feed/FeedPostCard";
@@ -26,8 +26,7 @@ const getDateLabel = (offset: number): string => {
 
 /** Feed画面 */
 export default function FeedScreen() {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
+  const { isDark } = useThemeStore();
   const t = makeTokens(isDark);
 
   const [selDate, setSelDate] = useState(0);
@@ -43,20 +42,20 @@ export default function FeedScreen() {
   );
 
   return (
-    <View className="flex-1" style={{ backgroundColor: t.bg }}>
+    <View style={{ flex: 1, backgroundColor: t.bg }}>
       <DatePicker t={t} selectedDate={selDate} onSelectDate={setSelDate} getPostCount={getPostCount} />
 
-      <View className="flex-row justify-between items-center px-5 pt-2.5 pb-1">
-        <Text className="text-[11px]" style={{ color: t.sub }}>{getDateLabel(selDate)}</Text>
-        <Text className="text-[10px] font-semibold" style={{ color: t.accent }}>{filtered.length}件</Text>
+      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 20, paddingTop: 10, paddingBottom: 4 }}>
+        <Text style={{ fontSize: 12, color: t.sub }}>{getDateLabel(selDate)}</Text>
+        <Text style={{ fontSize: 11, fontWeight: "600", color: t.accent }}>{filtered.length}件</Text>
       </View>
 
       <CategoryChips t={t} selected={selCat} onSelect={setSelCat} />
 
       {filtered.length === 0 ? (
-        <View className="py-[60px] px-5 items-center">
+        <View style={{ paddingVertical: 60, paddingHorizontal: 20, alignItems: "center" }}>
           <Calendar size={32} color={t.muted} />
-          <Text className="text-sm font-semibold mt-3" style={{ color: t.sub }}>この日の投稿はまだありません</Text>
+          <Text style={{ fontSize: 14, fontWeight: "600", marginTop: 12, color: t.sub }}>この日の投稿はまだありません</Text>
         </View>
       ) : (
         <FlatList
@@ -64,7 +63,7 @@ export default function FeedScreen() {
           renderItem={renderItem}
           keyExtractor={(item) => item.id.toString()}
           showsVerticalScrollIndicator={false}
-          contentContainerClassName="pb-[90px]"
+          contentContainerStyle={{ paddingBottom: 90 }}
         />
       )}
     </View>

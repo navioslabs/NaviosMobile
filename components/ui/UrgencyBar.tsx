@@ -15,7 +15,7 @@ export default function UrgencyBar({ timeLeft, subColor }: UrgencyBarProps) {
   return (
     <View className="flex-row items-center gap-1">
       <Timer size={12} color={color} />
-      <Text className={`text-[11px] ${urgent ? "font-bold" : "font-semibold"}`} style={{ color }}>
+      <Text style={{ fontSize: 12, fontWeight: urgent ? "700" : "600", color }}>
         あと{timeLeft}分
       </Text>
       {urgent && <View className="w-[5px] h-[5px] rounded-full bg-danger" />}
