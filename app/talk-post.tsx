@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, TextInput, Pressable, ScrollView, StyleSheet } from "react-native";
+import { View, Text, TextInput, Pressable, ScrollView } from "react-native";
 import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { User, MapPin, Camera, ImageIcon, Send } from "@/lib/icons";
@@ -14,10 +14,10 @@ export default function TalkPostScreen() {
   const [msg, setMsg] = useState("");
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: t.bg }]} contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+    <ScrollView className="flex-1" style={{ backgroundColor: t.bg }} contentContainerClassName="p-5 pb-10 gap-4" showsVerticalScrollIndicator={false}>
       {/* Avatar + input */}
-      <View style={styles.inputRow}>
-        <LinearGradient colors={[t.accent, t.blue]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.avatar}>
+      <View className="flex-row gap-3 items-start">
+        <LinearGradient colors={[t.accent, t.blue]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} className="w-[42px] h-[42px] rounded-full items-center justify-center">
           <User size={20} color="#fff" />
         </LinearGradient>
         <TextInput
@@ -27,30 +27,31 @@ export default function TalkPostScreen() {
           placeholderTextColor={t.sub}
           multiline
           autoFocus
-          style={[styles.textArea, { color: t.text }]}
+          className="flex-1 text-base min-h-[120px] leading-6"
+          style={{ color: t.text, textAlignVertical: "top" }}
         />
       </View>
 
       {/* Location tag */}
-      <View style={[styles.locTag, { backgroundColor: t.surface, borderColor: t.border }]}>
+      <View className="flex-row items-center gap-2 p-2.5 rounded-xl" style={{ backgroundColor: t.surface, borderWidth: 1, borderColor: t.border }}>
         <MapPin size={15} color={t.accent} />
-        <Text style={[styles.locText, { color: t.accent }]}>📍 越谷市・現在地周辺</Text>
-        <Text style={[styles.locAuto, { color: t.muted }]}>自動検出</Text>
+        <Text className="text-xs font-semibold" style={{ color: t.accent }}>📍 越谷市・現在地周辺</Text>
+        <Text className="ml-auto text-[10px]" style={{ color: t.muted }}>自動検出</Text>
       </View>
 
       {/* Photo options */}
-      <View style={styles.photoRow}>
+      <View className="flex-row gap-2">
         {[{ Icon: Camera, l: "撮影" }, { Icon: ImageIcon, l: "選択" }].map(({ Icon, l }) => (
-          <Pressable key={l} style={[styles.photoBtn, { borderColor: t.border, backgroundColor: t.surface }]}>
+          <Pressable key={l} className="w-[60px] h-[60px] rounded-[14px] items-center justify-center gap-1" style={{ borderWidth: 1.5, borderStyle: "dashed", borderColor: t.border, backgroundColor: t.surface }}>
             <Icon size={18} color={t.sub} />
-            <Text style={[styles.photoBtnText, { color: t.sub }]}>{l}</Text>
+            <Text className="text-[9px]" style={{ color: t.sub }}>{l}</Text>
           </Pressable>
         ))}
       </View>
 
       {/* Character count + submit */}
-      <View style={styles.submitRow}>
-        <Text style={[styles.charCount, { color: msg.length > 140 ? t.red : t.muted }]}>
+      <View className="flex-row items-center justify-between">
+        <Text className="text-[11px]" style={{ color: msg.length > 140 ? t.red : t.muted }}>
           {msg.length}/140
         </Text>
         <Pressable onPress={() => { if (msg.length > 0) router.back(); }}>
@@ -58,31 +59,13 @@ export default function TalkPostScreen() {
             colors={msg.length > 0 ? [t.accent, t.blue] : [t.surface2, t.surface2]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={styles.submitBtn}
+            className="flex-row items-center gap-1.5 rounded-[14px] px-7 py-[11px]"
           >
             <Send size={14} color={msg.length > 0 ? "#000" : t.muted} />
-            <Text style={[styles.submitText, { color: msg.length > 0 ? "#000" : t.muted }]}>つぶやく</Text>
+            <Text className="font-extrabold text-sm" style={{ color: msg.length > 0 ? "#000" : t.muted }}>つぶやく</Text>
           </LinearGradient>
         </Pressable>
       </View>
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  scroll: { padding: 20, paddingBottom: 40, gap: 16 },
-  inputRow: { flexDirection: "row", gap: 12, alignItems: "flex-start" },
-  avatar: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center" },
-  textArea: { flex: 1, fontSize: 16, minHeight: 120, lineHeight: 24, textAlignVertical: "top" },
-  locTag: { flexDirection: "row", alignItems: "center", gap: 8, padding: 10, borderWidth: 1, borderRadius: 12 },
-  locText: { fontSize: 12, fontWeight: "600" },
-  locAuto: { marginLeft: "auto", fontSize: 10 },
-  photoRow: { flexDirection: "row", gap: 8 },
-  photoBtn: { width: 60, height: 60, borderRadius: 14, borderWidth: 1.5, borderStyle: "dashed", alignItems: "center", justifyContent: "center", gap: 4 },
-  photoBtnText: { fontSize: 9 },
-  submitRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  charCount: { fontSize: 11 },
-  submitBtn: { flexDirection: "row", alignItems: "center", gap: 6, borderRadius: 14, paddingHorizontal: 28, paddingVertical: 11 },
-  submitText: { fontWeight: "800", fontSize: 14 },
-});

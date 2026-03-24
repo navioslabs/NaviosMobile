@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, Pressable, StyleSheet } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import { Image } from "expo-image";
 import { MapPin, MessageCircle, Heart, Share } from "@/lib/icons";
 import type { ThemeTokens } from "@/constants/theme";
@@ -15,45 +15,45 @@ export default function TalkItem({ chat, t }: TalkItemProps) {
   const [isLiked, setIsLiked] = useState(false);
 
   return (
-    <View style={[styles.container, { borderBottomColor: t.border }]}>
-      <Image source={{ uri: chat.avatar }} style={styles.avatar} contentFit="cover" />
-      <View style={styles.content}>
+    <View className="flex-row gap-2.5 py-3.5 px-5" style={{ borderBottomWidth: 1, borderBottomColor: t.border }}>
+      <Image source={{ uri: chat.avatar }} className="w-10 h-10 rounded-full" contentFit="cover" />
+      <View className="flex-1">
         {/* Name + time */}
-        <View style={styles.nameRow}>
-          <Text style={[styles.user, { color: t.text }]}>@{chat.user}</Text>
-          <Text style={[styles.dot, { color: t.muted }]}>•</Text>
-          <Text style={[styles.time, { color: t.muted }]}>{chat.time}</Text>
+        <View className="flex-row items-center gap-1.5 mb-[3px]">
+          <Text className="text-[13px] font-bold" style={{ color: t.text }}>@{chat.user}</Text>
+          <Text className="text-[11px]" style={{ color: t.muted }}>•</Text>
+          <Text className="text-[11px]" style={{ color: t.muted }}>{chat.time}</Text>
         </View>
 
         {/* Location tag */}
-        <View style={[styles.locTag, { backgroundColor: t.accent + "12" }]}>
+        <View className="self-start flex-row items-center gap-[3px] rounded-full px-2 py-0.5 mb-1.5" style={{ backgroundColor: t.accent + "12" }}>
           <MapPin size={9} color={t.accent} />
-          <Text style={[styles.locText, { color: t.accent }]}>{chat.location}</Text>
+          <Text className="text-[10px] font-semibold" style={{ color: t.accent }}>{chat.location}</Text>
         </View>
 
         {/* Message */}
-        <Text style={[styles.msg, { color: t.text }]}>{chat.msg}</Text>
+        <Text className="text-sm leading-[21px]" style={{ color: t.text }}>{chat.msg}</Text>
 
         {/* Image thumbnail */}
         {chat.image && (
-          <View style={[styles.imageWrap, { borderColor: t.border }]}>
-            <Image source={{ uri: chat.image }} style={styles.image} contentFit="cover" />
+          <View className="w-full h-[140px] rounded-[14px] overflow-hidden mt-2.5" style={{ borderWidth: 1, borderColor: t.border }}>
+            <Image source={{ uri: chat.image }} className="w-full h-full" contentFit="cover" />
           </View>
         )}
 
         {/* Actions */}
-        <View style={styles.actionsRow}>
-          <View style={styles.action}>
+        <View className="flex-row items-center gap-5 mt-2">
+          <View className="flex-row items-center gap-[5px]">
             <MessageCircle size={15} color={t.muted} />
-            <Text style={[styles.actionText, { color: t.muted }]}>{chat.count}</Text>
+            <Text className="text-[11px] font-semibold" style={{ color: t.muted }}>{chat.count}</Text>
           </View>
-          <Pressable onPress={() => setIsLiked(!isLiked)} style={styles.action}>
+          <Pressable onPress={() => setIsLiked(!isLiked)} className="flex-row items-center gap-[5px]">
             <Heart size={15} fill={isLiked ? t.red : "none"} color={isLiked ? t.red : t.muted} />
-            <Text style={[styles.actionText, { color: isLiked ? t.red : t.muted }]}>
+            <Text className="text-[11px] font-semibold" style={{ color: isLiked ? t.red : t.muted }}>
               {chat.likes + (isLiked ? 1 : 0)}
             </Text>
           </Pressable>
-          <Pressable style={styles.action}>
+          <Pressable className="flex-row items-center gap-[5px]">
             <Share size={15} color={t.muted} />
           </Pressable>
         </View>
@@ -61,21 +61,3 @@ export default function TalkItem({ chat, t }: TalkItemProps) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flexDirection: "row", gap: 10, padding: 14, paddingHorizontal: 20, borderBottomWidth: 1 },
-  avatar: { width: 40, height: 40, borderRadius: 20 },
-  content: { flex: 1 },
-  nameRow: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 3 },
-  user: { fontSize: 13, fontWeight: "700" },
-  dot: { fontSize: 11 },
-  time: { fontSize: 11 },
-  locTag: { flexDirection: "row", alignItems: "center", gap: 3, borderRadius: 99, paddingHorizontal: 8, paddingVertical: 2, marginBottom: 6, alignSelf: "flex-start" },
-  locText: { fontSize: 10, fontWeight: "600" },
-  msg: { fontSize: 14, lineHeight: 21 },
-  imageWrap: { width: "100%", height: 140, borderRadius: 14, overflow: "hidden", marginTop: 10, borderWidth: 1 },
-  image: { width: "100%", height: "100%" },
-  actionsRow: { flexDirection: "row", alignItems: "center", gap: 20, marginTop: 8 },
-  action: { flexDirection: "row", alignItems: "center", gap: 5 },
-  actionText: { fontSize: 11, fontWeight: "600" },
-});

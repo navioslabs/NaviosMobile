@@ -1,4 +1,4 @@
-import { View, Text, Pressable, ScrollView, StyleSheet } from "react-native";
+import { Text, Pressable, ScrollView } from "react-native";
 import { Rss } from "@/lib/icons";
 import { CAT_CONFIG, type CategoryId } from "@/constants/categories";
 import type { ThemeTokens } from "@/constants/theme";
@@ -21,7 +21,7 @@ export default function CategoryChips({ t, selected, onSelect }: CategoryChipsPr
   ];
 
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-[7px] px-5 pt-1.5 pb-3.5">
       {cats.map((cat) => {
         const Icon = cat.icon;
         const active = selected === cat.id;
@@ -29,22 +29,16 @@ export default function CategoryChips({ t, selected, onSelect }: CategoryChipsPr
           <Pressable
             key={cat.id}
             onPress={() => onSelect(cat.id)}
-            style={[
-              styles.chip,
-              { backgroundColor: active ? t.accent : t.surface, borderColor: active ? t.accent : t.border },
-            ]}
+            className="flex-row items-center gap-[5px] rounded-pill px-[13px] py-1.5"
+            style={{ backgroundColor: active ? t.accent : t.surface, borderWidth: 1, borderColor: active ? t.accent : t.border }}
           >
             <Icon size={12} color={active ? "#000" : t.sub} />
-            <Text style={[styles.label, { color: active ? "#000" : t.sub }]}>{cat.label}</Text>
+            <Text className="text-[11px] font-semibold" style={{ color: active ? "#000" : t.sub }}>
+              {cat.label}
+            </Text>
           </Pressable>
         );
       })}
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  scroll: { gap: 7, paddingHorizontal: 20, paddingTop: 6, paddingBottom: 14 },
-  chip: { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 13, paddingVertical: 6, borderRadius: 99, borderWidth: 1 },
-  label: { fontSize: 11, fontWeight: "600" },
-});

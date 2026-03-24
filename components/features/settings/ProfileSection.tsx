@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { User, ChevronRight } from "@/lib/icons";
 import type { ThemeTokens } from "@/constants/theme";
@@ -10,26 +10,17 @@ interface ProfileSectionProps {
 /** プロフィールセクション */
 export default function ProfileSection({ t }: ProfileSectionProps) {
   return (
-    <View style={[styles.container, { backgroundColor: t.surface, borderBottomColor: t.border }]}>
-      <View style={styles.row}>
-        <LinearGradient colors={[t.accent, t.blue]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.avatar}>
+    <View className="p-5" style={{ backgroundColor: t.surface, borderBottomWidth: 1, borderBottomColor: t.border }}>
+      <View className="flex-row items-center gap-3.5">
+        <LinearGradient colors={[t.accent, t.blue]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} className="w-14 h-14 rounded-full items-center justify-center">
           <User size={24} color="#fff" />
         </LinearGradient>
-        <View style={styles.info}>
-          <Text style={[styles.name, { color: t.text }]}>ゲストユーザー</Text>
-          <Text style={[styles.sub, { color: t.sub }]}>プロフィールを設定</Text>
+        <View className="flex-1">
+          <Text className="text-[17px] font-bold" style={{ color: t.text }}>ゲストユーザー</Text>
+          <Text className="text-xs mt-0.5" style={{ color: t.sub }}>プロフィールを設定</Text>
         </View>
         <ChevronRight size={18} color={t.muted} />
       </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { padding: 20, borderBottomWidth: 1 },
-  row: { flexDirection: "row", alignItems: "center", gap: 14 },
-  avatar: { width: 56, height: 56, borderRadius: 28, alignItems: "center", justifyContent: "center" },
-  info: { flex: 1 },
-  name: { fontSize: 17, fontWeight: "700" },
-  sub: { fontSize: 12, marginTop: 2 },
-});

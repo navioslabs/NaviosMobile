@@ -1,4 +1,4 @@
-import { FlatList, View, StyleSheet } from "react-native";
+import { FlatList, View } from "react-native";
 import { useCallback } from "react";
 import { makeTokens } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
@@ -21,20 +21,15 @@ export default function NearByScreen() {
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: t.bg }]}>
+    <View className="flex-1" style={{ backgroundColor: t.bg }}>
       <ScanHeader t={t} isDark={isDark} postCount={sorted.length} />
       <FlatList
         data={sorted}
         renderItem={renderItem}
         keyExtractor={(item) => item.id.toString()}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.list}
+        contentContainerClassName="px-3 pb-[100px]"
       />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  list: { paddingHorizontal: 12, paddingBottom: 100 },
-});

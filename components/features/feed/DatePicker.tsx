@@ -1,5 +1,4 @@
-import { useRef } from "react";
-import { View, Text, Pressable, ScrollView, StyleSheet } from "react-native";
+import { View, Text, Pressable, ScrollView } from "react-native";
 import { Calendar } from "@/lib/icons";
 import type { ThemeTokens } from "@/constants/theme";
 
@@ -34,33 +33,32 @@ export default function DatePicker({ t, selectedDate, onSelectDate, getPostCount
   });
 
   return (
-    <View style={[styles.container, { backgroundColor: t.surface, borderBottomColor: t.border }]}>
-      <View style={styles.monthRow}>
+    <View style={{ backgroundColor: t.surface, borderBottomColor: t.border, borderBottomWidth: 1 }}>
+      <View className="flex-row items-center gap-1 pt-2.5 pl-4 pb-1">
         <Calendar size={13} color={t.accent} />
-        <Text style={[styles.monthText, { color: t.text }]}>
+        <Text className="text-xs font-bold" style={{ color: t.text }}>
           {dateDays[selectedDate]?.month}月
         </Text>
       </View>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-1 px-4 pt-1 pb-3">
         {dateDays.map((dd) => {
           const active = selectedDate === dd.offset;
           const isToday = dd.offset === 0;
           const count = getPostCount(dd.offset);
           return (
-            <Pressable key={dd.offset} onPress={() => onSelectDate(dd.offset)} style={[styles.chip, active && styles.chipActive, !active && { borderColor: isToday ? t.accent + "50" : t.border, borderWidth: 1 }]}>
-              {active ? (
-                <View style={styles.chipActiveInner}>
-                  <Text style={[styles.weekday, { color: "#000" }]}>{dd.weekday}</Text>
-                  <Text style={[styles.dayNum, { color: "#000" }]}>{dd.day}</Text>
-                  {count > 0 && <View style={[styles.dot, { backgroundColor: "#000" }]} />}
-                </View>
-              ) : (
-                <>
-                  <Text style={[styles.weekday, { color: dd.isWeekend ? t.red : t.muted }]}>{dd.weekday}</Text>
-                  <Text style={[styles.dayNum, { color: t.text }]}>{dd.day}</Text>
-                  {count > 0 && <View style={[styles.dot, { backgroundColor: t.accent }]} />}
-                </>
-              )}
+            <Pressable
+              key={dd.offset}
+              onPress={() => onSelectDate(dd.offset)}
+              className={`w-12 items-center gap-0.5 rounded-[14px] py-2 ${active ? "bg-accent" : ""}`}
+              style={!active ? { borderWidth: 1, borderColor: isToday ? t.accent + "50" : t.border } : undefined}
+            >
+              <Text className="text-[9px] font-semibold" style={{ color: active ? "#000" : dd.isWeekend ? t.red : t.muted }}>
+                {dd.weekday}
+              </Text>
+              <Text className="text-lg font-extrabold" style={{ color: active ? "#000" : t.text }}>
+                {dd.day}
+              </Text>
+              {count > 0 && <View className="w-[5px] h-[5px] rounded-full" style={{ backgroundColor: active ? "#000" : t.accent }} />}
             </Pressable>
           );
         })}
@@ -68,16 +66,3 @@ export default function DatePicker({ t, selectedDate, onSelectDate, getPostCount
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { borderBottomWidth: 1 },
-  monthRow: { flexDirection: "row", alignItems: "center", gap: 4, paddingTop: 10, paddingLeft: 16, paddingBottom: 4 },
-  monthText: { fontSize: 12, fontWeight: "700" },
-  scrollContent: { gap: 4, paddingHorizontal: 16, paddingTop: 4, paddingBottom: 12 },
-  chip: { width: 48, paddingVertical: 8, borderRadius: 14, alignItems: "center", gap: 2 },
-  chipActive: { backgroundColor: "#00D4A1", borderWidth: 0 },
-  chipActiveInner: { alignItems: "center", gap: 2 },
-  weekday: { fontSize: 9, fontWeight: "600" },
-  dayNum: { fontSize: 18, fontWeight: "800" },
-  dot: { width: 5, height: 5, borderRadius: 2.5 },
-});

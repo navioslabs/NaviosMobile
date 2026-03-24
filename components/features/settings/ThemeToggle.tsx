@@ -1,4 +1,4 @@
-import { View, Text, Pressable, StyleSheet } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import { Moon, Sun } from "@/lib/icons";
 import type { ThemeTokens } from "@/constants/theme";
 
@@ -11,14 +11,21 @@ interface ThemeToggleProps {
 /** テーマ切替トグル */
 export default function ThemeToggle({ t, isDark, onToggle }: ThemeToggleProps) {
   return (
-    <View style={[styles.container, { backgroundColor: t.surface, borderTopColor: t.border, borderBottomColor: t.border }]}>
-      <View style={styles.row}>
-        <View style={styles.labelRow}>
+    <View className="mt-2" style={{ backgroundColor: t.surface, borderTopWidth: 1, borderTopColor: t.border, borderBottomWidth: 1, borderBottomColor: t.border }}>
+      <View className="flex-row items-center justify-between py-3.5 px-5">
+        <View className="flex-row items-center gap-3">
           {isDark ? <Moon size={18} color={t.purple} /> : <Sun size={18} color="#F5A623" />}
-          <Text style={[styles.label, { color: t.text }]}>テーマ</Text>
+          <Text className="text-[15px]" style={{ color: t.text }}>テーマ</Text>
         </View>
-        <Pressable onPress={onToggle} style={[styles.toggle, { backgroundColor: isDark ? t.accent : t.surface3 }]}>
-          <View style={[styles.toggleKnob, { backgroundColor: isDark ? "#000" : "#fff", transform: [{ translateX: isDark ? 24 : 2 }] }]}>
+        <Pressable
+          onPress={onToggle}
+          className="w-[50px] h-7 rounded-full justify-center"
+          style={{ backgroundColor: isDark ? t.accent : t.surface3 }}
+        >
+          <View
+            className="absolute top-0.5 w-6 h-6 rounded-full items-center justify-center shadow"
+            style={{ backgroundColor: isDark ? "#000" : "#fff", transform: [{ translateX: isDark ? 24 : 2 }] }}
+          >
             {isDark ? <Moon size={11} color={t.accent} /> : <Sun size={11} color="#F5A623" />}
           </View>
         </Pressable>
@@ -26,12 +33,3 @@ export default function ThemeToggle({ t, isDark, onToggle }: ThemeToggleProps) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { marginTop: 8, borderTopWidth: 1, borderBottomWidth: 1 },
-  row: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 14, paddingHorizontal: 20 },
-  labelRow: { flexDirection: "row", alignItems: "center", gap: 12 },
-  label: { fontSize: 15 },
-  toggle: { width: 50, height: 28, borderRadius: 99, justifyContent: "center" },
-  toggleKnob: { position: "absolute", top: 2, width: 24, height: 24, borderRadius: 12, alignItems: "center", justifyContent: "center", shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.2, shadowRadius: 4, elevation: 2 },
-});

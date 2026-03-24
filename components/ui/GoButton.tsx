@@ -1,4 +1,4 @@
-import { Text, Pressable, StyleSheet } from "react-native";
+import { Text, Pressable } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { ChevronRight } from "@/lib/icons";
 
@@ -16,18 +16,11 @@ export default function GoButton({ small, accentColor = "#00D4A1", accentDarkCol
         colors={[accentColor, accentDarkColor]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={[styles.btn, small && styles.btnSmall]}
+        className={`flex-row items-center gap-[3px] rounded-xl ${small ? "px-3.5 py-[7px]" : "px-5 py-[9px]"}`}
       >
-        <Text style={[styles.text, small && styles.textSmall]}>行く</Text>
+        <Text className={`text-white font-bold tracking-wide ${small ? "text-xs" : "text-[13px]"}`}>行く</Text>
         <ChevronRight size={14} color="#fff" />
       </LinearGradient>
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  btn: { flexDirection: "row", alignItems: "center", gap: 3, borderRadius: 12, paddingHorizontal: 20, paddingVertical: 9 },
-  btnSmall: { paddingHorizontal: 14, paddingVertical: 7 },
-  text: { color: "#fff", fontSize: 13, fontWeight: "700", letterSpacing: 0.3 },
-  textSmall: { fontSize: 12 },
-});

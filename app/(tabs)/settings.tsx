@@ -1,4 +1,4 @@
-import { View, Text, Pressable, ScrollView, StyleSheet } from "react-native";
+import { View, Text, Pressable, ScrollView } from "react-native";
 import { Bell, Lock, ChevronRight } from "@/lib/icons";
 import { makeTokens } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
@@ -22,15 +22,15 @@ export default function SettingsScreen() {
   ];
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: t.bg }]} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+    <ScrollView className="flex-1" style={{ backgroundColor: t.bg }} contentContainerClassName="pb-[100px]" showsVerticalScrollIndicator={false}>
       <ProfileSection t={t} />
 
       {/* Stats */}
-      <View style={[styles.statsRow, { backgroundColor: t.surface, borderTopColor: t.border, borderBottomColor: t.border }]}>
+      <View className="flex-row justify-around p-4 mt-2" style={{ backgroundColor: t.surface, borderTopWidth: 1, borderTopColor: t.border, borderBottomWidth: 1, borderBottomColor: t.border }}>
         {[{ v: "56", l: "チェックイン" }, { v: "8", l: "バッジ" }].map((s) => (
-          <View key={s.l} style={styles.stat}>
-            <Text style={[styles.statValue, { color: t.accent }]}>{s.v}</Text>
-            <Text style={[styles.statLabel, { color: t.sub }]}>{s.l}</Text>
+          <View key={s.l} className="items-center">
+            <Text className="text-xl font-extrabold" style={{ color: t.accent }}>{s.v}</Text>
+            <Text className="text-[10px]" style={{ color: t.sub }}>{s.l}</Text>
           </View>
         ))}
       </View>
@@ -39,13 +39,13 @@ export default function SettingsScreen() {
       <PremiumCard />
 
       {/* Menu items */}
-      <View style={[styles.menu, { backgroundColor: t.surface, borderTopColor: t.border }]}>
+      <View className="mt-2" style={{ backgroundColor: t.surface, borderTopWidth: 1, borderTopColor: t.border }}>
         {menuItems.map((item, i) => {
           const Icon = item.icon;
           return (
-            <Pressable key={i} style={[styles.menuItem, { borderBottomColor: t.border }]}>
+            <Pressable key={i} className="flex-row items-center gap-3.5 py-3.5 px-5" style={{ borderBottomWidth: 1, borderBottomColor: t.border }}>
               <Icon size={17} color={t.sub} />
-              <Text style={[styles.menuLabel, { color: t.text }]}>{item.label}</Text>
+              <Text className="flex-1 text-sm" style={{ color: t.text }}>{item.label}</Text>
               <ChevronRight size={15} color={t.muted} />
             </Pressable>
           );
@@ -54,15 +54,3 @@ export default function SettingsScreen() {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  scrollContent: { paddingBottom: 100 },
-  statsRow: { flexDirection: "row", justifyContent: "space-around", padding: 16, marginTop: 8, borderTopWidth: 1, borderBottomWidth: 1 },
-  stat: { alignItems: "center" },
-  statValue: { fontSize: 20, fontWeight: "800" },
-  statLabel: { fontSize: 10 },
-  menu: { marginTop: 8, borderTopWidth: 1 },
-  menuItem: { flexDirection: "row", alignItems: "center", gap: 14, paddingVertical: 14, paddingHorizontal: 20, borderBottomWidth: 1 },
-  menuLabel: { flex: 1, fontSize: 14 },
-});

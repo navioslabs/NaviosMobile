@@ -1,4 +1,4 @@
-import { View, Text, Pressable, StyleSheet } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import { Package, Calendar, Users, Building2 } from "@/lib/icons";
 import type { ThemeTokens } from "@/constants/theme";
 
@@ -17,17 +17,23 @@ export default function QuickActions({ t, isDark }: QuickActionsProps) {
   ];
 
   return (
-    <View style={styles.container}>
-      <Text style={[styles.heading, { color: t.sub }]}>クイックアクション</Text>
-      <View style={styles.grid}>
+    <View className="mb-[22px]">
+      <Text className="text-[11px] font-bold mb-2 tracking-wider uppercase" style={{ color: t.sub }}>
+        クイックアクション
+      </Text>
+      <View className="flex-row flex-wrap gap-2.5">
         {actions.map((a, i) => {
           const Icon = a.icon;
           return (
-            <Pressable key={i} style={[styles.card, { backgroundColor: a.bg, borderColor: a.dc + "22" }]}>
-              <View style={[styles.iconBox, { backgroundColor: a.dc + "20" }]}>
+            <Pressable
+              key={i}
+              className="w-[48%] rounded-2xl p-3.5 gap-2"
+              style={{ backgroundColor: a.bg, borderWidth: 1, borderColor: a.dc + "22" }}
+            >
+              <View className="w-[34px] h-[34px] rounded-[10px] items-center justify-center" style={{ backgroundColor: a.dc + "20" }}>
                 <Icon size={17} color={a.dc} />
               </View>
-              <Text style={[styles.label, { color: t.text }]}>{a.label}</Text>
+              <Text className="text-xs font-semibold leading-4" style={{ color: t.text }}>{a.label}</Text>
             </Pressable>
           );
         })}
@@ -35,12 +41,3 @@ export default function QuickActions({ t, isDark }: QuickActionsProps) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { marginBottom: 22 },
-  heading: { fontSize: 11, fontWeight: "700", marginBottom: 8, letterSpacing: 0.5, textTransform: "uppercase" },
-  grid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
-  card: { width: "48%", borderWidth: 1, borderRadius: 16, padding: 14, gap: 8 },
-  iconBox: { width: 34, height: 34, borderRadius: 10, alignItems: "center", justifyContent: "center" },
-  label: { fontSize: 12, fontWeight: "600", lineHeight: 16 },
-});

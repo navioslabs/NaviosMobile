@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text } from "react-native";
 import { Timer } from "@/lib/icons";
 
 interface UrgencyBarProps {
@@ -13,18 +13,12 @@ export default function UrgencyBar({ timeLeft, subColor }: UrgencyBarProps) {
   const color = urgent ? "#F0425C" : warn ? "#F5A623" : subColor;
 
   return (
-    <View style={styles.container}>
+    <View className="flex-row items-center gap-1">
       <Timer size={12} color={color} />
-      <Text style={[styles.text, { color, fontWeight: urgent ? "700" : "600" }]}>
+      <Text className={`text-[11px] ${urgent ? "font-bold" : "font-semibold"}`} style={{ color }}>
         あと{timeLeft}分
       </Text>
-      {urgent && <View style={styles.blink} />}
+      {urgent && <View className="w-[5px] h-[5px] rounded-full bg-danger" />}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flexDirection: "row", alignItems: "center", gap: 4 },
-  text: { fontSize: 11 },
-  blink: { width: 5, height: 5, borderRadius: 2.5, backgroundColor: "#F0425C" },
-});

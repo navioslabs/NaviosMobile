@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, TextInput, Pressable, ScrollView, StyleSheet } from "react-native";
+import { View, Text, TextInput, Pressable, ScrollView } from "react-native";
 import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { Camera, ImageIcon, MapPin, Locate } from "@/lib/icons";
@@ -18,18 +18,23 @@ export default function PostScreen() {
   const [content, setContent] = useState("");
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: t.bg }]} contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+    <ScrollView className="flex-1" style={{ backgroundColor: t.bg }} contentContainerClassName="p-5 pb-10 gap-4" showsVerticalScrollIndicator={false}>
       {/* Category */}
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: t.sub }]}>カテゴリ</Text>
-        <View style={styles.catGrid}>
+      <View>
+        <Text className="text-[11px] font-bold mb-2 tracking-wider uppercase" style={{ color: t.sub }}>カテゴリ</Text>
+        <View className="flex-row gap-2">
           {(Object.entries(CAT_CONFIG) as [CategoryId, typeof CAT_CONFIG[CategoryId]][]).map(([id, c]) => {
             const Icon = c.icon;
             const active = cat === id;
             return (
-              <Pressable key={id} onPress={() => setCat(id)} style={[styles.catBtn, { borderColor: active ? c.color : t.border, backgroundColor: active ? c.color + "18" : t.surface }]}>
+              <Pressable
+                key={id}
+                onPress={() => setCat(id)}
+                className="flex-1 items-center gap-1.5 rounded-[14px] py-3 px-1.5"
+                style={{ borderWidth: 1, borderColor: active ? c.color : t.border, backgroundColor: active ? c.color + "18" : t.surface }}
+              >
                 <Icon size={18} color={active ? c.color : t.sub} />
-                <Text style={[styles.catLabel, { color: active ? c.color : t.sub }]}>{c.label}</Text>
+                <Text className="text-[10px] font-semibold" style={{ color: active ? c.color : t.sub }}>{c.label}</Text>
               </Pressable>
             );
           })}
@@ -37,62 +42,58 @@ export default function PostScreen() {
       </View>
 
       {/* Title */}
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: t.sub }]}>タイトル</Text>
-        <TextInput style={[styles.input, { backgroundColor: t.surface, borderColor: t.border, color: t.text }]} placeholder="タイトルを入力" placeholderTextColor={t.sub} value={title} onChangeText={setTitle} />
+      <View>
+        <Text className="text-[11px] font-bold mb-2 tracking-wider uppercase" style={{ color: t.sub }}>タイトル</Text>
+        <TextInput
+          className="rounded-xl p-3 text-sm"
+          style={{ backgroundColor: t.surface, borderWidth: 1, borderColor: t.border, color: t.text }}
+          placeholder="タイトルを入力"
+          placeholderTextColor={t.sub}
+          value={title}
+          onChangeText={setTitle}
+        />
       </View>
 
       {/* Detail */}
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: t.sub }]}>詳細</Text>
-        <TextInput style={[styles.input, styles.textarea, { backgroundColor: t.surface, borderColor: t.border, color: t.text }]} placeholder="詳細を入力" placeholderTextColor={t.sub} value={content} onChangeText={setContent} multiline />
+      <View>
+        <Text className="text-[11px] font-bold mb-2 tracking-wider uppercase" style={{ color: t.sub }}>詳細</Text>
+        <TextInput
+          className="rounded-xl p-3 text-sm h-[88px]"
+          style={{ backgroundColor: t.surface, borderWidth: 1, borderColor: t.border, color: t.text, textAlignVertical: "top" }}
+          placeholder="詳細を入力"
+          placeholderTextColor={t.sub}
+          value={content}
+          onChangeText={setContent}
+          multiline
+        />
       </View>
 
       {/* Photo */}
-      <View style={styles.section}>
-        <Text style={[styles.label, { color: t.sub }]}>写真</Text>
-        <View style={styles.photoRow}>
+      <View>
+        <Text className="text-[11px] font-bold mb-2 tracking-wider uppercase" style={{ color: t.sub }}>写真</Text>
+        <View className="flex-row gap-2">
           {[{ Icon: Camera, l: "撮影" }, { Icon: ImageIcon, l: "選択" }].map(({ Icon, l }) => (
-            <Pressable key={l} style={[styles.photoBtn, { borderColor: t.border, backgroundColor: t.surface }]}>
+            <Pressable key={l} className="w-[72px] h-[72px] rounded-[14px] items-center justify-center gap-[5px]" style={{ borderWidth: 1.5, borderStyle: "dashed", borderColor: t.border, backgroundColor: t.surface }}>
               <Icon size={20} color={t.sub} />
-              <Text style={[styles.photoBtnText, { color: t.sub }]}>{l}</Text>
+              <Text className="text-[10px]" style={{ color: t.sub }}>{l}</Text>
             </Pressable>
           ))}
         </View>
       </View>
 
       {/* Location */}
-      <Pressable style={[styles.locBtn, { backgroundColor: t.surface, borderColor: t.border }]}>
+      <Pressable className="flex-row items-center gap-2.5 p-3 rounded-xl" style={{ backgroundColor: t.surface, borderWidth: 1, borderColor: t.border }}>
         <MapPin size={17} color={t.sub} />
-        <Text style={[styles.locText, { color: t.sub }]}>場所を設定</Text>
+        <Text className="flex-1 text-[13px]" style={{ color: t.sub }}>場所を設定</Text>
         <Locate size={15} color={t.sub} />
       </Pressable>
 
       {/* Submit */}
       <Pressable onPress={() => router.back()}>
-        <LinearGradient colors={[t.accent, t.blue]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.submitBtn}>
-          <Text style={styles.submitText}>投稿する</Text>
+        <LinearGradient colors={[t.accent, t.blue]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} className="rounded-[14px] p-[15px] items-center">
+          <Text className="text-black font-extrabold text-[15px]">投稿する</Text>
         </LinearGradient>
       </Pressable>
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  scroll: { padding: 20, paddingBottom: 40, gap: 16 },
-  section: {},
-  label: { fontSize: 11, fontWeight: "700", marginBottom: 8, letterSpacing: 0.5, textTransform: "uppercase" },
-  catGrid: { flexDirection: "row", gap: 8 },
-  catBtn: { flex: 1, paddingVertical: 12, paddingHorizontal: 6, borderRadius: 14, borderWidth: 1, alignItems: "center", gap: 6 },
-  catLabel: { fontSize: 10, fontWeight: "600" },
-  input: { borderWidth: 1, borderRadius: 12, padding: 12, fontSize: 14 },
-  textarea: { height: 88, textAlignVertical: "top" },
-  photoRow: { flexDirection: "row", gap: 8 },
-  photoBtn: { width: 72, height: 72, borderRadius: 14, borderWidth: 1.5, borderStyle: "dashed", alignItems: "center", justifyContent: "center", gap: 5 },
-  photoBtnText: { fontSize: 10 },
-  locBtn: { flexDirection: "row", alignItems: "center", gap: 10, padding: 12, borderWidth: 1, borderRadius: 12 },
-  locText: { flex: 1, fontSize: 13 },
-  submitBtn: { borderRadius: 14, padding: 15, alignItems: "center" },
-  submitText: { color: "#000", fontWeight: "800", fontSize: 15 },
-});

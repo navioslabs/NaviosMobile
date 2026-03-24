@@ -1,4 +1,4 @@
-import { FlatList, View, Text, StyleSheet } from "react-native";
+import { FlatList, View, Text } from "react-native";
 import { useCallback } from "react";
 import { makeTokens } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
@@ -18,26 +18,18 @@ export default function TalkScreen() {
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: t.bg }]}>
-      <View style={styles.header}>
-        <Text style={[styles.title, { color: t.text }]}>Talk</Text>
-        <Text style={[styles.sub, { color: t.sub }]}>近くのつぶやきをキャッチ</Text>
+    <View className="flex-1" style={{ backgroundColor: t.bg }}>
+      <View className="px-5 pt-3.5 pb-2.5">
+        <Text className="text-xl font-extrabold" style={{ color: t.text }}>Talk</Text>
+        <Text className="text-xs" style={{ color: t.sub }}>近くのつぶやきをキャッチ</Text>
       </View>
       <FlatList
         data={CHAT_ROOMS}
         renderItem={renderItem}
         keyExtractor={(item) => item.id.toString()}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.list}
+        contentContainerClassName="pb-[90px]"
       />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  header: { paddingHorizontal: 20, paddingTop: 14, paddingBottom: 10 },
-  title: { fontSize: 20, fontWeight: "800" },
-  sub: { fontSize: 12 },
-  list: { paddingBottom: 90 },
-});

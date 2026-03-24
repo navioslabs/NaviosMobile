@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { View, Text, FlatList, StyleSheet } from "react-native";
+import { View, Text, FlatList } from "react-native";
 import { Calendar } from "@/lib/icons";
 import { makeTokens } from "@/constants/theme";
 import { FEED_POSTS } from "@/data/mockData";
@@ -9,7 +9,6 @@ import DatePicker from "@/components/features/feed/DatePicker";
 import CategoryChips from "@/components/features/feed/CategoryChips";
 import FeedPostCard from "@/components/features/feed/FeedPostCard";
 
-/** 日付オフセットに応じた投稿を取得 */
 const getPostsForDate = (offset: number): FeedPost[] => {
   if (offset === 0) return FEED_POSTS.filter((p) => p.hoursAgo <= 24);
   if (offset === 1) return FEED_POSTS.filter((p) => p.hoursAgo > 24 && p.hoursAgo <= 48);
@@ -17,7 +16,6 @@ const getPostsForDate = (offset: number): FeedPost[] => {
   return FEED_POSTS.filter((_, i) => i % (offset + 1) === 0);
 };
 
-/** 日付ラベル生成 */
 const getDateLabel = (offset: number): string => {
   if (offset === 0) return "📍 今日 • 越谷市";
   if (offset === 1) return "📅 明日";
@@ -39,28 +37,26 @@ export default function FeedScreen() {
   const filtered = selCat === "all" ? datePosts : datePosts.filter((p) => p.category === selCat);
 
   const getPostCount = useCallback((offset: number) => getPostsForDate(offset).length, []);
-
   const renderItem = useCallback(
     ({ item }: { item: FeedPost }) => <FeedPostCard post={item} t={t} isDark={isDark} />,
     [t, isDark]
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: t.bg }]}>
+    <View className="flex-1" style={{ backgroundColor: t.bg }}>
       <DatePicker t={t} selectedDate={selDate} onSelectDate={setSelDate} getPostCount={getPostCount} />
 
-      {/* Date label */}
-      <View style={styles.dateLabel}>
-        <Text style={[styles.dateLabelText, { color: t.sub }]}>{getDateLabel(selDate)}</Text>
-        <Text style={[styles.countText, { color: t.accent }]}>{filtered.length}件</Text>
+      <View className="flex-row justify-between items-center px-5 pt-2.5 pb-1">
+        <Text className="text-[11px]" style={{ color: t.sub }}>{getDateLabel(selDate)}</Text>
+        <Text className="text-[10px] font-semibold" style={{ color: t.accent }}>{filtered.length}件</Text>
       </View>
 
       <CategoryChips t={t} selected={selCat} onSelect={setSelCat} />
 
       {filtered.length === 0 ? (
-        <View style={styles.empty}>
+        <View className="py-[60px] px-5 items-center">
           <Calendar size={32} color={t.muted} />
-          <Text style={[styles.emptyText, { color: t.sub }]}>この日の投稿はまだありません</Text>
+          <Text className="text-sm font-semibold mt-3" style={{ color: t.sub }}>この日の投稿はまだありません</Text>
         </View>
       ) : (
         <FlatList
@@ -68,18 +64,9 @@ export default function FeedScreen() {
           renderItem={renderItem}
           keyExtractor={(item) => item.id.toString()}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 90 }}
+          contentContainerClassName="pb-[90px]"
         />
       )}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  dateLabel: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 20, paddingTop: 10, paddingBottom: 4 },
-  dateLabelText: { fontSize: 11 },
-  countText: { fontSize: 10, fontWeight: "600" },
-  empty: { paddingVertical: 60, paddingHorizontal: 20, alignItems: "center" },
-  emptyText: { fontSize: 14, fontWeight: "600", marginTop: 12 },
-});
