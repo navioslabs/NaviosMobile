@@ -1,7 +1,8 @@
-import { SectionList, View, Text } from "react-native";
+import { SectionList, View, Text, RefreshControl } from "react-native";
 import { useMemo } from "react";
 import { NEARBY_POSTS } from "@/data/mockData";
-import { usePosts } from "@/hooks/usePosts";
+import { useNearbyPosts } from "@/hooks/usePosts";
+import { useLocation } from "@/hooks/useLocation";
 import { postToNearbyPost } from "@/lib/adapters";
 import type { NearbyPost } from "@/types";
 import { useAppStyles } from "@/hooks/useAppStyles";
@@ -20,8 +21,11 @@ interface NearbySection {
 /** NearBy画面 */
 export default function NearByScreen() {
   const { s, t, fs, isDark } = useAppStyles();
+  const { lat, lng, isLoading: locationLoading, error: locationError } = useLocation();
+  const { data: serverPosts, isLoading: queryLoading, refetch } = useNearbyPosts(lat, lng);
 
-  const { data: serverPosts } = usePosts();
+  const isLoading = locationLoading || queryLoading;
+
   const nearbyPosts = serverPosts && serverPosts.length > 0
     ? serverPosts.map(postToNearbyPost)
     : NEARBY_POSTS;
@@ -39,12 +43,21 @@ export default function NearByScreen() {
     return result;
   }, [nearbyPosts]);
 
+  if (isLoading) {
+    return (
+      <View style={s.screen}>
+        <ScanHeader t={t} isDark={isDark} postCount={0} />
+        <StateView t={t} type="loading" />
+      </View>
+    );
+  }
+
   return (
     <View style={s.screen}>
       <ScanHeader t={t} isDark={isDark} postCount={nearbyPosts.length} />
       <SectionList
         sections={sections}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item, index) => `${item.title}-${index}`}
         renderItem={({ item, index, section }) => {
           const isFeatured = section === sections[0] && index === 0;
           return <NearbyPostItem post={item} t={t} featured={isFeatured} isDark={isDark} />;
@@ -64,6 +77,15 @@ export default function NearByScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 100 }}
         stickySectionHeadersEnabled={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={queryLoading}
+            onRefresh={() => refetch()}
+            tintColor={t.accent}
+            colors={[t.accent]}
+            progressBackgroundColor={t.surface}
+          />
+        }
       />
     </View>
   );

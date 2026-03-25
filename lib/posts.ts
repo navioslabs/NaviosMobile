@@ -46,7 +46,38 @@ export async function fetchNearbyPosts(
     radius_m: radius,
   });
   if (error) throw error;
-  return data as Post[];
+
+  // RPC のフラット結果を Post 型に正規化
+  return (data ?? []).map((row: any) => ({
+    id: row.id,
+    author_id: row.author_id,
+    category: row.category,
+    title: row.title,
+    content: row.content,
+    image_url: row.image_url,
+    location_text: row.location_text,
+    deadline: row.deadline,
+    crowd: row.crowd,
+    is_featured: row.is_featured,
+    likes_count: row.likes_count,
+    comments_count: row.comments_count,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+    distance_m: row.distance_m,
+    author: {
+      id: row.author_id,
+      display_name: row.author_display_name,
+      avatar_url: row.author_avatar_url,
+      is_verified: row.author_is_verified,
+      bio: null,
+      location_text: null,
+      is_public: true,
+      show_location: true,
+      show_checkins: false,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+    },
+  })) as Post[];
 }
 
 /** テキスト検索 */
