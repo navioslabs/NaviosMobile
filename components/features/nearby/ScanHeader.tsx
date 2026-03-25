@@ -1,5 +1,5 @@
-import { View, Text } from "react-native";
-import { Radio, Eye } from "@/lib/icons";
+import { View, Text, Pressable } from "react-native";
+import { Radio, Eye, Clock } from "@/lib/icons";
 import type { ThemeTokens } from "@/constants/theme";
 import { FONT_SIZE, WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 
@@ -9,8 +9,11 @@ interface ScanHeaderProps {
   postCount: number;
 }
 
-/** スキャンヘッダー（Pulseスコア統合版） */
+/** スキャンヘッダー（Pulseスコア + 更新時刻） */
 export default function ScanHeader({ t, isDark, postCount }: ScanHeaderProps) {
+  const now = new Date();
+  const timeStr = `${now.getHours()}:${String(now.getMinutes()).padStart(2, "0")}`;
+
   return (
     <View style={{ paddingVertical: SPACE.lg, paddingHorizontal: SPACE.xl, backgroundColor: isDark ? "rgba(0,212,161,0.05)" : "rgba(0,212,161,0.07)", borderBottomWidth: 1, borderBottomColor: t.border }}>
       <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.sm + 2 }}>
@@ -27,12 +30,16 @@ export default function ScanHeader({ t, isDark, postCount }: ScanHeaderProps) {
         </View>
       </View>
 
-      {/* Pulseスコア統合 */}
+      {/* Pulseスコア + 更新時刻 */}
       <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.sm, marginTop: SPACE.md, paddingTop: SPACE.sm, borderTopWidth: 1, borderTopColor: t.accent + "15" }}>
         <Text style={{ fontSize: FONT_SIZE.sm, fontWeight: WEIGHT.semibold, color: t.sub }}>盛り上がり度</Text>
         <Text style={{ fontSize: FONT_SIZE.base, fontWeight: WEIGHT.bold, color: t.text }}>82 / 100</Text>
-        <View style={{ borderRadius: RADIUS.sm, paddingHorizontal: SPACE.sm, paddingVertical: 2, backgroundColor: t.accent, marginLeft: "auto" }}>
+        <View style={{ borderRadius: RADIUS.sm, paddingHorizontal: SPACE.sm, paddingVertical: 2, backgroundColor: t.accent }}>
           <Text style={{ fontSize: FONT_SIZE.xxs, fontWeight: WEIGHT.extrabold, color: "#000" }}>HOT</Text>
+        </View>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 3, marginLeft: "auto" }}>
+          <Clock size={11} color={t.muted} />
+          <Text style={{ fontSize: FONT_SIZE.xxs, color: t.muted }}>{timeStr} 更新</Text>
         </View>
       </View>
     </View>

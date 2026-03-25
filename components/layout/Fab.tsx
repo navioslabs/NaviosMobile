@@ -80,8 +80,8 @@ export default function Fab({ t, isDark }: FabProps) {
               <Mic size={22} color={t.blue} />
             </View>
             <View>
-              <Text style={{ fontSize: 15, fontWeight: "700", color: t.text }}>つぶやく</Text>
-              <Text style={{ fontSize: 13, color: t.sub }}>近くの人にひとこと</Text>
+              <Text style={{ fontSize: 15, fontWeight: "700", color: t.text }}>トークする</Text>
+              <Text style={{ fontSize: 13, color: t.sub }}>近くの人に声を届ける</Text>
             </View>
           </Pressable>
         </View>

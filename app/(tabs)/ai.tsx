@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { View, Text, TextInput, Pressable, ScrollView } from "react-native";
+import { useState, useMemo, useEffect, useRef } from "react";
+import { View, Text, TextInput, Pressable, ScrollView, ActivityIndicator } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Sparkles, Search, Mic, Zap } from "@/lib/icons";
 import { makeTokens } from "@/constants/theme";
@@ -16,6 +16,24 @@ export default function AiScreen() {
   const t = makeTokens(isDark);
   const s = createStyles(t);
   const [query, setQuery] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  /** 入力時にローディング演出（300ms debounce） */
+  const handleQueryChange = (text: string) => {
+    setQuery(text);
+    if (text.trim().length > 0) {
+      setIsLoading(true);
+      if (timerRef.current) clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => setIsLoading(false), 500);
+    } else {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
+  }, []);
 
   const pulseEvents = useMemo(
     () => [...FEED_POSTS].sort((a, b) => a.timeLeft - b.timeLeft).slice(0, 4),
@@ -56,7 +74,7 @@ export default function AiScreen() {
         <Search size={18} color={t.sub} />
         <TextInput
           value={query}
-          onChangeText={setQuery}
+          onChangeText={handleQueryChange}
           placeholder="何をお探しですか？"
           placeholderTextColor={t.sub}
           style={{ flex: 1, fontSize: FONT_SIZE.lg, color: t.text }}
@@ -100,15 +118,21 @@ export default function AiScreen() {
       {/* ═══ 検索モード ═══ */}
       {isSearching ? (
         <View style={{ marginTop: SPACE.sm }}>
-          <Text style={{ fontSize: FONT_SIZE.sm, fontWeight: WEIGHT.semibold, color: t.accent, marginBottom: SPACE.lg }}>
-            「{query}」の検索結果 — {searchResults?.length || 0}件
-          </Text>
-
-          {searchResults && searchResults.length > 0 ? (
-            <View style={{ gap: SPACE.sm + 2 }}>
-              {searchResults.map((ev) => (
-                <PulseEventCard key={ev.id} event={ev} t={t} />
-              ))}
+          {isLoading ? (
+            <View style={{ alignItems: "center", paddingVertical: SPACE.xxxl }}>
+              <ActivityIndicator size="large" color={t.accent} />
+              <Text style={{ fontSize: FONT_SIZE.base, color: t.sub, marginTop: SPACE.lg }}>検索中...</Text>
+            </View>
+          ) : searchResults && searchResults.length > 0 ? (
+            <View>
+              <Text style={{ fontSize: FONT_SIZE.sm, fontWeight: WEIGHT.semibold, color: t.accent, marginBottom: SPACE.lg }}>
+                「{query}」の検索結果 — {searchResults.length}件
+              </Text>
+              <View style={{ gap: SPACE.sm + 2 }}>
+                {searchResults.map((ev) => (
+                  <PulseEventCard key={ev.id} event={ev} t={t} />
+                ))}
+              </View>
             </View>
           ) : (
             <View style={{ paddingVertical: SPACE.xxxl }}>
@@ -118,7 +142,7 @@ export default function AiScreen() {
               </Text>
               {/* 代替サジェスト */}
               <View style={{ marginTop: SPACE.xl }}>
-                <SuggestionChips t={t} onSelect={(q) => setQuery(q)} />
+                <SuggestionChips t={t} onSelect={(q) => handleQueryChange(q)} />
               </View>
             </View>
           )}
@@ -127,7 +151,7 @@ export default function AiScreen() {
         <>
           {/* ═══ 通常モード ═══ */}
           {/* サジェストチップ */}
-          <SuggestionChips t={t} onSelect={(q) => setQuery(q)} />
+          <SuggestionChips t={t} onSelect={(q) => handleQueryChange(q)} />
 
           {/* おすすめフィード */}
           <View style={{ marginBottom: SPACE.xl }}>

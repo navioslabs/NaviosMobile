@@ -38,7 +38,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="talk"
           options={{
-            title: "ひとこと",
+            title: "トーク",
             tabBarIcon: ({ color, size }) => <MessageCircle size={size} color={color} />,
           }}
         />
@@ -65,7 +65,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="index"
           options={{
-            title: "ホーム",
+            title: "フィード",
             tabBarIcon: ({ color, size }) => <Rss size={size} color={color} />,
           }}
         />

@@ -31,10 +31,13 @@ export default function TalkPostScreen() {
         />
       </View>
 
-      <View style={[s.card, { flexDirection: "row", alignItems: "center", gap: SPACE.sm }]}>
-        <MapPin size={16} color={t.accent} />
-        <Text style={{ fontSize: FONT_SIZE.md, fontWeight: WEIGHT.semibold, color: t.accent }}>📍 越谷市・現在地周辺</Text>
-        <Text style={{ marginLeft: "auto", fontSize: FONT_SIZE.xs, color: t.muted }}>自動検出</Text>
+      <View style={[s.card, { gap: SPACE.xs }]}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.sm }}>
+          <MapPin size={16} color={t.accent} />
+          <Text style={{ fontSize: FONT_SIZE.md, fontWeight: WEIGHT.semibold, color: t.accent }}>📍 越谷市・現在地周辺</Text>
+          <Text style={{ marginLeft: "auto", fontSize: FONT_SIZE.xs, color: t.muted }}>自動検出</Text>
+        </View>
+        <Text style={{ fontSize: FONT_SIZE.xxs, color: t.muted, paddingLeft: SPACE.xxl }}>位置情報つきで投稿されます</Text>
       </View>
 
       <View style={{ flexDirection: "row", gap: SPACE.sm }}>
@@ -70,7 +73,7 @@ export default function TalkPostScreen() {
             style={{ flexDirection: "row", alignItems: "center", gap: 6, borderRadius: RADIUS.lg, paddingHorizontal: SPACE.xxl + 4, paddingVertical: SPACE.md }}
           >
             <Send size={15} color={msg.length > 0 && msg.length <= 140 ? "#000" : t.muted} />
-            <Text style={{ fontWeight: WEIGHT.extrabold, fontSize: FONT_SIZE.lg, color: msg.length > 0 && msg.length <= 140 ? "#000" : t.muted }}>つぶやく</Text>
+            <Text style={{ fontWeight: WEIGHT.extrabold, fontSize: FONT_SIZE.lg, color: msg.length > 0 && msg.length <= 140 ? "#000" : t.muted }}>投稿する</Text>
           </LinearGradient>
         </Pressable>
       </View>

@@ -95,13 +95,16 @@ export default function FeedDetailScreen() {
             <ChevronLeft size={22} color="#fff" />
           </Pressable>
 
-          {/* カテゴリピル（画像上、左下寄り） */}
+          {/* カテゴリピル（画像上、不透明背景で視認性確保） */}
           <View style={{ position: "absolute", top: 56, left: SPACE.lg + 46, flexDirection: "row", gap: SPACE.sm }}>
-            <CatPill cat={post.category} />
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 4, borderRadius: RADIUS.full, paddingHorizontal: 10, paddingVertical: 5, backgroundColor: catConfig.color, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 4, elevation: 3 }}>
+              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "#fff" }} />
+              <Text style={{ fontSize: FONT_SIZE.xxs, fontWeight: WEIGHT.extrabold, color: "#fff" }}>{catConfig.label}</Text>
+            </View>
             {isUrgent && (
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 3, borderRadius: RADIUS.full, paddingHorizontal: 8, paddingVertical: 3, backgroundColor: t.red + "30" }}>
-                <Timer size={11} color={t.red} />
-                <Text style={{ fontSize: FONT_SIZE.xxs, fontWeight: WEIGHT.bold, color: t.red }}>急ぎ</Text>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 4, borderRadius: RADIUS.full, paddingHorizontal: 10, paddingVertical: 5, backgroundColor: t.red, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 4, elevation: 3 }}>
+                <Timer size={12} color="#fff" />
+                <Text style={{ fontSize: FONT_SIZE.xxs, fontWeight: WEIGHT.extrabold, color: "#fff" }}>急ぎ</Text>
               </View>
             )}
           </View>

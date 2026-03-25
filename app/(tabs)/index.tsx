@@ -1,6 +1,8 @@
 import { useState, useCallback, useMemo } from "react";
-import { View, Text, FlatList } from "react-native";
-import { Calendar, Inbox } from "@/lib/icons";
+import { View, Text, FlatList, RefreshControl, Pressable } from "react-native";
+import { Inbox } from "@/lib/icons";
+import { router } from "expo-router";
+import { LinearGradient } from "expo-linear-gradient";
 import { makeTokens } from "@/constants/theme";
 import { FEED_POSTS } from "@/data/mockData";
 import type { FeedPost } from "@/types";
@@ -37,6 +39,12 @@ export default function FeedScreen() {
   const [selDate, setSelDate] = useState(0);
   const [selCat, setSelCat] = useState("all");
   const [summaryFilter, setSummaryFilter] = useState<FilterType>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => setRefreshing(false), 1200);
+  }, []);
 
   const datePosts = getPostsForDate(selDate);
 
@@ -87,6 +95,27 @@ export default function FeedScreen() {
             <Inbox size={40} color={t.muted} />
             <Text style={[s.textSubheading, { marginTop: SPACE.md, color: t.text }]}>この日の投稿はまだありません</Text>
             <Text style={[s.textLabel, { marginTop: SPACE.xs, color: t.sub }]}>他の日付を選ぶか、投稿してみましょう</Text>
+            <View style={{ flexDirection: "row", gap: SPACE.md, marginTop: SPACE.xl }}>
+              <Pressable
+                onPress={() => setSelDate(0)}
+                style={({ pressed }) => ({ paddingHorizontal: SPACE.xl, paddingVertical: SPACE.md, borderRadius: RADIUS.full, backgroundColor: t.surface2, borderWidth: 1, borderColor: t.border, opacity: pressed ? 0.7 : 1 })}
+              >
+                <Text style={{ fontSize: FONT_SIZE.sm, fontWeight: WEIGHT.bold, color: t.text }}>今日を見る</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => router.push("/post")}
+                style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}
+              >
+                <LinearGradient
+                  colors={[t.accent, t.blue]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={{ paddingHorizontal: SPACE.xl, paddingVertical: SPACE.md, borderRadius: RADIUS.full }}
+                >
+                  <Text style={{ fontSize: FONT_SIZE.sm, fontWeight: WEIGHT.bold, color: "#000" }}>投稿する</Text>
+                </LinearGradient>
+              </Pressable>
+            </View>
           </View>
         </View>
       ) : (
@@ -97,6 +126,15 @@ export default function FeedScreen() {
           showsVerticalScrollIndicator={false}
           ListHeaderComponent={ListHeader}
           contentContainerStyle={{ paddingBottom: 90 }}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={t.accent}
+              colors={[t.accent]}
+              progressBackgroundColor={t.surface}
+            />
+          }
         />
       )}
     </View>
