@@ -78,7 +78,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="talk"
           options={{
-            title: "トーク",
+            title: "タイムライン",
             tabBarIcon: ({ color, size }) => <MessageCircle size={size} color={color} />,
           }}
         />

@@ -1,18 +1,20 @@
 import { FlatList, View, Text, RefreshControl } from "react-native";
 import { useCallback } from "react";
+import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withSequence, withTiming, Easing } from "react-native-reanimated";
+import { Radio } from "@/lib/icons";
 import { useTalks } from "@/hooks/useTalks";
 import { useRealtimeTalks } from "@/hooks/useRealtimeTalks";
 import type { Talk } from "@/types";
 import { useAppStyles } from "@/hooks/useAppStyles";
-import { SPACE } from "@/lib/styles";
+import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 import TalkItem from "@/components/features/talk/TalkItem";
 import StateView from "@/components/ui/StateView";
 
-/** ひとこと画面 */
+/** タイムライン画面 */
 export default function TalkScreen() {
-  const { s, t } = useAppStyles();
+  const { s, t, fs } = useAppStyles();
 
-  const { data: serverTalks, isLoading: queryLoading, refetch } = useTalks();
+  const { data: serverTalks, isLoading: queryLoading, isFetching, refetch } = useTalks();
   useRealtimeTalks();
   const talks: Talk[] = (serverTalks ?? []).filter((t) => t?.id);
 
@@ -22,30 +24,35 @@ export default function TalkScreen() {
   );
 
   const ListHeader = (
-    <View style={{ paddingHorizontal: SPACE.xl, paddingTop: SPACE.lg, paddingBottom: SPACE.sm }}>
-      <Text style={s.textScreenTitle}>トーク</Text>
-      <Text style={s.textLabel}>ご近所のリアルタイムな声</Text>
+    <View style={{ paddingHorizontal: SPACE.xl, paddingTop: SPACE.lg, paddingBottom: SPACE.md, borderBottomWidth: 1, borderBottomColor: t.border }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.sm }}>
+        <Text style={s.textScreenTitle}>タイムライン</Text>
+        <LiveBadge t={t} />
+      </View>
+      <Text style={{ fontSize: fs.sm, color: t.sub, marginTop: SPACE.xs }}>
+        近くの人のリアルタイムな声 • {talks.length}件
+      </Text>
     </View>
   );
 
   return (
     <View style={s.screen}>
-      {talks.length === 0 ? (
+      {talks.length === 0 && !queryLoading ? (
         <>
           {ListHeader}
-          <StateView t={t} type="empty" message="最初のトークを投稿してみましょう" />
+          <StateView t={t} type="empty" message="まだ投稿がありません。最初のひとことを投稿してみましょう" />
         </>
       ) : (
         <FlatList
           data={talks}
           renderItem={renderItem}
-          keyExtractor={(item, index) => item.id ?? `talk-${index}`}
+          keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
           ListHeaderComponent={ListHeader}
           contentContainerStyle={{ paddingBottom: 100 }}
           refreshControl={
             <RefreshControl
-              refreshing={queryLoading}
+              refreshing={isFetching}
               onRefresh={refetch}
               tintColor={t.accent}
               colors={[t.accent]}
@@ -55,5 +62,38 @@ export default function TalkScreen() {
         />
       )}
     </View>
+  );
+}
+
+/** LIVE 脈動バッジ */
+function LiveBadge({ t }: { t: any }) {
+  const pulse = useSharedValue(1);
+
+  pulse.value = withRepeat(
+    withSequence(
+      withTiming(1.06, { duration: 800, easing: Easing.inOut(Easing.ease) }),
+      withTiming(1.0, { duration: 800, easing: Easing.inOut(Easing.ease) }),
+    ),
+    -1,
+    true,
+  );
+
+  const animStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pulse.value }],
+  }));
+
+  return (
+    <Animated.View style={[animStyle, {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 3,
+      borderRadius: RADIUS.sm,
+      paddingHorizontal: SPACE.sm,
+      paddingVertical: 3,
+      backgroundColor: t.accent,
+    }]}>
+      <Radio size={10} color="#000" />
+      <Text style={{ fontSize: 10, fontWeight: WEIGHT.extrabold, color: "#000" }}>LIVE</Text>
+    </Animated.View>
   );
 }

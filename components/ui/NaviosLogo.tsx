@@ -20,9 +20,9 @@ export default function NaviosLogo({
     <View style={{ flexDirection: "row", alignItems: "center", gap: 7 }}>
       <Svg width={size} height={size} viewBox="0 0 144 144">
         <Rect width="144" height="144" rx="31.68" fill={isDark ? "transparent" : "#FFFFFF"} />
-        <Ellipse cx="72" cy="72" rx="50.976" ry="22.786" fill="none" stroke="#00B88A" strokeWidth="0.36" opacity="0.22" rotation={-30} origin="72, 72" />
-        <Ellipse cx="72" cy="72" rx="50.976" ry="22.786" fill="none" stroke="#00B88A" strokeWidth="0.36" opacity="0.22" rotation={30} origin="72, 72" />
-        <Ellipse cx="72" cy="72" rx="50.976" ry="22.786" fill="none" stroke="#00B88A" strokeWidth="0.36" opacity="0.22" rotation={90} origin="72, 72" />
+        <Ellipse cx="72" cy="72" rx="50.976" ry="22.786" fill="none" stroke="#00B88A" strokeWidth="6" opacity="0.22" rotation={-30} origin="72, 72" />
+        <Ellipse cx="72" cy="72" rx="50.976" ry="22.786" fill="none" stroke="#00B88A" strokeWidth="6" opacity="0.22" rotation={30} origin="72, 72" />
+        <Ellipse cx="72" cy="72" rx="50.976" ry="22.786" fill="none" stroke="#00B88A" strokeWidth="6" opacity="0.22" rotation={90} origin="72, 72" />
         <Circle cx="72" cy="72" r="14.4" fill="#00D4A1" />
         <Circle cx="46" cy="46" r="4.752" fill="#F0425C" />
         <Circle cx="98" cy="46" r="4.752" fill="#F5A623" />

@@ -3,7 +3,7 @@ import { View, Text, Pressable, StyleSheet } from "react-native";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { Navigation, Flame } from "@/lib/icons";
+import { Navigation, Flame, Clock, Heart, MessageSquare } from "@/lib/icons";
 import { CAT_CONFIG } from "@/constants/categories";
 import type { ThemeTokens } from "@/constants/theme";
 import type { Post } from "@/types";
@@ -14,6 +14,7 @@ import { useFontSizeStore } from "@/stores/fontSizeStore";
 import UrgencyBar from "@/components/ui/UrgencyBar";
 import CrowdTag from "@/components/ui/CrowdTag";
 import FeaturedGlow from "@/components/ui/FeaturedGlow";
+import CatPill from "@/components/ui/CatPill";
 import CardHeader from "./CardHeader";
 import CardActions from "./CardActions";
 
@@ -32,8 +33,97 @@ interface FeedPostCardProps {
   featured?: boolean;
 }
 
+/** 画像なし投稿用コンパクトカード */
+function CompactCard({ post, t, isDark }: { post: Post; t: ThemeTokens; isDark: boolean }) {
+  const { scale } = useFontSizeStore();
+  const fs = getScaledFontSize(scale);
+  const catColor = CAT_CONFIG[post.category]?.color || t.accent;
+
+  return (
+    <View style={{ marginHorizontal: SPACE.lg, marginBottom: SPACE.sm }}>
+      <Pressable
+        onPress={() => router.push(`/feed/${post.id}` as any)}
+        style={({ pressed }) => ({
+          flexDirection: "row" as const,
+          borderRadius: RADIUS.lg,
+          overflow: "hidden" as const,
+          backgroundColor: t.surface,
+          borderWidth: 1,
+          borderColor: t.border,
+          shadowColor: isDark ? "#000" : "rgba(0,0,0,0.06)",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.2,
+          shadowRadius: SPACE.sm,
+          elevation: 2,
+          opacity: pressed ? 0.92 : 1,
+          transform: [{ scale: pressed ? 0.99 : 1 }],
+        })}
+      >
+        {/* カテゴリカラーのアクセントライン */}
+        <View style={{ width: 4, backgroundColor: catColor }} />
+
+        <View style={{ flex: 1, padding: SPACE.md, gap: SPACE.sm }}>
+          {/* 上段: カテゴリ + 距離 + 時刻 */}
+          <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.sm }}>
+            <CatPill cat={post.category} small />
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
+              <Navigation size={10} color={catColor} />
+              <Text style={{ fontSize: fs.xxs, fontWeight: WEIGHT.bold, color: catColor }}>
+                {distLabel(post.distance_m ?? 0)}
+              </Text>
+            </View>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 3, marginLeft: "auto" }}>
+              <Clock size={10} color={t.muted} />
+              <Text style={{ fontSize: fs.xxs, color: t.muted }}>{timeAgo(post.created_at)}</Text>
+            </View>
+          </View>
+
+          {/* タイトル */}
+          <Text style={{ fontSize: fs.lg, fontWeight: WEIGHT.bold, color: t.text, lineHeight: 22 }} numberOfLines={2}>
+            {post.title}
+          </Text>
+
+          {/* 本文（あれば1行） */}
+          {post.content ? (
+            <Text style={{ fontSize: fs.sm, color: t.sub, lineHeight: 18 }} numberOfLines={1}>
+              {post.content}
+            </Text>
+          ) : null}
+
+          {/* 下段: 投稿者 + アクション */}
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.sm }}>
+              <Image
+                source={{ uri: post.author?.avatar_url ?? "https://i.pravatar.cc/100" }}
+                style={{ width: 22, height: 22, borderRadius: 11 }}
+              />
+              <Text style={{ fontSize: fs.xs, fontWeight: WEIGHT.semibold, color: t.sub }}>
+                {post.author?.display_name ?? "ユーザー"}
+              </Text>
+            </View>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.md }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
+                <Heart size={14} color={t.muted} />
+                <Text style={{ fontSize: fs.xs, color: t.muted }}>{post.likes_count}</Text>
+              </View>
+              <MessageSquare size={14} color={t.muted} />
+            </View>
+          </View>
+        </View>
+      </Pressable>
+    </View>
+  );
+}
+
 /** フィード投稿カード（カテゴリ別デザイン） */
 function FeedPostCard({ post, t, isDark, featured }: FeedPostCardProps) {
+  const hasImage = !!post.image_url;
+
+  // 画像なし & Featured でない → コンパクトカード
+  if (!hasImage && !featured) {
+    return <CompactCard post={post} t={t} isDark={isDark} />;
+  }
+
   const { scale } = useFontSizeStore();
   const fs = getScaledFontSize(scale);
   const catColor = CAT_CONFIG[post.category]?.color || t.accent;
@@ -54,8 +144,12 @@ function FeedPostCard({ post, t, isDark, featured }: FeedPostCardProps) {
         transform: [{ scale: pressed ? 0.98 : 1 }],
       })}
     >
-      <View style={{ aspectRatio: 3 / 4 }}>
-        <Image source={{ uri: post.image_url ?? "" }} style={StyleSheet.absoluteFill} contentFit="cover" />
+      <View style={{ aspectRatio: hasImage ? 3 / 4 : 16 / 9 }}>
+        {hasImage ? (
+          <Image source={{ uri: post.image_url! }} style={StyleSheet.absoluteFill} contentFit="cover" />
+        ) : (
+          <View style={[StyleSheet.absoluteFill, { backgroundColor: catColor + "15" }]} />
+        )}
         {/* カテゴリ別グラデーションオーバーレイ */}
         <LinearGradient
           colors={gradColors}

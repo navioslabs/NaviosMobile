@@ -1,3 +1,4 @@
+import { Platform } from "react-native";
 import { create } from "zustand";
 
 type FontSizeLevel = "standard" | "large" | "xlarge";
@@ -23,10 +24,13 @@ const LABELS: Record<FontSizeLevel, string> = {
   xlarge: "特大",
 };
 
+/** iOS はデフォルトを「大」にする */
+const DEFAULT_LEVEL: FontSizeLevel = Platform.OS === "ios" ? "large" : "standard";
+
 /** 文字サイズ状態管理ストア */
 export const useFontSizeStore = create<FontSizeState>((set) => ({
-  level: "standard",
-  scale: 1,
+  level: DEFAULT_LEVEL,
+  scale: SCALES[DEFAULT_LEVEL],
   setLevel: (level) => set({ level, scale: SCALES[level] }),
 }));
 
