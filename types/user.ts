@@ -1,7 +1,6 @@
-/** ユーザーデータの型定義 */
+/** Supabase Auth ユーザー（auth.users の最小情報） */
 export interface User {
   id: string;
-  display_name: string;
-  avatar_url: string | null;
+  email: string;
   created_at: string;
 }
