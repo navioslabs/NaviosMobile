@@ -1,20 +1,19 @@
-import { FlatList, View, Text, Pressable, RefreshControl } from "react-native";
+import { FlatList, View, Text, RefreshControl } from "react-native";
 import { useCallback } from "react";
-import { router } from "expo-router";
-import { LinearGradient } from "expo-linear-gradient";
-import { MapPin, User } from "@/lib/icons";
 import { useTalks } from "@/hooks/useTalks";
+import { useRealtimeTalks } from "@/hooks/useRealtimeTalks";
 import type { Talk } from "@/types";
 import { useAppStyles } from "@/hooks/useAppStyles";
-import { SPACE, RADIUS } from "@/lib/styles";
+import { SPACE } from "@/lib/styles";
 import TalkItem from "@/components/features/talk/TalkItem";
 import StateView from "@/components/ui/StateView";
 
 /** ひとこと画面 */
 export default function TalkScreen() {
-  const { s, t, fs } = useAppStyles();
+  const { s, t } = useAppStyles();
 
   const { data: serverTalks, isLoading: queryLoading, refetch } = useTalks();
+  useRealtimeTalks();
   const talks: Talk[] = (serverTalks ?? []).filter((t) => t?.id);
 
   const renderItem = useCallback(
@@ -22,54 +21,11 @@ export default function TalkScreen() {
     [t]
   );
 
-  /** 常駐入力欄 */
-  const QuickInput = (
-    <View style={{ marginHorizontal: SPACE.xl, marginBottom: SPACE.md }}>
-      <Pressable
-        onPress={() => router.push("/talk-post")}
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          gap: SPACE.sm + 2,
-          padding: SPACE.md,
-          borderRadius: RADIUS.xxl,
-          backgroundColor: t.surface,
-          borderWidth: 1,
-          borderColor: t.border,
-        }}
-      >
-        {/* アバター */}
-        <LinearGradient
-          colors={[t.accent, t.blue]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={{ width: 34, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center" }}
-        >
-          <User size={16} color="#fff" />
-        </LinearGradient>
-
-        {/* プレースホルダー入力エリア */}
-        <Text style={{ flex: 1, fontSize: fs.base, color: t.muted }}>
-          今どんな感じ？つぶやいてみよう
-        </Text>
-
-        {/* 位置情報 */}
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
-          <MapPin size={12} color={t.accent} />
-          <Text style={{ fontSize: fs.xxs, color: t.accent }}>越谷市</Text>
-        </View>
-      </Pressable>
-    </View>
-  );
-
   const ListHeader = (
-    <>
-      <View style={{ paddingHorizontal: SPACE.xl, paddingTop: SPACE.lg, paddingBottom: SPACE.sm }}>
-        <Text style={s.textScreenTitle}>トーク</Text>
-        <Text style={s.textLabel}>ご近所のリアルタイムな声</Text>
-      </View>
-      {QuickInput}
-    </>
+    <View style={{ paddingHorizontal: SPACE.xl, paddingTop: SPACE.lg, paddingBottom: SPACE.sm }}>
+      <Text style={s.textScreenTitle}>トーク</Text>
+      <Text style={s.textLabel}>ご近所のリアルタイムな声</Text>
+    </View>
   );
 
   return (

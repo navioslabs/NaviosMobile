@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { View, Text, TextInput, Pressable, ScrollView, Alert } from "react-native";
 import { router } from "expo-router";
+import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Image } from "expo-image";
 import { User, MapPin, Camera, ImageIcon, Send } from "@/lib/icons";
@@ -17,7 +18,30 @@ export default function TalkPostScreen() {
   const createTalkMutation = useCreateTalk();
   const { imageUri, pickImage, takePhoto, clear } = useImagePicker();
   const { lat, lng, granted } = useLocation();
+  const navigation = useNavigation();
+  const submittedRef = useRef(false);
   const [msg, setMsg] = useState("");
+
+  const hasContent = msg.trim().length > 0 || imageUri !== null;
+
+  useEffect(() => {
+    if (!hasContent) return;
+
+    const unsubscribe = navigation.addListener("beforeRemove", (e: any) => {
+      if (submittedRef.current) return;
+      e.preventDefault();
+      Alert.alert(
+        "投稿を破棄しますか？",
+        "入力した内容は保存されません",
+        [
+          { text: "編集を続ける", style: "cancel" },
+          { text: "破棄する", style: "destructive", onPress: () => navigation.dispatch(e.data.action) },
+        ]
+      );
+    });
+
+    return unsubscribe;
+  }, [hasContent, navigation]);
 
   const handleSend = async () => {
     if (!msg.trim()) return;
@@ -32,6 +56,7 @@ export default function TalkPostScreen() {
         lat: granted ? lat : undefined,
         lng: granted ? lng : undefined,
       });
+      submittedRef.current = true;
       router.back();
     } catch (e: any) {
       Alert.alert("エラー", e.message ?? "投稿に失敗しました");

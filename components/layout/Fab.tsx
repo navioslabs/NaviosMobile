@@ -1,9 +1,19 @@
-import { useState } from "react";
-import { View, Text, Pressable } from "react-native";
+import { useState, useCallback, useEffect } from "react";
+import { View, Text, Pressable, Platform, StyleSheet } from "react-native";
 import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
-import { PenLine, Plus, Package, Mic } from "@/lib/icons";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+  interpolate,
+  runOnJS,
+} from "react-native-reanimated";
+import { Plus, Package, Mic } from "@/lib/icons";
 import type { ThemeTokens } from "@/constants/theme";
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 interface FabProps {
   t: ThemeTokens;
@@ -12,23 +22,80 @@ interface FabProps {
 
 /** フローティングアクションボタン（投稿・つぶやき） */
 export default function Fab({ t, isDark }: FabProps) {
-  const [open, setOpen] = useState(false);
+  const [touchable, setTouchable] = useState(false);
+  const progress = useSharedValue(0);
+  const rotation = useSharedValue(0);
+  const fabScale = useSharedValue(1);
+
+  const open = useCallback(() => {
+    setTouchable(true);
+    progress.value = withTiming(1, { duration: 250 });
+    rotation.value = withSpring(135, { damping: 14, stiffness: 150 });
+  }, []);
+
+  const close = useCallback(() => {
+    progress.value = withTiming(0, { duration: 200 }, () => {
+      runOnJS(setTouchable)(false);
+    });
+    rotation.value = withSpring(0, { damping: 14, stiffness: 150 });
+  }, []);
+
+  const handleToggle = useCallback(() => {
+    fabScale.value = withSpring(0.92, { damping: 15 }, () => {
+      fabScale.value = withSpring(1, { damping: 12 });
+    });
+    if (progress.value > 0.5) {
+      close();
+    } else {
+      open();
+    }
+  }, []);
+
+  const handleMenuPress = useCallback((route: string) => {
+    close();
+    router.push(route as any);
+  }, []);
+
+  const iconStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${rotation.value}deg` }],
+  }));
+
+  const fabScaleStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: fabScale.value }],
+  }));
+
+  const backdropStyle = useAnimatedStyle(() => ({
+    opacity: progress.value * 0.4,
+  }));
+
+  const menuItem1Style = useAnimatedStyle(() => ({
+    opacity: interpolate(progress.value, [0, 0.6, 1], [0, 0, 1]),
+    transform: [{ translateY: interpolate(progress.value, [0, 1], [30, 0]) }],
+  }));
+
+  const menuItem2Style = useAnimatedStyle(() => ({
+    opacity: interpolate(progress.value, [0, 0.3, 0.8], [0, 0, 1]),
+    transform: [{ translateY: interpolate(progress.value, [0, 1], [40, 0]) }],
+  }));
 
   return (
     <>
-      {/* Backdrop */}
-      {open && (
-        <Pressable
-          onPress={() => setOpen(false)}
-          style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, zIndex: 48, backgroundColor: "rgba(0,0,0,0.4)" }}
-        />
-      )}
+      {/* Backdrop — 常時マウント、opacity で制御 */}
+      <AnimatedPressable
+        onPress={close}
+        pointerEvents={touchable ? "auto" : "none"}
+        style={[StyleSheet.absoluteFill, { zIndex: 48, backgroundColor: "#000" }, backdropStyle]}
+      />
 
-      {/* Popup menu */}
-      {open && (
-        <View style={{ position: "absolute", bottom: 150, right: 20, zIndex: 52, gap: 12 }}>
+      {/* Popup menu — 常時マウント、opacity + translateY で制御 */}
+      <View
+        pointerEvents={touchable ? "box-none" : "none"}
+        style={{ position: "absolute", bottom: Platform.OS === "ios" ? 170 : 150, right: 20, zIndex: 52, gap: 12 }}
+      >
+        {/* 投稿する */}
+        <Animated.View style={menuItem1Style}>
           <Pressable
-            onPress={() => { setOpen(false); router.push("/post"); }}
+            onPress={() => handleMenuPress("/post")}
             style={({ pressed }) => ({
               flexDirection: "row" as const,
               alignItems: "center" as const,
@@ -55,9 +122,12 @@ export default function Fab({ t, isDark }: FabProps) {
               <Text style={{ fontSize: 13, color: t.sub }}>イベント・物資・お知らせ</Text>
             </View>
           </Pressable>
+        </Animated.View>
 
+        {/* トークする */}
+        <Animated.View style={menuItem2Style}>
           <Pressable
-            onPress={() => { setOpen(false); router.push("/talk-post"); }}
+            onPress={() => handleMenuPress("/talk-post")}
             style={({ pressed }) => ({
               flexDirection: "row" as const,
               alignItems: "center" as const,
@@ -84,53 +154,54 @@ export default function Fab({ t, isDark }: FabProps) {
               <Text style={{ fontSize: 13, color: t.sub }}>近くの人に声を届ける</Text>
             </View>
           </Pressable>
-        </View>
-      )}
+        </Animated.View>
+      </View>
 
       {/* FAB button */}
-      <Pressable
-        onPress={() => setOpen((p) => !p)}
-        style={{
-          position: "absolute",
-          bottom: 80,
-          right: 20,
-          zIndex: 52,
-          shadowColor: t.accent,
-          shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: 0.5,
-          shadowRadius: 20,
-          elevation: 12,
-        }}
+      <Animated.View
+        style={[
+          fabScaleStyle,
+          {
+            position: "absolute",
+            bottom: Platform.OS === "ios" ? 100 : 80,
+            right: 20,
+            zIndex: 52,
+            shadowColor: t.accent,
+            shadowOffset: { width: 0, height: 8 },
+            shadowOpacity: 0.5,
+            shadowRadius: 20,
+            elevation: 12,
+          },
+        ]}
       >
-        {/* 外側のグロー */}
-        <View
-          style={{
-            width: 64,
-            height: 64,
-            borderRadius: 32,
-            padding: 3,
-          }}
-        >
-          <LinearGradient
-            colors={[t.accent, t.blue]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
+        <Pressable onPress={handleToggle}>
+          <View
             style={{
-              width: 58,
-              height: 58,
-              borderRadius: 29,
-              alignItems: "center",
-              justifyContent: "center",
+              width: 64,
+              height: 64,
+              borderRadius: 32,
+              padding: 3,
             }}
           >
-            {open ? (
-              <Plus size={26} color="#fff" strokeWidth={2.5} style={{ transform: [{ rotate: "45deg" }] }} />
-            ) : (
-              <PenLine size={24} color="#fff" strokeWidth={2.2} />
-            )}
-          </LinearGradient>
-        </View>
-      </Pressable>
+            <LinearGradient
+              colors={[t.accent, t.blue]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{
+                width: 58,
+                height: 58,
+                borderRadius: 29,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Animated.View style={iconStyle}>
+                <Plus size={26} color="#fff" strokeWidth={2.5} />
+              </Animated.View>
+            </LinearGradient>
+          </View>
+        </Pressable>
+      </Animated.View>
     </>
   );
 }

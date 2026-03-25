@@ -6,6 +6,7 @@ interface NaviosLogoProps {
   size?: number;
   textColor?: string;
   showText?: boolean;
+  isDark?: boolean;
 }
 
 /** NaviOs ロゴ（地球モチーフ） */
@@ -13,11 +14,12 @@ export default function NaviosLogo({
   size = 28,
   textColor = "#00D4A1",
   showText = true,
+  isDark = false,
 }: NaviosLogoProps) {
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 7 }}>
       <Svg width={size} height={size} viewBox="0 0 144 144">
-        <Rect width="144" height="144" rx="31.68" fill="#FFFFFF" />
+        <Rect width="144" height="144" rx="31.68" fill={isDark ? "transparent" : "#FFFFFF"} />
         <Ellipse cx="72" cy="72" rx="50.976" ry="22.786" fill="none" stroke="#00B88A" strokeWidth="0.36" opacity="0.22" rotation={-30} origin="72, 72" />
         <Ellipse cx="72" cy="72" rx="50.976" ry="22.786" fill="none" stroke="#00B88A" strokeWidth="0.36" opacity="0.22" rotation={30} origin="72, 72" />
         <Ellipse cx="72" cy="72" rx="50.976" ry="22.786" fill="none" stroke="#00B88A" strokeWidth="0.36" opacity="0.22" rotation={90} origin="72, 72" />

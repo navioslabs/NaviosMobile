@@ -1,7 +1,8 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { View, Text, TextInput, Pressable, ScrollView, ActivityIndicator, RefreshControl } from "react-native";
+import Animated, { FadeIn, FadeOut, FadeInUp } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
-import { Sparkles, Search, Mic, Zap } from "@/lib/icons";
+import { Sparkles, Search, Send, Zap } from "@/lib/icons";
 import { useAppStyles } from "@/hooks/useAppStyles";
 import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 import { useSearchPosts, usePosts } from "@/hooks/usePosts";
@@ -98,31 +99,35 @@ export default function AiScreen() {
           style={{ flex: 1, fontSize: fs.lg, color: t.text }}
         />
         {isSearching ? (
-          <Pressable
-            onPress={() => { setQuery(""); setDebouncedQuery(""); }}
-            style={({ pressed }) => ({
-              width: 40,
-              height: 40,
-              borderRadius: 20,
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: t.surface2,
-              opacity: pressed ? 0.7 : 1,
-            })}
-          >
-            <Text style={{ fontSize: fs.lg, color: t.sub }}>✕</Text>
-          </Pressable>
-        ) : (
-          <Pressable style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
-            <LinearGradient
-              colors={[t.accent, t.blue]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={{ width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" }}
+          <Animated.View entering={FadeIn.duration(200)} exiting={FadeOut.duration(150)} key="clear-btn">
+            <Pressable
+              onPress={() => { setQuery(""); setDebouncedQuery(""); }}
+              style={({ pressed }) => ({
+                width: 40,
+                height: 40,
+                borderRadius: 20,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: t.surface2,
+                opacity: pressed ? 0.7 : 1,
+              })}
             >
-              <Mic size={16} color="#fff" />
-            </LinearGradient>
-          </Pressable>
+              <Text style={{ fontSize: fs.lg, color: t.sub }}>✕</Text>
+            </Pressable>
+          </Animated.View>
+        ) : (
+          <Animated.View entering={FadeIn.duration(200)} exiting={FadeOut.duration(150)} key="mic-btn">
+            <Pressable style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
+              <LinearGradient
+                colors={[t.accent, t.blue]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{ width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" }}
+              >
+                <Send size={16} color="#fff" />
+              </LinearGradient>
+            </Pressable>
+          </Animated.View>
         )}
       </View>
 
@@ -137,18 +142,20 @@ export default function AiScreen() {
       {isSearching ? (
         <View style={{ marginTop: SPACE.sm }}>
           {isLoading ? (
-            <View style={{ alignItems: "center", paddingVertical: SPACE.xxxl }}>
+            <Animated.View entering={FadeIn.duration(250)} exiting={FadeOut.duration(150)} style={{ alignItems: "center", paddingVertical: SPACE.xxxl }}>
               <ActivityIndicator size="large" color={t.accent} />
               <Text style={{ fontSize: fs.base, color: t.sub, marginTop: SPACE.lg }}>検索中...</Text>
-            </View>
+            </Animated.View>
           ) : searchResults && searchResults.length > 0 ? (
             <View>
-              <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.semibold, color: t.accent, marginBottom: SPACE.lg }}>
+              <Animated.Text entering={FadeIn.duration(300)} style={{ fontSize: fs.sm, fontWeight: WEIGHT.semibold, color: t.accent, marginBottom: SPACE.lg }}>
                 「{query}」の検索結果 — {searchResults.length}件
-              </Text>
+              </Animated.Text>
               <View style={{ gap: SPACE.sm + 2 }}>
-                {searchResults.map((ev) => (
-                  <PulseEventCard key={ev.id} event={ev} t={t} />
+                {searchResults.map((ev, i) => (
+                  <Animated.View key={ev.id} entering={FadeInUp.delay(Math.min(i * 60, 400)).duration(350)}>
+                    <PulseEventCard event={ev} t={t} />
+                  </Animated.View>
                 ))}
               </View>
             </View>
@@ -181,8 +188,10 @@ export default function AiScreen() {
               <Text style={[s.textCaption, { color: t.accent }]}>リアルタイム</Text>
             </View>
             <View style={{ gap: SPACE.sm + 2 }}>
-              {pulseEvents.map((ev) => (
-                <PulseEventCard key={ev.id} event={ev} t={t} />
+              {pulseEvents.map((ev, i) => (
+                <Animated.View key={ev.id} entering={FadeInUp.delay(Math.min(i * 60, 400)).duration(350)}>
+                  <PulseEventCard event={ev} t={t} />
+                </Animated.View>
               ))}
             </View>
           </View>

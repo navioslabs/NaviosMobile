@@ -1,6 +1,8 @@
-import { useState } from "react";
-import { View, Text, TextInput, Pressable, ScrollView, Alert } from "react-native";
+import { useState, useEffect, useRef } from "react";
+import { View, Text, TextInput, Pressable, ScrollView, Alert, ActivityIndicator } from "react-native";
+import Animated, { useSharedValue, useAnimatedStyle, withSpring, withSequence } from "react-native-reanimated";
 import { router } from "expo-router";
+import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Image } from "expo-image";
 import { Camera, ImageIcon, MapPin, Locate } from "@/lib/icons";
@@ -27,9 +29,33 @@ export default function PostScreen() {
   const { imageUri, pickImage, takePhoto, clear } = useImagePicker();
   const { lat, lng, granted } = useLocation();
 
+  const navigation = useNavigation();
+  const submittedRef = useRef(false);
+
   const [cat, setCat] = useState<CategoryId>("stock");
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+
+  const hasContent = title.trim().length > 0 || content.trim().length > 0 || imageUri !== null;
+
+  useEffect(() => {
+    if (!hasContent) return;
+
+    const unsubscribe = navigation.addListener("beforeRemove", (e: any) => {
+      if (submittedRef.current) return;
+      e.preventDefault();
+      Alert.alert(
+        "投稿を破棄しますか？",
+        "入力した内容は保存されません",
+        [
+          { text: "編集を続ける", style: "cancel" },
+          { text: "破棄する", style: "destructive", onPress: () => navigation.dispatch(e.data.action) },
+        ]
+      );
+    });
+
+    return unsubscribe;
+  }, [hasContent, navigation]);
 
   const canSubmit = title.trim().length > 0 && !createPostMutation.isPending;
 
@@ -49,7 +75,7 @@ export default function PostScreen() {
         lng: granted ? lng : undefined,
       });
       Alert.alert("投稿完了", "投稿が作成されました", [
-        { text: "OK", onPress: () => router.back() },
+        { text: "OK", onPress: () => { submittedRef.current = true; router.back(); } },
       ]);
     } catch (e: any) {
       Alert.alert("エラー", e.message ?? "投稿に失敗しました");
@@ -133,10 +159,52 @@ export default function PostScreen() {
       </View>
 
       {/* 投稿ボタン */}
-      <Pressable
+      <AnimatedSubmitButton
         onPress={handleSubmit}
-        style={({ pressed }) => ({ opacity: pressed && canSubmit ? 0.8 : 1 })}
         disabled={!canSubmit}
+        isPending={createPostMutation.isPending}
+        canSubmit={canSubmit}
+        t={t}
+        fs={fs}
+      />
+      {!canSubmit && (
+        <Text style={{ fontSize: fs.sm, color: t.muted, textAlign: "center", marginTop: SPACE.xs }}>
+          タイトルを入力すると投稿できます
+        </Text>
+      )}
+    </ScrollView>
+  );
+}
+
+/** タップ感のあるアニメーション付き投稿ボタン */
+function AnimatedSubmitButton({ onPress, disabled, isPending, canSubmit, t, fs }: {
+  onPress: () => void;
+  disabled: boolean;
+  isPending: boolean;
+  canSubmit: boolean;
+  t: any;
+  fs: any;
+}) {
+  const btnScale = useSharedValue(1);
+
+  const animStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: btnScale.value }],
+  }));
+
+  const handlePressIn = () => {
+    if (!disabled) btnScale.value = withSpring(0.95, { damping: 15, stiffness: 300 });
+  };
+  const handlePressOut = () => {
+    btnScale.value = withSpring(1, { damping: 15, stiffness: 300 });
+  };
+
+  return (
+    <Animated.View style={animStyle}>
+      <Pressable
+        onPress={onPress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        disabled={disabled}
       >
         <LinearGradient
           colors={canSubmit ? [t.accent, t.blue] : [t.surface2, t.surface2]}
@@ -144,14 +212,13 @@ export default function PostScreen() {
           end={{ x: 1, y: 1 }}
           style={{ borderRadius: RADIUS.lg, padding: SPACE.lg, alignItems: "center" }}
         >
-          <Text style={{ color: canSubmit ? "#000" : t.muted, fontWeight: WEIGHT.extrabold, fontSize: fs.lg + 1 }}>投稿する</Text>
+          {isPending ? (
+            <ActivityIndicator color="#000" />
+          ) : (
+            <Text style={{ color: canSubmit ? "#000" : t.muted, fontWeight: WEIGHT.extrabold, fontSize: fs.lg + 1 }}>投稿する</Text>
+          )}
         </LinearGradient>
       </Pressable>
-      {!canSubmit && (
-        <Text style={{ fontSize: fs.sm, color: t.muted, textAlign: "center", marginTop: SPACE.xs }}>
-          タイトルを入力すると投稿できます
-        </Text>
-      )}
-    </ScrollView>
+    </Animated.View>
   );
 }

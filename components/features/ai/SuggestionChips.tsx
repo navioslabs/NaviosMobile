@@ -1,4 +1,5 @@
 import { View, Text, Pressable } from "react-native";
+import Animated, { FadeInRight } from "react-native-reanimated";
 import type { ThemeTokens } from "@/constants/theme";
 import { WEIGHT, SPACE, RADIUS, getScaledFontSize } from "@/lib/styles";
 import { useFontSizeStore } from "@/stores/fontSizeStore";
@@ -16,29 +17,30 @@ const SUGGESTIONS = [
   "無料で参加OK",
 ];
 
-/** AI検索のサジェスションチップ（折り返し表示） */
+/** AI検索のサジェスションチップ（折り返し表示 + スタッガーアニメーション） */
 export default function SuggestionChips({ t, onSelect }: SuggestionChipsProps) {
   const { scale } = useFontSizeStore();
   const fs = getScaledFontSize(scale);
 
   return (
     <View style={{ flexDirection: "row", flexWrap: "wrap", gap: SPACE.sm, marginBottom: SPACE.lg }}>
-      {SUGGESTIONS.map((s) => (
-        <Pressable
-          key={s}
-          onPress={() => onSelect(s)}
-          style={({ pressed }) => ({
-            paddingHorizontal: SPACE.md,
-            paddingVertical: SPACE.sm,
-            borderRadius: RADIUS.full,
-            backgroundColor: t.surface2,
-            borderWidth: 1,
-            borderColor: t.border,
-            opacity: pressed ? 0.7 : 1,
-          })}
-        >
-          <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.medium, color: t.sub }}>{s}</Text>
-        </Pressable>
+      {SUGGESTIONS.map((s, i) => (
+        <Animated.View key={s} entering={FadeInRight.delay(i * 50).duration(300).springify().damping(14)}>
+          <Pressable
+            onPress={() => onSelect(s)}
+            style={({ pressed }) => ({
+              paddingHorizontal: SPACE.md,
+              paddingVertical: SPACE.sm,
+              borderRadius: RADIUS.full,
+              backgroundColor: t.surface2,
+              borderWidth: 1,
+              borderColor: t.border,
+              opacity: pressed ? 0.7 : 1,
+            })}
+          >
+            <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.medium, color: t.sub }}>{s}</Text>
+          </Pressable>
+        </Animated.View>
       ))}
     </View>
   );

@@ -12,8 +12,8 @@ interface ThemeState {
 
 /** テーマ状態管理ストア */
 export const useThemeStore = create<ThemeState>((set) => ({
-  theme: Appearance.getColorScheme() === "dark" ? "dark" : "light",
-  isDark: Appearance.getColorScheme() === "dark",
+  theme: "light",
+  isDark: false,
   toggle: () =>
     set((state) => ({
       theme: state.isDark ? "light" : "dark",

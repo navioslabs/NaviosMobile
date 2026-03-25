@@ -3,6 +3,7 @@ import { View, Text, Pressable } from "react-native";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
+import Animated, { FadeInUp } from "react-native-reanimated";
 import { Clock, Navigation, Flame } from "@/lib/icons";
 import type { ThemeTokens } from "@/constants/theme";
 import type { Post } from "@/types";
@@ -25,10 +26,14 @@ interface NearbyPostItemProps {
   t: ThemeTokens;
   featured?: boolean;
   isDark?: boolean;
+  index?: number;
 }
 
 /** 近隣投稿リストアイテム */
-function NearbyPostItem({ post, t, featured, isDark = true }: NearbyPostItemProps) {
+/** スタッガー遅延（最大400msでキャップ） */
+const staggerDelay = (i: number) => Math.min(i * 60, 400);
+
+function NearbyPostItem({ post, t, featured, isDark = true, index = 0 }: NearbyPostItemProps) {
   const { scale } = useFontSizeStore();
   const fs = getScaledFontSize(scale);
   const distance = post.distance_m ?? 0;
@@ -85,11 +90,11 @@ function NearbyPostItem({ post, t, featured, isDark = true }: NearbyPostItemProp
     );
 
     return (
-      <View style={{ marginHorizontal: SPACE.lg, marginVertical: SPACE.sm }}>
+      <Animated.View entering={FadeInUp.duration(400).springify().damping(14)} style={{ marginHorizontal: SPACE.lg, marginVertical: SPACE.sm }}>
         <FeaturedGlow borderRadius={RADIUS.xxl} accentColor={t.accent} blueColor={t.blue} isDark={isDark}>
           {featuredCard}
         </FeaturedGlow>
-      </View>
+      </Animated.View>
     );
   }
 
@@ -97,6 +102,7 @@ function NearbyPostItem({ post, t, featured, isDark = true }: NearbyPostItemProp
   const accentColor = isClose ? t.accent : distance <= 500 ? "#F5A623" : t.border;
 
   return (
+    <Animated.View entering={FadeInUp.delay(staggerDelay(index)).duration(400).springify().damping(14)}>
     <Pressable
       onPress={() => router.push(`/feed/${post.id}` as any)}
       style={({ pressed }) => ({
@@ -143,6 +149,7 @@ function NearbyPostItem({ post, t, featured, isDark = true }: NearbyPostItemProp
         </View>
       </View>
     </Pressable>
+    </Animated.View>
   );
 }
 

@@ -56,7 +56,7 @@ export default function NearByScreen() {
         keyExtractor={(item, index) => `${item.title}-${index}`}
         renderItem={({ item, index, section }) => {
           const isFeatured = section === sections[0] && index === 0;
-          return <NearbyPostItem post={item} t={t} featured={isFeatured} isDark={isDark} />;
+          return <NearbyPostItem post={item} t={t} featured={isFeatured} isDark={isDark} index={index} />;
         }}
         renderSectionHeader={({ section }) => (
           <DistanceSectionHeader title={section.title} count={section.data.length} color={section.color} t={t} />
