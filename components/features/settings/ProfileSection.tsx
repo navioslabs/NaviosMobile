@@ -1,5 +1,6 @@
-import { View, Text } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { router } from "expo-router";
 import { User, ChevronRight } from "@/lib/icons";
 import type { ThemeTokens } from "@/constants/theme";
 import { FONT_SIZE, WEIGHT, SPACE } from "@/lib/styles";
@@ -11,7 +12,16 @@ interface ProfileSectionProps {
 /** プロフィールセクション */
 export default function ProfileSection({ t }: ProfileSectionProps) {
   return (
-    <View style={{ padding: SPACE.xl, backgroundColor: t.surface, borderBottomWidth: 1, borderBottomColor: t.border }}>
+    <Pressable
+      onPress={() => router.push("/profile/edit")}
+      style={({ pressed }) => ({
+        padding: SPACE.xl,
+        backgroundColor: t.surface,
+        borderBottomWidth: 1,
+        borderBottomColor: t.border,
+        opacity: pressed ? 0.8 : 1,
+      })}
+    >
       <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.lg }}>
         <LinearGradient
           colors={[t.accent, t.blue]}
@@ -27,6 +37,6 @@ export default function ProfileSection({ t }: ProfileSectionProps) {
         </View>
         <ChevronRight size={18} color={t.muted} />
       </View>
-    </View>
+    </Pressable>
   );
 }

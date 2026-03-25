@@ -56,7 +56,9 @@ export default function FeedScreen() {
 
   const getPostCount = useCallback((offset: number) => getPostsForDate(offset).length, []);
   const renderItem = useCallback(
-    ({ item }: { item: FeedPost }) => <FeedPostCard post={item} t={t} isDark={isDark} />,
+    ({ item, index }: { item: FeedPost; index: number }) => (
+      <FeedPostCard post={item} t={t} isDark={isDark} featured={index === 0} />
+    ),
     [t, isDark]
   );
 

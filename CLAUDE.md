@@ -10,6 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Stack**: Expo ~55 + React Native 0.83 + TypeScript 5.9
 - **Backend**: Supabase (Auth, Postgres, PostGIS, Storage)
 - **UI**: StyleSheet（style prop統一）+ React Native Reanimated (アニメーション) + React Native Gesture Handler (ジェスチャー) + React Hook Form + Zod
+- **データ取得 / キャッシュ**: React Query（`@tanstack/react-query`）を採用
 - **テーマ**: Dark / Light 切替（`ThemeProvider` + `useTheme()`）
 - **対応言語**: 日本語のみ
 - **エントリポイント**: `index.ts` → `App.tsx`
@@ -26,9 +27,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | ------------- | ---------------------------- | ------------------------------------------------------- |
 | `app/`        | 画面・ルーティング           | UI + インタラクション処理のみ。`(auth)/`, `(tabs)/` でグループ化 |
 | `components/` | 再利用可能 UI コンポーネント | `ui/`（プリミティブ）, `features/`（機能別）, `layout/`（レイアウト） |
-| `hooks/`      | カスタム hooks               | `useAuth`, `useLocation` 等                             |
-| `stores/`     | Zustand ストア               | 機能単位でファイル分割（`authStore.ts` 等）              |
-| `lib/`        | サービス層 + ユーティリティ  | Supabase クエリ、認証、API、`appError.ts`、`utils.ts`   |
+| `hooks/`      | カスタム hooks               | `useAuth`, `useLocation`, React Query ラッパー等        |
+| `stores/`     | Zustand ストア               | UI状態・一時状態のみ。サーバーデータは保持しない        |
+| `lib/`        | サービス層 + ユーティリティ  | Supabase クエリ関数、認証、API、`appError.ts`、`utils.ts` |
 | `constants/`  | 定数・デザイントークン       | 色、カテゴリ、スペーシング                              |
 | `types/`      | 型定義                       | `index.ts`(バレル), `post.ts`, `user.ts` 等             |
 | `supabase/`   | DB マイグレーション          | SQL ファイルを `migrations/` に番号付きで管理           |
@@ -51,6 +52,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **コメントは「なぜ」だけ書く**
 - **不要な import / 変数は即削除**
 - **関数・コンポーネントには JSDoc を付ける**
+
+## データ取得方針
+
+- **サーバーデータの取得・キャッシュ・再取得は React Query を使用する**
+- **Supabase 呼び出しは `lib/` に関数として切り出し、画面から直接書かない**
+- **React Query の `queryKey` は機能単位で安定したキーを設計する**
+- **一覧、詳細、検索結果、プロフィール等のサーバーデータは Zustand に持たない**
+- **Zustand はテーマ、モーダル開閉、フィルタUI状態などのクライアント状態に限定する**
+- **作成・更新・削除は React Query の mutation を使い、成功後は invalidate または cache update を行う**
 
 ## 依存パッケージ追加ルール
 

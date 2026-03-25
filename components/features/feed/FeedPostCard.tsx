@@ -1,44 +1,91 @@
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, Pressable, StyleSheet } from "react-native";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import { Navigation } from "@/lib/icons";
+import { router } from "expo-router";
+import { Navigation, Flame } from "@/lib/icons";
+import { CAT_CONFIG } from "@/constants/categories";
 import type { ThemeTokens } from "@/constants/theme";
 import type { FeedPost } from "@/types";
 import { distLabel } from "@/lib/utils";
 import { FONT_SIZE, WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 import UrgencyBar from "@/components/ui/UrgencyBar";
 import CrowdTag from "@/components/ui/CrowdTag";
+import FeaturedGlow from "@/components/ui/FeaturedGlow";
 import CardHeader from "./CardHeader";
 import CardActions from "./CardActions";
+
+/** カテゴリ別のグラデーション色 */
+const CAT_GRADIENTS: Record<string, [string, string, string]> = {
+  stock: ["rgba(0,212,161,0.15)", "rgba(0,0,0,0.12)", "rgba(0,0,0,0.88)"],
+  event: ["rgba(245,166,35,0.18)", "rgba(0,0,0,0.12)", "rgba(0,0,0,0.88)"],
+  help: ["rgba(240,66,92,0.18)", "rgba(0,0,0,0.12)", "rgba(0,0,0,0.88)"],
+  admin: ["rgba(139,111,192,0.18)", "rgba(0,0,0,0.12)", "rgba(0,0,0,0.88)"],
+};
 
 interface FeedPostCardProps {
   post: FeedPost;
   t: ThemeTokens;
   isDark: boolean;
+  featured?: boolean;
 }
 
-/** フィード投稿カード */
-export default function FeedPostCard({ post, t, isDark }: FeedPostCardProps) {
-  return (
-    <View style={{ marginHorizontal: SPACE.lg, marginBottom: SPACE.lg, borderRadius: 26, overflow: "hidden", shadowColor: isDark ? "#000" : "rgba(0,0,0,0.06)", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: SPACE.md, elevation: 4 }}>
+/** フィード投稿カード（カテゴリ別デザイン） */
+export default function FeedPostCard({ post, t, isDark, featured }: FeedPostCardProps) {
+  const catColor = CAT_CONFIG[post.category]?.color || t.accent;
+  const gradColors = CAT_GRADIENTS[post.category] || CAT_GRADIENTS.stock;
+
+  const card = (
+    <Pressable
+      onPress={() => router.push(`/feed/${post.id}` as any)}
+      style={({ pressed }) => ({
+        borderRadius: 26,
+        overflow: "hidden" as const,
+        shadowColor: featured ? t.accent : isDark ? "#000" : "rgba(0,0,0,0.06)",
+        shadowOffset: { width: 0, height: featured ? 6 : 2 },
+        shadowOpacity: featured ? 0.4 : 0.3,
+        shadowRadius: featured ? 20 : SPACE.md,
+        elevation: featured ? 8 : 4,
+        opacity: pressed ? 0.95 : 1,
+        transform: [{ scale: pressed ? 0.98 : 1 }],
+      })}
+    >
       <View style={{ aspectRatio: 3 / 4 }}>
         <Image source={{ uri: post.image }} style={StyleSheet.absoluteFill} contentFit="cover" />
+        {/* カテゴリ別グラデーションオーバーレイ */}
         <LinearGradient
-          colors={["rgba(0,0,0,0.3)", "rgba(0,0,0,0.15)", "rgba(0,0,0,0.85)"]}
+          colors={gradColors}
           locations={[0, 0.35, 1]}
           style={StyleSheet.absoluteFill}
         />
 
+        {/* カテゴリ別トップアクセントライン */}
+        <View style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, backgroundColor: catColor }} />
+
         <CardHeader post={post} t={t} />
+
+        {/* Featured badge */}
+        {featured && (
+          <View style={{ position: "absolute", top: SPACE.lg, right: SPACE.lg, flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "rgba(240,66,92,0.9)", borderRadius: RADIUS.full, paddingHorizontal: SPACE.sm + 2, paddingVertical: SPACE.xs }}>
+            <Flame size={12} color="#fff" />
+            <Text style={{ fontSize: FONT_SIZE.xxs, fontWeight: WEIGHT.extrabold, color: "#fff" }}>注目</Text>
+          </View>
+        )}
 
         {/* Distance badge */}
         <View style={{ position: "absolute", right: SPACE.lg, top: "50%", transform: [{ translateY: -14 }], flexDirection: "row", alignItems: "center", gap: SPACE.xs, backgroundColor: "rgba(0,0,0,0.5)", borderRadius: RADIUS.full, paddingHorizontal: SPACE.md, paddingVertical: 6 }}>
-          <Navigation size={13} color={t.accent} />
+          <Navigation size={13} color={catColor} />
           <Text style={{ fontSize: FONT_SIZE.sm, fontWeight: WEIGHT.bold, color: "#fff" }}>{distLabel(post.distance)}</Text>
         </View>
 
-        {/* Bottom: caption + status + actions */}
+        {/* Bottom */}
         <View style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: SPACE.lg }}>
+          {featured && (
+            <View style={{ alignSelf: "flex-start", flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "rgba(0,0,0,0.5)", borderRadius: RADIUS.full, paddingHorizontal: SPACE.sm + 2, paddingVertical: 3, marginBottom: SPACE.xs }}>
+              <Text style={{ fontSize: FONT_SIZE.xxs, fontWeight: WEIGHT.bold, color: t.accent }}>
+                {post.matchScore >= 85 ? "近くで話題" : post.timeLeft <= 60 ? "締切が近い" : "おすすめ"}
+              </Text>
+            </View>
+          )}
           <Text style={{ fontSize: FONT_SIZE.lg + 1, fontWeight: WEIGHT.bold, color: "#fff", lineHeight: 24 }}>{post.caption}</Text>
           <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.sm, marginTop: SPACE.sm }}>
             <UrgencyBar timeLeft={post.timeLeft} subColor={t.sub} />
@@ -46,7 +93,26 @@ export default function FeedPostCard({ post, t, isDark }: FeedPostCardProps) {
           </View>
           <CardActions likes={post.likes} t={t} />
         </View>
+
+        {/* カテゴリ別ボトムアクセントライン */}
+        <View style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 3, backgroundColor: catColor + "80" }} />
       </View>
+    </Pressable>
+  );
+
+  if (featured) {
+    return (
+      <View style={{ marginHorizontal: SPACE.lg, marginBottom: SPACE.lg, marginTop: SPACE.sm, paddingTop: SPACE.sm }}>
+        <FeaturedGlow borderRadius={26} accentColor={t.accent} blueColor={t.blue} isDark={isDark}>
+          {card}
+        </FeaturedGlow>
+      </View>
+    );
+  }
+
+  return (
+    <View style={{ marginHorizontal: SPACE.lg, marginBottom: SPACE.lg }}>
+      {card}
     </View>
   );
 }

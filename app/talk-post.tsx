@@ -46,19 +46,31 @@ export default function TalkPostScreen() {
         ))}
       </View>
 
+      {/* 文字数超過警告 */}
+      {msg.length > 140 && (
+        <View style={{ backgroundColor: t.red + "15", borderRadius: RADIUS.md, padding: SPACE.md, borderWidth: 1, borderColor: t.red + "30" }}>
+          <Text style={{ fontSize: FONT_SIZE.sm, fontWeight: WEIGHT.semibold, color: t.red }}>
+            140文字を超えています（{msg.length - 140}文字オーバー）
+          </Text>
+        </View>
+      )}
+
       <View style={s.rowBetween}>
-        <Text style={{ fontSize: FONT_SIZE.sm, color: msg.length > 140 ? t.red : t.muted }}>
+        <Text style={{ fontSize: FONT_SIZE.sm, fontWeight: msg.length > 140 ? WEIGHT.bold : WEIGHT.normal, color: msg.length > 140 ? t.red : msg.length > 120 ? t.amber : t.muted }}>
           {msg.length}/140
         </Text>
-        <Pressable onPress={() => { if (msg.length > 0) router.back(); }}>
+        <Pressable
+          onPress={() => { if (msg.length > 0 && msg.length <= 140) router.back(); }}
+          disabled={msg.length === 0 || msg.length > 140}
+        >
           <LinearGradient
-            colors={msg.length > 0 ? [t.accent, t.blue] : [t.surface2, t.surface2]}
+            colors={msg.length > 0 && msg.length <= 140 ? [t.accent, t.blue] : [t.surface2, t.surface2]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={{ flexDirection: "row", alignItems: "center", gap: 6, borderRadius: RADIUS.lg, paddingHorizontal: SPACE.xxl + 4, paddingVertical: SPACE.md }}
           >
-            <Send size={15} color={msg.length > 0 ? "#000" : t.muted} />
-            <Text style={{ fontWeight: WEIGHT.extrabold, fontSize: FONT_SIZE.lg, color: msg.length > 0 ? "#000" : t.muted }}>つぶやく</Text>
+            <Send size={15} color={msg.length > 0 && msg.length <= 140 ? "#000" : t.muted} />
+            <Text style={{ fontWeight: WEIGHT.extrabold, fontSize: FONT_SIZE.lg, color: msg.length > 0 && msg.length <= 140 ? "#000" : t.muted }}>つぶやく</Text>
           </LinearGradient>
         </Pressable>
       </View>

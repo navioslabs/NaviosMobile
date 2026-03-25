@@ -1,8 +1,9 @@
 import { View, Text, Pressable, ScrollView } from "react-native";
-import { Bell, Lock, Moon, Sun, Settings } from "@/lib/icons";
+import { Bell, Lock, Moon, Sun, Settings, MapPin, Eye } from "@/lib/icons";
 import { makeTokens } from "@/constants/theme";
 import { useThemeStore } from "@/stores/themeStore";
-import { createStyles, SPACE } from "@/lib/styles";
+import { useFontSizeStore, FONT_SIZE_LABELS, FONT_SIZE_LEVELS } from "@/stores/fontSizeStore";
+import { createStyles, FONT_SIZE, WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 import ProfileSection from "@/components/features/settings/ProfileSection";
 import PremiumCard from "@/components/features/settings/PremiumCard";
 import SettingsSection from "@/components/features/settings/SettingsSection";
@@ -11,6 +12,7 @@ import SettingsRow from "@/components/features/settings/SettingsRow";
 /** 設定画面 */
 export default function SettingsScreen() {
   const { isDark, toggle } = useThemeStore();
+  const { level, setLevel } = useFontSizeStore();
   const t = makeTokens(isDark);
   const s = createStyles(t);
 
@@ -22,6 +24,38 @@ export default function SettingsScreen() {
       <View style={{ position: "absolute", top: 3, width: 24, height: 24, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: isDark ? "#000" : "#fff", transform: [{ translateX: isDark ? 25 : 3 }], shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.2, shadowRadius: 4, elevation: 2 }}>
         {isDark ? <Moon size={12} color={t.accent} /> : <Sun size={12} color="#F5A623" />}
       </View>
+    </Pressable>
+  );
+
+  /** 文字サイズ切替 */
+  const FontSizeSelector = (
+    <View style={{ flexDirection: "row", gap: SPACE.xs }}>
+      {FONT_SIZE_LEVELS.map((l) => (
+        <Pressable
+          key={l}
+          onPress={() => setLevel(l)}
+          style={({ pressed }) => ({
+            paddingHorizontal: SPACE.md,
+            paddingVertical: SPACE.xs + 2,
+            borderRadius: RADIUS.sm,
+            backgroundColor: level === l ? t.accent : t.surface2,
+            borderWidth: 1,
+            borderColor: level === l ? t.accent : t.border,
+            opacity: pressed ? 0.7 : 1,
+          })}
+        >
+          <Text style={{ fontSize: l === "xlarge" ? FONT_SIZE.base : l === "large" ? FONT_SIZE.sm : FONT_SIZE.xs, fontWeight: WEIGHT.bold, color: level === l ? "#000" : t.sub }}>
+            {FONT_SIZE_LABELS[l]}
+          </Text>
+        </Pressable>
+      ))}
+    </View>
+  );
+
+  /** オートチェックイントグル */
+  const CheckInToggle = (
+    <Pressable style={({ pressed }) => ({ borderRadius: RADIUS.full, paddingHorizontal: SPACE.lg, paddingVertical: SPACE.sm, backgroundColor: t.accent, opacity: pressed ? 0.7 : 1 })}>
+      <Text style={{ fontSize: FONT_SIZE.sm, fontWeight: WEIGHT.bold, color: "#000" }}>ON</Text>
     </Pressable>
   );
 
@@ -40,11 +74,13 @@ export default function SettingsScreen() {
       </View>
 
       <SettingsSection title="表示" t={t}>
-        <SettingsRow icon={isDark ? Moon : Sun} label="テーマ" t={t} right={ThemeToggle} />
+        <SettingsRow icon={isDark ? Moon : Sun} label="テーマ" subtitle={isDark ? "ダーク" : "ライト"} t={t} right={ThemeToggle} />
+        <SettingsRow icon={Eye} label="文字サイズ" subtitle={FONT_SIZE_LABELS[level]} t={t} right={FontSizeSelector} isLast />
       </SettingsSection>
 
       <SettingsSection title="通知" t={t}>
-        <SettingsRow icon={Bell} label="通知設定" t={t} isLast />
+        <SettingsRow icon={Bell} label="通知設定" subtitle="ON" t={t} />
+        <SettingsRow icon={MapPin} label="AIオートチェックイン" subtitle="近づいたら自動で通知" t={t} right={CheckInToggle} isLast />
       </SettingsSection>
 
       <SettingsSection title="アカウント" t={t}>

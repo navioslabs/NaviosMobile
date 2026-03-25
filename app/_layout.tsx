@@ -32,6 +32,22 @@ export default function RootLayout() {
           name="talk-post"
           options={{ presentation: "modal", title: "つぶやく" }}
         />
+        <Stack.Screen
+          name="feed/[id]"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="talk-detail/[id]"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="profile/[id]"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="profile/edit"
+          options={{ headerShown: false }}
+        />
       </Stack>
       <StatusBar style={isDark ? "light" : "dark"} />
     </ThemeProvider>

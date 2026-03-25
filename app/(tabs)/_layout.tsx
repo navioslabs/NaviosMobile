@@ -29,10 +29,10 @@ export default function TabLayout() {
         }}
       >
         <Tabs.Screen
-          name="index"
+          name="nearby"
           options={{
-            title: "ホーム",
-            tabBarIcon: ({ color, size }) => <Rss size={size} color={color} />,
+            title: "ちかく",
+            tabBarIcon: ({ color, size }) => <Radio size={size} color={color} />,
           }}
         />
         <Tabs.Screen
@@ -63,10 +63,10 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="nearby"
+          name="index"
           options={{
-            title: "ちかく",
-            tabBarIcon: ({ color, size }) => <Radio size={size} color={color} />,
+            title: "ホーム",
+            tabBarIcon: ({ color, size }) => <Rss size={size} color={color} />,
           }}
         />
         <Tabs.Screen

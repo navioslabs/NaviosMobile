@@ -1,23 +1,40 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { View, Text, TextInput, Pressable, ScrollView } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { Sparkles, Search, Mic, Zap, MapPin } from "@/lib/icons";
+import { Sparkles, Search, Mic, Zap } from "@/lib/icons";
 import { makeTokens } from "@/constants/theme";
 import { useThemeStore } from "@/stores/themeStore";
 import { FEED_POSTS } from "@/data/mockData";
 import { createStyles, FONT_SIZE, WEIGHT, SPACE, RADIUS } from "@/lib/styles";
-import QuickActions from "@/components/features/ai/QuickActions";
 import PulseEventCard from "@/components/features/ai/PulseEventCard";
 import SuggestionChips from "@/components/features/ai/SuggestionChips";
+import StateView from "@/components/ui/StateView";
 
-/** AI画面 */
+/** AI画面（さがす） */
 export default function AiScreen() {
   const { isDark } = useThemeStore();
   const t = makeTokens(isDark);
   const s = createStyles(t);
   const [query, setQuery] = useState("");
 
-  const pulseEvents = [...FEED_POSTS].sort((a, b) => a.timeLeft - b.timeLeft).slice(0, 4);
+  const pulseEvents = useMemo(
+    () => [...FEED_POSTS].sort((a, b) => a.timeLeft - b.timeLeft).slice(0, 4),
+    [],
+  );
+
+  /** 検索結果: queryに部分一致するFEED_POSTSを返す */
+  const searchResults = useMemo(() => {
+    if (!query.trim()) return null;
+    const q = query.trim().toLowerCase();
+    return FEED_POSTS.filter(
+      (p) =>
+        p.caption.toLowerCase().includes(q) ||
+        p.user.name.toLowerCase().includes(q) ||
+        p.category.includes(q),
+    );
+  }, [query]);
+
+  const isSearching = query.trim().length > 0;
 
   return (
     <ScrollView style={s.screen} contentContainerStyle={{ padding: SPACE.xl, paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
@@ -34,7 +51,7 @@ export default function AiScreen() {
         <Text style={[s.textSectionTitle, { color: t.text }]}>Navios AI</Text>
       </View>
 
-      {/* Primary Action: Search */}
+      {/* 検索バー */}
       <View style={[s.card, { flexDirection: "row", alignItems: "center", gap: SPACE.sm + 2, marginBottom: SPACE.sm }]}>
         <Search size={18} color={t.sub} />
         <TextInput
@@ -44,64 +61,91 @@ export default function AiScreen() {
           placeholderTextColor={t.sub}
           style={{ flex: 1, fontSize: FONT_SIZE.lg, color: t.text }}
         />
-        <Pressable style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
-          <LinearGradient
-            colors={[t.accent, t.blue]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={{ width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" }}
+        {isSearching ? (
+          <Pressable
+            onPress={() => setQuery("")}
+            style={({ pressed }) => ({
+              width: 40,
+              height: 40,
+              borderRadius: 20,
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: t.surface2,
+              opacity: pressed ? 0.7 : 1,
+            })}
           >
-            <Mic size={16} color="#fff" />
-          </LinearGradient>
-        </Pressable>
+            <Text style={{ fontSize: FONT_SIZE.lg, color: t.sub }}>✕</Text>
+          </Pressable>
+        ) : (
+          <Pressable style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
+            <LinearGradient
+              colors={[t.accent, t.blue]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{ width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" }}
+            >
+              <Mic size={16} color="#fff" />
+            </LinearGradient>
+          </Pressable>
+        )}
       </View>
 
-      {/* Search helper / query preview */}
-      {query ? (
-        <Text style={{ fontSize: FONT_SIZE.sm, color: t.accent, marginBottom: SPACE.sm, paddingHorizontal: SPACE.xs }}>
-          「{query}」で検索...
-        </Text>
-      ) : (
+      {/* 検索ヘルパー */}
+      {!isSearching && (
         <Text style={{ fontSize: FONT_SIZE.xs, color: t.muted, marginBottom: SPACE.sm, paddingHorizontal: SPACE.xs }}>
           例: 空いてるカフェ / 近いイベント / 今日締切
         </Text>
       )}
 
-      {/* Suggestion Chips */}
-      <SuggestionChips t={t} onSelect={(q) => setQuery(q)} />
+      {/* ═══ 検索モード ═══ */}
+      {isSearching ? (
+        <View style={{ marginTop: SPACE.sm }}>
+          <Text style={{ fontSize: FONT_SIZE.sm, fontWeight: WEIGHT.semibold, color: t.accent, marginBottom: SPACE.lg }}>
+            「{query}」の検索結果 — {searchResults?.length || 0}件
+          </Text>
 
-      {/* Pulse Feed */}
-      <View style={{ marginBottom: SPACE.xl }}>
-        <View style={[s.rowBetween, { marginBottom: SPACE.sm + 2 }]}>
-          <View style={[s.row, { gap: 5 }]}>
-            <Zap size={15} color={t.accent} />
-            <Text style={s.textBodyBold}>今すぐ行くべき順</Text>
+          {searchResults && searchResults.length > 0 ? (
+            <View style={{ gap: SPACE.sm + 2 }}>
+              {searchResults.map((ev) => (
+                <PulseEventCard key={ev.id} event={ev} t={t} />
+              ))}
+            </View>
+          ) : (
+            <View style={{ paddingVertical: SPACE.xxxl }}>
+              <StateView t={t} type="empty" message="該当する投稿が見つかりませんでした" />
+              <Text style={{ fontSize: FONT_SIZE.sm, color: t.muted, textAlign: "center", marginTop: SPACE.lg }}>
+                別のキーワードを試してみてください
+              </Text>
+              {/* 代替サジェスト */}
+              <View style={{ marginTop: SPACE.xl }}>
+                <SuggestionChips t={t} onSelect={(q) => setQuery(q)} />
+              </View>
+            </View>
+          )}
+        </View>
+      ) : (
+        <>
+          {/* ═══ 通常モード ═══ */}
+          {/* サジェストチップ */}
+          <SuggestionChips t={t} onSelect={(q) => setQuery(q)} />
+
+          {/* おすすめフィード */}
+          <View style={{ marginBottom: SPACE.xl }}>
+            <View style={[s.rowBetween, { marginBottom: SPACE.sm + 2 }]}>
+              <View style={[s.row, { gap: 5 }]}>
+                <Zap size={15} color={t.accent} />
+                <Text style={s.textBodyBold}>今すぐ行くべき順</Text>
+              </View>
+              <Text style={[s.textCaption, { color: t.accent }]}>リアルタイム</Text>
+            </View>
+            <View style={{ gap: SPACE.sm + 2 }}>
+              {pulseEvents.map((ev) => (
+                <PulseEventCard key={ev.id} event={ev} t={t} />
+              ))}
+            </View>
           </View>
-          <Text style={[s.textCaption, { color: t.accent }]}>リアルタイム</Text>
-        </View>
-        <View style={{ gap: SPACE.sm + 2 }}>
-          {pulseEvents.map((ev) => (
-            <PulseEventCard key={ev.id} event={ev} t={t} />
-          ))}
-        </View>
-      </View>
-
-      {/* Quick Actions — subdued */}
-      <QuickActions t={t} isDark={isDark} />
-
-      {/* Auto check-in */}
-      <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.md, borderRadius: RADIUS.xl, padding: SPACE.lg, backgroundColor: isDark ? "#0F1A14" : "#EAF9F4", borderWidth: 1, borderColor: t.accent + "28" }}>
-        <View style={{ width: 44, height: 44, borderRadius: RADIUS.md, alignItems: "center", justifyContent: "center", backgroundColor: t.accent + "20" }}>
-          <MapPin size={22} color={t.accent} />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text style={[s.textLabel, { color: t.text, fontWeight: WEIGHT.bold }]}>AIオートチェックイン</Text>
-          <Text style={[s.textMeta, { color: t.sub, lineHeight: 16 }]}>現地に近づいたら自動で通知</Text>
-        </View>
-        <Pressable style={({ pressed }) => ({ borderRadius: RADIUS.full, paddingHorizontal: SPACE.lg, paddingVertical: SPACE.sm, backgroundColor: t.accent, opacity: pressed ? 0.7 : 1 })}>
-          <Text style={{ fontSize: FONT_SIZE.sm, fontWeight: WEIGHT.bold, color: "#000" }}>ON</Text>
-        </Pressable>
-      </View>
+        </>
+      )}
     </ScrollView>
   );
 }
