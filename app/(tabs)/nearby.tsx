@@ -1,6 +1,8 @@
 import { SectionList, View, Text } from "react-native";
 import { useMemo } from "react";
 import { NEARBY_POSTS } from "@/data/mockData";
+import { usePosts } from "@/hooks/usePosts";
+import { postToNearbyPost } from "@/lib/adapters";
 import type { NearbyPost } from "@/types";
 import { useAppStyles } from "@/hooks/useAppStyles";
 import { SPACE } from "@/lib/styles";
@@ -19,8 +21,13 @@ interface NearbySection {
 export default function NearByScreen() {
   const { s, t, fs, isDark } = useAppStyles();
 
+  const { data: serverPosts } = usePosts();
+  const nearbyPosts = serverPosts && serverPosts.length > 0
+    ? serverPosts.map(postToNearbyPost)
+    : NEARBY_POSTS;
+
   const sections: NearbySection[] = useMemo(() => {
-    const sorted = [...NEARBY_POSTS].sort((a, b) => a.distance - b.distance);
+    const sorted = [...nearbyPosts].sort((a, b) => a.distance - b.distance);
     const close = sorted.filter((p) => p.distance <= 200);
     const mid = sorted.filter((p) => p.distance > 200 && p.distance <= 500);
     const far = sorted.filter((p) => p.distance > 500);
@@ -30,11 +37,11 @@ export default function NearByScreen() {
     if (mid.length > 0) result.push({ title: "徒歩圏内（500m以内）", color: "#F5A623", data: mid });
     if (far.length > 0) result.push({ title: "その他", color: "#8887A0", data: far });
     return result;
-  }, []);
+  }, [nearbyPosts]);
 
   return (
     <View style={s.screen}>
-      <ScanHeader t={t} isDark={isDark} postCount={NEARBY_POSTS.length} />
+      <ScanHeader t={t} isDark={isDark} postCount={nearbyPosts.length} />
       <SectionList
         sections={sections}
         keyExtractor={(item) => item.id.toString()}

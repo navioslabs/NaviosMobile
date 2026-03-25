@@ -1,15 +1,27 @@
 import { useState } from "react";
-import { View, Text, TextInput, Pressable, ScrollView } from "react-native";
+import { View, Text, TextInput, Pressable, ScrollView, Alert } from "react-native";
 import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { User, MapPin, Camera, ImageIcon, Send } from "@/lib/icons";
+import { useCreateTalk } from "@/hooks/useTalks";
 import { useAppStyles } from "@/hooks/useAppStyles";
 import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 
 /** つぶやき投稿画面 */
 export default function TalkPostScreen() {
   const { s, t, fs } = useAppStyles();
+  const createTalkMutation = useCreateTalk();
   const [msg, setMsg] = useState("");
+
+  const handleSend = async () => {
+    if (!msg.trim()) return;
+    try {
+      await createTalkMutation.mutateAsync({ message: msg.trim() });
+      router.back();
+    } catch (e: any) {
+      Alert.alert("エラー", e.message ?? "投稿に失敗しました");
+    }
+  };
 
   return (
     <ScrollView style={s.screen} contentContainerStyle={{ padding: SPACE.xl, paddingBottom: 40, gap: SPACE.lg }} showsVerticalScrollIndicator={false}>
@@ -60,8 +72,8 @@ export default function TalkPostScreen() {
           {msg.length}/140
         </Text>
         <Pressable
-          onPress={() => { if (msg.length > 0 && msg.length <= 140) router.back(); }}
-          disabled={msg.length === 0 || msg.length > 140}
+          onPress={handleSend}
+          disabled={msg.length === 0 || msg.length > 140 || createTalkMutation.isPending}
         >
           <LinearGradient
             colors={msg.length > 0 && msg.length <= 140 ? [t.accent, t.blue] : [t.surface2, t.surface2]}

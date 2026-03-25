@@ -4,6 +4,8 @@ import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { MapPin, Send, User } from "@/lib/icons";
 import { CHAT_ROOMS } from "@/data/mockData";
+import { useTalks } from "@/hooks/useTalks";
+import { talkToChatRoom } from "@/lib/adapters";
 import type { ChatRoom } from "@/types";
 import { useAppStyles } from "@/hooks/useAppStyles";
 import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
@@ -14,12 +16,11 @@ import StateView from "@/components/ui/StateView";
 export default function TalkScreen() {
   const { s, t, fs } = useAppStyles();
   const [quickMsg, setQuickMsg] = useState("");
-  const [refreshing, setRefreshing] = useState(false);
 
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1200);
-  }, []);
+  const { data: serverTalks, isLoading: queryLoading, refetch } = useTalks();
+  const talks = serverTalks && serverTalks.length > 0
+    ? serverTalks.map(talkToChatRoom)
+    : CHAT_ROOMS;
 
   const renderItem = useCallback(
     ({ item }: { item: ChatRoom }) => <TalkItem chat={item} t={t} />,
@@ -78,14 +79,14 @@ export default function TalkScreen() {
 
   return (
     <View style={s.screen}>
-      {CHAT_ROOMS.length === 0 ? (
+      {talks.length === 0 ? (
         <>
           {ListHeader}
           <StateView t={t} type="empty" message="最初のトークを投稿してみましょう" />
         </>
       ) : (
         <FlatList
-          data={CHAT_ROOMS}
+          data={talks}
           renderItem={renderItem}
           keyExtractor={(item) => item.id.toString()}
           showsVerticalScrollIndicator={false}
@@ -93,8 +94,8 @@ export default function TalkScreen() {
           contentContainerStyle={{ paddingBottom: 100 }}
           refreshControl={
             <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
+              refreshing={queryLoading}
+              onRefresh={refetch}
               tintColor={t.accent}
               colors={[t.accent]}
               progressBackgroundColor={t.surface}

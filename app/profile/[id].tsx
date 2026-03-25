@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, Pressable } from "react-native";
+import { View, Text, ScrollView, Pressable, ActivityIndicator } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
@@ -12,6 +12,7 @@ import {
   Heart,
 } from "@/lib/icons";
 import { FEED_POSTS, CHAT_ROOMS } from "@/data/mockData";
+import { useProfile, useUserPosts, useUserTalks } from "@/hooks/useProfile";
 import { useAppStyles } from "@/hooks/useAppStyles";
 import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 import CatPill from "@/components/ui/CatPill";
@@ -30,23 +31,49 @@ export default function ProfileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { s, t, fs } = useAppStyles();
 
+  const userId = id ?? "";
   const profileId = Number(id);
-  const profile = MOCK_PROFILES[profileId] || {
-    name: "ユーザー",
-    avatar: `https://i.pravatar.cc/100?img=${profileId}`,
-    bio: "Naviosユーザー",
-    verified: false,
-    location: "越谷市",
-    joinDate: "2024年",
-    checkins: 0,
-    badges: 0,
-    followers: 0,
-    following: 0,
-  };
 
-  /** このユーザーの投稿を取得 */
-  const userPosts = FEED_POSTS.filter((p) => p.user.name === profile.name);
-  const userTalks = CHAT_ROOMS.filter((c) => c.user === profile.name);
+  // Supabase からプロフィール・投稿・ひとこと取得
+  const { data: remoteProfile, isLoading: profileLoading } = useProfile(userId);
+  const { data: remotePosts } = useUserPosts(userId);
+  const { data: remoteTalks } = useUserTalks(userId);
+
+  /** モック or Supabase のプロフィールデータ */
+  const mockProfile = MOCK_PROFILES[profileId];
+  const profile = remoteProfile
+    ? {
+        name: remoteProfile.display_name,
+        avatar: remoteProfile.avatar_url ?? `https://i.pravatar.cc/100?img=${profileId}`,
+        bio: remoteProfile.bio ?? "Naviosユーザー",
+        verified: remoteProfile.is_verified,
+        location: remoteProfile.location_text ?? "越谷市",
+        joinDate: new Date(remoteProfile.created_at).toLocaleDateString("ja-JP", { year: "numeric", month: "long" }),
+        checkins: 0,
+        badges: 0,
+        followers: 0,
+        following: 0,
+      }
+    : mockProfile ?? {
+        name: "ユーザー",
+        avatar: `https://i.pravatar.cc/100?img=${profileId}`,
+        bio: "Naviosユーザー",
+        verified: false,
+        location: "越谷市",
+        joinDate: "2024年",
+        checkins: 0,
+        badges: 0,
+        followers: 0,
+        following: 0,
+      };
+
+  /** このユーザーの投稿を取得（Supabase → モックフォールバック） */
+  const userPosts = remotePosts && remotePosts.length > 0
+    ? remotePosts
+    : FEED_POSTS.filter((p) => p.user.name === profile.name);
+  const userTalks = remoteTalks && remoteTalks.length > 0
+    ? remoteTalks
+    : CHAT_ROOMS.filter((c) => c.user === profile.name);
 
   return (
     <View style={s.screen}>
@@ -60,6 +87,12 @@ export default function ProfileScreen() {
         </Pressable>
         <Text style={s.textHeading} numberOfLines={1}>{profile.name}</Text>
       </View>
+
+      {profileLoading && (
+        <View style={{ padding: SPACE.xxl, alignItems: "center" }}>
+          <ActivityIndicator size="large" color={t.accent} />
+        </View>
+      )}
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
         {/* プロフィールヘッダー */}
@@ -159,7 +192,17 @@ export default function ProfileScreen() {
         {userPosts.length > 0 && (
           <View style={{ paddingHorizontal: SPACE.xl, paddingTop: SPACE.xxl }}>
             <Text style={[s.textSubheading, { marginBottom: SPACE.md }]}>最近の投稿</Text>
-            {userPosts.map((post) => (
+            {userPosts.map((post: any) => {
+              // Supabase Post と モック FeedPost の両方に対応
+              const imgUri = post.image_url ?? post.image;
+              const caption = post.title ?? post.caption;
+              const time = post.created_at
+                ? new Date(post.created_at).toLocaleDateString("ja-JP")
+                : post.time;
+              const likes = post.likes_count ?? post.likes ?? 0;
+              const comments = post.comments_count ?? 3;
+
+              return (
               <Pressable
                 key={post.id}
                 onPress={() => router.push(`/feed/${post.id}` as any)}
@@ -175,28 +218,29 @@ export default function ProfileScreen() {
                   opacity: pressed ? 0.7 : 1,
                 })}
               >
-                <Image source={{ uri: post.image }} style={{ width: 60, height: 60, borderRadius: RADIUS.sm }} contentFit="cover" />
+                {imgUri && <Image source={{ uri: imgUri }} style={{ width: 60, height: 60, borderRadius: RADIUS.sm }} contentFit="cover" />}
                 <View style={{ flex: 1, justifyContent: "center" }}>
                   <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.sm, marginBottom: SPACE.xs }}>
                     <CatPill cat={post.category} small />
-                    <Text style={{ fontSize: fs.xs, color: t.muted }}>{post.time}</Text>
+                    <Text style={{ fontSize: fs.xs, color: t.muted }}>{time}</Text>
                   </View>
                   <Text style={{ fontSize: fs.base, fontWeight: WEIGHT.semibold, color: t.text }} numberOfLines={2}>
-                    {post.caption}
+                    {caption}
                   </Text>
                   <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.lg, marginTop: SPACE.xs }}>
                     <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.xs }}>
                       <Heart size={12} color={t.muted} />
-                      <Text style={{ fontSize: fs.xs, color: t.muted }}>{post.likes}</Text>
+                      <Text style={{ fontSize: fs.xs, color: t.muted }}>{likes}</Text>
                     </View>
                     <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.xs }}>
                       <MessageCircle size={12} color={t.muted} />
-                      <Text style={{ fontSize: fs.xs, color: t.muted }}>3</Text>
+                      <Text style={{ fontSize: fs.xs, color: t.muted }}>{comments}</Text>
                     </View>
                   </View>
                 </View>
               </Pressable>
-            ))}
+              );
+            })}
           </View>
         )}
 

@@ -7,6 +7,8 @@ import { FEED_POSTS } from "@/data/mockData";
 import type { FeedPost } from "@/types";
 import { useAppStyles } from "@/hooks/useAppStyles";
 import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
+import { usePosts } from "@/hooks/usePosts";
+import { postToFeedPost } from "@/lib/adapters";
 import DatePicker from "@/components/features/feed/DatePicker";
 import FeedSummary from "@/components/features/feed/FeedSummary";
 import CategoryChips from "@/components/features/feed/CategoryChips";
@@ -36,14 +38,24 @@ export default function FeedScreen() {
   const [selDate, setSelDate] = useState(0);
   const [selCat, setSelCat] = useState("all");
   const [summaryFilter, setSummaryFilter] = useState<FilterType>(null);
-  const [refreshing, setRefreshing] = useState(false);
 
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1200);
-  }, []);
+  const { data: serverPosts, isLoading: queryLoading, refetch } = usePosts({
+    category: selCat === "all" ? undefined : selCat,
+  });
 
-  const datePosts = getPostsForDate(selDate);
+  /** サーバーデータがあれば使用、なければモックにフォールバック */
+  const allPosts: FeedPost[] = serverPosts && serverPosts.length > 0
+    ? serverPosts.map(postToFeedPost)
+    : FEED_POSTS;
+
+  const getPostsForDateWithData = (offset: number): FeedPost[] => {
+    if (offset === 0) return allPosts.filter((p) => p.hoursAgo <= 24);
+    if (offset === 1) return allPosts.filter((p) => p.hoursAgo > 24 && p.hoursAgo <= 48);
+    if (offset <= 3) return allPosts.filter((p) => p.hoursAgo > 48 && p.hoursAgo <= 96);
+    return allPosts.filter((_, i) => i % (offset + 1) === 0);
+  };
+
+  const datePosts = getPostsForDateWithData(selDate);
 
   const filtered = useMemo(() => {
     let posts = selCat === "all" ? datePosts : datePosts.filter((p) => p.category === selCat);
@@ -59,7 +71,7 @@ export default function FeedScreen() {
     return posts;
   }, [datePosts, selCat, summaryFilter]);
 
-  const getPostCount = useCallback((offset: number) => getPostsForDate(offset).length, []);
+  const getPostCount = useCallback((offset: number) => getPostsForDateWithData(offset).length, [allPosts]);
   const renderItem = useCallback(
     ({ item, index }: { item: FeedPost; index: number }) => (
       <FeedPostCard post={item} t={t} isDark={isDark} featured={index === 0} />
@@ -125,8 +137,8 @@ export default function FeedScreen() {
           contentContainerStyle={{ paddingBottom: 90 }}
           refreshControl={
             <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
+              refreshing={queryLoading}
+              onRefresh={() => refetch()}
               tintColor={t.accent}
               colors={[t.accent]}
               progressBackgroundColor={t.surface}

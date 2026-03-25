@@ -5,6 +5,7 @@ import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 import { makeTokens } from "@/constants/theme";
 import { useThemeStore } from "@/stores/themeStore";
+import AuthProvider from "@/components/providers/AuthProvider";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -27,6 +28,7 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
+    <AuthProvider>
     <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
       <Stack
         screenOptions={{
@@ -36,6 +38,7 @@ export default function RootLayout() {
         }}
       >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen
           name="post"
           options={{ presentation: "modal", title: "新規投稿" }}
@@ -63,6 +66,7 @@ export default function RootLayout() {
       </Stack>
       <StatusBar style={isDark ? "light" : "dark"} />
     </ThemeProvider>
+    </AuthProvider>
     </QueryClientProvider>
   );
 }

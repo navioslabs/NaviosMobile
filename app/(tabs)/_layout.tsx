@@ -6,6 +6,10 @@ import { useThemeStore } from "@/stores/themeStore";
 import Header from "@/components/layout/Header";
 import Fab from "@/components/layout/Fab";
 
+export const unstable_settings = {
+  initialRouteName: "nearby",
+};
+
 /** タブナビゲーションレイアウト */
 export default function TabLayout() {
   const { isDark } = useThemeStore();
@@ -15,6 +19,7 @@ export default function TabLayout() {
     <View style={{ flex: 1, backgroundColor: t.bg }}>
       <Header t={t} />
       <Tabs
+        initialRouteName="nearby"
         screenOptions={{
           headerShown: false,
           tabBarActiveTintColor: t.accent,

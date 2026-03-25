@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, ScrollView, Pressable, TextInput } from "react-native";
+import { View, Text, ScrollView, Pressable, TextInput, Alert } from "react-native";
 import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import {
@@ -10,6 +10,8 @@ import {
   Check,
 } from "@/lib/icons";
 import type { ThemeTokens } from "@/constants/theme";
+import { useAuth } from "@/hooks/useAuth";
+import { useUpdateProfile } from "@/hooks/useProfile";
 import { useAppStyles } from "@/hooks/useAppStyles";
 import { useFontSizeStore } from "@/stores/fontSizeStore";
 import { getScaledFontSize, WEIGHT, SPACE, RADIUS } from "@/lib/styles";
@@ -17,12 +19,33 @@ import { getScaledFontSize, WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 /** プロフィール編集画面 */
 export default function ProfileEditScreen() {
   const { s, t, fs } = useAppStyles();
+  const { profile } = useAuth();
+  const updateMutation = useUpdateProfile();
 
-  const [name, setName] = useState("ゲストユーザー");
-  const [bio, setBio] = useState("");
-  const [location, setLocation] = useState("越谷市");
+  const [name, setName] = useState(profile?.display_name ?? "ゲストユーザー");
+  const [bio, setBio] = useState(profile?.bio ?? "");
+  const [location, setLocation] = useState(profile?.location_text ?? "越谷市");
 
   const isValid = name.trim().length > 0;
+  const isSaving = updateMutation.isPending;
+
+  /** プロフィール保存 */
+  const handleSave = async () => {
+    if (!isValid) return;
+    try {
+      await updateMutation.mutateAsync({
+        display_name: name.trim(),
+        bio: bio.trim() || undefined,
+        location_text: location.trim() || undefined,
+        is_public: true,
+        show_location: true,
+        show_checkins: false,
+      });
+      router.back();
+    } catch (e: any) {
+      Alert.alert("エラー", e.message ?? "保存に失敗しました");
+    }
+  };
 
   return (
     <View style={s.screen}>
@@ -36,17 +59,19 @@ export default function ProfileEditScreen() {
         </Pressable>
         <Text style={s.textHeading}>プロフィール編集</Text>
         <Pressable
-          onPress={() => { if (isValid) router.back(); }}
-          disabled={!isValid}
+          onPress={handleSave}
+          disabled={!isValid || isSaving}
           style={({ pressed }) => ({
             paddingHorizontal: SPACE.lg,
             paddingVertical: SPACE.sm,
             borderRadius: RADIUS.full,
-            backgroundColor: isValid ? t.accent : t.surface2,
+            backgroundColor: isValid && !isSaving ? t.accent : t.surface2,
             opacity: pressed && isValid ? 0.7 : 1,
           })}
         >
-          <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.bold, color: isValid ? "#000" : t.muted }}>保存</Text>
+          <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.bold, color: isValid && !isSaving ? "#000" : t.muted }}>
+            {isSaving ? "保存中..." : "保存"}
+          </Text>
         </Pressable>
       </View>
 

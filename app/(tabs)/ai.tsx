@@ -5,6 +5,8 @@ import { Sparkles, Search, Mic, Zap } from "@/lib/icons";
 import { FEED_POSTS } from "@/data/mockData";
 import { useAppStyles } from "@/hooks/useAppStyles";
 import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
+import { useSearchPosts } from "@/hooks/usePosts";
+import { postToFeedPost } from "@/lib/adapters";
 import PulseEventCard from "@/components/features/ai/PulseEventCard";
 import SuggestionChips from "@/components/features/ai/SuggestionChips";
 import StateView from "@/components/ui/StateView";
@@ -13,18 +15,17 @@ import StateView from "@/components/ui/StateView";
 export default function AiScreen() {
   const { s, t, fs } = useAppStyles();
   const [query, setQuery] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  /** 入力時にローディング演出（300ms debounce） */
+  /** 入力時にdebounce（300ms）でクエリ反映 */
   const handleQueryChange = (text: string) => {
     setQuery(text);
+    if (timerRef.current) clearTimeout(timerRef.current);
     if (text.trim().length > 0) {
-      setIsLoading(true);
-      if (timerRef.current) clearTimeout(timerRef.current);
-      timerRef.current = setTimeout(() => setIsLoading(false), 500);
+      timerRef.current = setTimeout(() => setDebouncedQuery(text.trim()), 300);
     } else {
-      setIsLoading(false);
+      setDebouncedQuery("");
     }
   };
 
@@ -32,14 +33,16 @@ export default function AiScreen() {
     return () => { if (timerRef.current) clearTimeout(timerRef.current); };
   }, []);
 
-  const pulseEvents = useMemo(
-    () => [...FEED_POSTS].sort((a, b) => a.timeLeft - b.timeLeft).slice(0, 4),
-    [],
-  );
+  /** サーバー検索（React Query） */
+  const { data: serverResults, isLoading: searchLoading } = useSearchPosts(debouncedQuery);
 
-  /** 検索結果: queryに部分一致するFEED_POSTSを返す */
+  /** サーバーデータがあれば使用、なければモックにフォールバック */
   const searchResults = useMemo(() => {
     if (!query.trim()) return null;
+    if (serverResults && serverResults.length > 0) {
+      return serverResults.map(postToFeedPost);
+    }
+    // フォールバック: モックデータからローカル検索
     const q = query.trim().toLowerCase();
     return FEED_POSTS.filter(
       (p) =>
@@ -47,7 +50,15 @@ export default function AiScreen() {
         p.user.name.toLowerCase().includes(q) ||
         p.category.includes(q),
     );
-  }, [query]);
+  }, [query, serverResults]);
+
+  /** debounce中 or React Queryローディング中 */
+  const isLoading = query.trim().length > 0 && (query.trim() !== debouncedQuery || searchLoading);
+
+  const pulseEvents = useMemo(
+    () => [...FEED_POSTS].sort((a, b) => a.timeLeft - b.timeLeft).slice(0, 4),
+    [],
+  );
 
   const isSearching = query.trim().length > 0;
 
@@ -78,7 +89,7 @@ export default function AiScreen() {
         />
         {isSearching ? (
           <Pressable
-            onPress={() => setQuery("")}
+            onPress={() => { setQuery(""); setDebouncedQuery(""); }}
             style={({ pressed }) => ({
               width: 40,
               height: 40,

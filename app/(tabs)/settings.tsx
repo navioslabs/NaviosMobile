@@ -1,9 +1,11 @@
-import { View, Text, Pressable, ScrollView } from "react-native";
-import { Bell, Lock, Moon, Sun, Settings, MapPin, Eye } from "@/lib/icons";
+import { View, Text, Pressable, ScrollView, Alert } from "react-native";
+import { Bell, Lock, Moon, Sun, Settings, MapPin, Eye, LogOut, User } from "@/lib/icons";
 import { useThemeStore } from "@/stores/themeStore";
 import { useFontSizeStore, FONT_SIZE_LABELS, FONT_SIZE_LEVELS } from "@/stores/fontSizeStore";
 import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 import { useAppStyles } from "@/hooks/useAppStyles";
+import { useAuth } from "@/hooks/useAuth";
+import { router } from "expo-router";
 import ProfileSection from "@/components/features/settings/ProfileSection";
 import PremiumCard from "@/components/features/settings/PremiumCard";
 import SettingsSection from "@/components/features/settings/SettingsSection";
@@ -14,6 +16,25 @@ export default function SettingsScreen() {
   const { isDark, toggle } = useThemeStore();
   const { level, setLevel } = useFontSizeStore();
   const { s, t, fs } = useAppStyles();
+  const { user, profile, isGuest, signOut } = useAuth();
+
+  /** ログアウト確認ダイアログ */
+  const handleSignOut = () => {
+    Alert.alert("ログアウト", "ログアウトしますか？", [
+      { text: "キャンセル", style: "cancel" },
+      {
+        text: "ログアウト",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await signOut();
+          } catch (e) {
+            Alert.alert("エラー", "ログアウトに失敗しました");
+          }
+        },
+      },
+    ]);
+  };
 
   const ThemeToggle = (
     <Pressable
@@ -60,7 +81,7 @@ export default function SettingsScreen() {
 
   return (
     <ScrollView style={s.screen} contentContainerStyle={{ paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
-      <ProfileSection t={t} />
+      <ProfileSection t={t} isGuest={isGuest} profile={profile} />
 
       {/* Stats */}
       <View style={{ flexDirection: "row", justifyContent: "space-around", padding: SPACE.lg, marginTop: SPACE.sm, backgroundColor: t.surface, borderTopWidth: 1, borderTopColor: t.border, borderBottomWidth: 1, borderBottomColor: t.border }}>
@@ -84,7 +105,14 @@ export default function SettingsScreen() {
 
       <SettingsSection title="アカウント" t={t}>
         <SettingsRow icon={Lock} label="プライバシー" t={t} />
-        <SettingsRow icon={Settings} label="アカウント管理" t={t} isLast />
+        {isGuest ? (
+          <SettingsRow icon={User} label="ログイン" onPress={() => router.push("/(auth)/login")} t={t} isLast />
+        ) : (
+          <>
+            <SettingsRow icon={Settings} label="アカウント管理" t={t} />
+            <SettingsRow icon={LogOut} label="ログアウト" onPress={handleSignOut} t={t} isLast />
+          </>
+        )}
       </SettingsSection>
 
       <PremiumCard />

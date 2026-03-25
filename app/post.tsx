@@ -4,6 +4,7 @@ import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { Camera, ImageIcon, MapPin, Locate } from "@/lib/icons";
 import { CAT_CONFIG, type CategoryId } from "@/constants/categories";
+import { useCreatePost } from "@/hooks/usePosts";
 import { useAppStyles } from "@/hooks/useAppStyles";
 import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 
@@ -18,18 +19,28 @@ const CAT_HINTS: Record<CategoryId, string> = {
 /** 新規投稿画面 */
 export default function PostScreen() {
   const { s, t, fs } = useAppStyles();
+  const createPostMutation = useCreatePost();
 
   const [cat, setCat] = useState<CategoryId>("stock");
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
 
-  const canSubmit = title.trim().length > 0;
+  const canSubmit = title.trim().length > 0 && !createPostMutation.isPending;
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!canSubmit) return;
-    Alert.alert("投稿完了", "投稿が作成されました", [
-      { text: "OK", onPress: () => router.back() },
-    ]);
+    try {
+      await createPostMutation.mutateAsync({
+        category: cat,
+        title: title.trim(),
+        content: content.trim() || undefined,
+      });
+      Alert.alert("投稿完了", "投稿が作成されました", [
+        { text: "OK", onPress: () => router.back() },
+      ]);
+    } catch (e: any) {
+      Alert.alert("エラー", e.message ?? "投稿に失敗しました");
+    }
   };
 
   return (
