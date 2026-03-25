@@ -11,20 +11,10 @@ import {
   MessageCircle,
   Heart,
 } from "@/lib/icons";
-import { FEED_POSTS, CHAT_ROOMS } from "@/data/mockData";
 import { useProfile, useUserPosts, useUserTalks } from "@/hooks/useProfile";
 import { useAppStyles } from "@/hooks/useAppStyles";
 import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 import CatPill from "@/components/ui/CatPill";
-
-/** モックユーザープロフィール */
-const MOCK_PROFILES: Record<number, { name: string; avatar: string; bio: string; verified: boolean; location: string; joinDate: string; checkins: number; badges: number; followers: number; following: number }> = {
-  1: { name: "田中商店", avatar: "https://i.pravatar.cc/100?img=1", bio: "越谷市で40年の八百屋です。毎朝新鮮な野菜を仕入れています。", verified: true, location: "越谷市駅前", joinDate: "2024年4月", checkins: 234, badges: 12, followers: 156, following: 23 },
-  2: { name: "健康ヨガクラブ", avatar: "https://i.pravatar.cc/100?img=5", bio: "毎朝中央公園でヨガ会を開催中！初心者大歓迎です。", verified: false, location: "中央公園", joinDate: "2024年6月", checkins: 89, badges: 5, followers: 67, following: 12 },
-  3: { name: "ベーカリー佐藤", avatar: "https://i.pravatar.cc/100?img=3", bio: "手作りパンのお店。毎日焼きたてをお届けします。", verified: true, location: "商店街エリア", joinDate: "2024年3月", checkins: 312, badges: 15, followers: 289, following: 45 },
-  4: { name: "山田さん", avatar: "https://i.pravatar.cc/100?img=8", bio: "家庭菜園が趣味です。お裾分けもしています！", verified: false, location: "住宅街エリア", joinDate: "2024年8月", checkins: 45, badges: 3, followers: 23, following: 34 },
-  5: { name: "〇〇市役所", avatar: "https://i.pravatar.cc/100?img=12", bio: "〇〇市の公式アカウントです。行政情報をお届けします。", verified: true, location: "市役所", joinDate: "2024年1月", checkins: 567, badges: 20, followers: 1200, following: 5 },
-};
 
 /** ユーザープロフィール画面 */
 export default function ProfileScreen() {
@@ -32,48 +22,23 @@ export default function ProfileScreen() {
   const { s, t, fs } = useAppStyles();
 
   const userId = id ?? "";
-  const profileId = Number(id);
-
-  // Supabase からプロフィール・投稿・ひとこと取得
   const { data: remoteProfile, isLoading: profileLoading } = useProfile(userId);
-  const { data: remotePosts } = useUserPosts(userId);
-  const { data: remoteTalks } = useUserTalks(userId);
+  const { data: userPosts } = useUserPosts(userId);
+  const { data: userTalks } = useUserTalks(userId);
 
-  /** モック or Supabase のプロフィールデータ */
-  const mockProfile = MOCK_PROFILES[profileId];
+  const posts = userPosts ?? [];
+  const talks = userTalks ?? [];
+
   const profile = remoteProfile
     ? {
         name: remoteProfile.display_name,
-        avatar: remoteProfile.avatar_url ?? `https://i.pravatar.cc/100?img=${profileId}`,
-        bio: remoteProfile.bio ?? "Naviosユーザー",
+        avatar: remoteProfile.avatar_url ?? "https://i.pravatar.cc/100",
+        bio: remoteProfile.bio ?? "",
         verified: remoteProfile.is_verified,
-        location: remoteProfile.location_text ?? "越谷市",
+        location: remoteProfile.location_text ?? "",
         joinDate: new Date(remoteProfile.created_at).toLocaleDateString("ja-JP", { year: "numeric", month: "long" }),
-        checkins: 0,
-        badges: 0,
-        followers: 0,
-        following: 0,
       }
-    : mockProfile ?? {
-        name: "ユーザー",
-        avatar: `https://i.pravatar.cc/100?img=${profileId}`,
-        bio: "Naviosユーザー",
-        verified: false,
-        location: "越谷市",
-        joinDate: "2024年",
-        checkins: 0,
-        badges: 0,
-        followers: 0,
-        following: 0,
-      };
-
-  /** このユーザーの投稿を取得（Supabase → モックフォールバック） */
-  const userPosts = remotePosts && remotePosts.length > 0
-    ? remotePosts
-    : FEED_POSTS.filter((p) => p.user.name === profile.name);
-  const userTalks = remoteTalks && remoteTalks.length > 0
-    ? remoteTalks
-    : CHAT_ROOMS.filter((c) => c.user === profile.name);
+    : null;
 
   return (
     <View style={s.screen}>
@@ -85,7 +50,7 @@ export default function ProfileScreen() {
         >
           <ChevronLeft size={24} color={t.text} />
         </Pressable>
-        <Text style={s.textHeading} numberOfLines={1}>{profile.name}</Text>
+        <Text style={s.textHeading} numberOfLines={1}>{profile?.name ?? "プロフィール"}</Text>
       </View>
 
       {profileLoading && (
@@ -94,163 +59,129 @@ export default function ProfileScreen() {
         </View>
       )}
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
-        {/* プロフィールヘッダー */}
-        <View style={{ alignItems: "center", paddingVertical: SPACE.xxl, paddingHorizontal: SPACE.xl }}>
-          <View style={{ position: "relative", marginBottom: SPACE.lg }}>
-            <Image source={{ uri: profile.avatar }} style={{ width: 80, height: 80, borderRadius: 40, borderWidth: 3, borderColor: t.accent + "40" }} contentFit="cover" />
-            {profile.verified && (
-              <View style={{ position: "absolute", bottom: 0, right: 0, width: 24, height: 24, borderRadius: 12, backgroundColor: t.blue, alignItems: "center", justifyContent: "center", borderWidth: 2, borderColor: t.surface }}>
-                <UserCheck size={12} color="#fff" />
-              </View>
-            )}
-          </View>
-
-          <Text style={{ fontSize: fs.xxl, fontWeight: WEIGHT.extrabold, color: t.text }}>{profile.name}</Text>
-          <Text style={{ fontSize: fs.base, color: t.sub, textAlign: "center", lineHeight: 22, marginTop: SPACE.sm, marginHorizontal: SPACE.xl }}>
-            {profile.bio}
-          </Text>
-
-          {/* メタ情報 */}
-          <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.lg, marginTop: SPACE.md }}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.xs }}>
-              <MapPin size={14} color={t.muted} />
-              <Text style={{ fontSize: fs.sm, color: t.muted }}>{profile.location}</Text>
-            </View>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.xs }}>
-              <Calendar size={14} color={t.muted} />
-              <Text style={{ fontSize: fs.sm, color: t.muted }}>{profile.joinDate}から</Text>
-            </View>
-          </View>
-
-          {/* フォロー情報 */}
-          <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.xl, marginTop: SPACE.lg }}>
-            <View style={{ alignItems: "center" }}>
-              <Text style={{ fontSize: fs.xl, fontWeight: WEIGHT.extrabold, color: t.text }}>{profile.followers}</Text>
-              <Text style={{ fontSize: fs.xs, color: t.muted }}>フォロワー</Text>
-            </View>
-            <View style={{ width: 1, height: 24, backgroundColor: t.border }} />
-            <View style={{ alignItems: "center" }}>
-              <Text style={{ fontSize: fs.xl, fontWeight: WEIGHT.extrabold, color: t.text }}>{profile.following}</Text>
-              <Text style={{ fontSize: fs.xs, color: t.muted }}>フォロー中</Text>
-            </View>
-          </View>
-
-          {/* フォローボタン */}
-          <Pressable style={({ pressed }) => ({ marginTop: SPACE.lg, opacity: pressed ? 0.8 : 1 })}>
-            <LinearGradient
-              colors={[t.accent, t.blue]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={{ borderRadius: RADIUS.full, paddingHorizontal: SPACE.xxxl, paddingVertical: SPACE.md }}
-            >
-              <Text style={{ fontSize: fs.base, fontWeight: WEIGHT.bold, color: "#000" }}>フォローする</Text>
-            </LinearGradient>
+      {!profileLoading && !profile && (
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+          <Text style={s.textSubheading}>ユーザーが見つかりません</Text>
+          <Pressable onPress={() => router.back()} style={{ marginTop: SPACE.lg }}>
+            <Text style={{ color: t.accent, fontSize: fs.base, fontWeight: WEIGHT.bold }}>戻る</Text>
           </Pressable>
         </View>
+      )}
 
-        {/* 統計 */}
-        <View style={{ flexDirection: "row", justifyContent: "space-around", paddingVertical: SPACE.lg, backgroundColor: t.surface, borderTopWidth: 1, borderTopColor: t.border, borderBottomWidth: 1, borderBottomColor: t.border }}>
-          <View style={{ alignItems: "center" }}>
-            <Text style={{ fontSize: fs.xxl, fontWeight: WEIGHT.extrabold, color: t.accent }}>{profile.checkins}</Text>
-            <Text style={{ fontSize: fs.xs, color: t.muted }}>チェックイン</Text>
-          </View>
-          <View style={{ alignItems: "center" }}>
-            <Text style={{ fontSize: fs.xxl, fontWeight: WEIGHT.extrabold, color: t.accent }}>{profile.badges}</Text>
-            <Text style={{ fontSize: fs.xs, color: t.muted }}>バッジ</Text>
-          </View>
-          <View style={{ alignItems: "center" }}>
-            <Text style={{ fontSize: fs.xxl, fontWeight: WEIGHT.extrabold, color: t.accent }}>{userPosts.length + userTalks.length}</Text>
-            <Text style={{ fontSize: fs.xs, color: t.muted }}>投稿数</Text>
-          </View>
-        </View>
-
-        {/* バッジセクション */}
-        {profile.badges > 0 && (
-          <View style={{ paddingHorizontal: SPACE.xl, paddingTop: SPACE.xl }}>
-            <Text style={[s.textSubheading, { marginBottom: SPACE.md }]}>獲得バッジ</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: SPACE.md }}>
-              {[
-                { label: "初投稿", color: t.accent },
-                { label: "常連", color: t.amber },
-                { label: "人気者", color: t.red },
-                ...(profile.badges > 3 ? [{ label: "地域の星", color: t.purple }] : []),
-                ...(profile.badges > 5 ? [{ label: "ヘルパー", color: t.blue }] : []),
-              ].map((badge) => (
-                <View key={badge.label} style={{ alignItems: "center", gap: SPACE.xs }}>
-                  <View style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: badge.color + "20", alignItems: "center", justifyContent: "center", borderWidth: 1.5, borderColor: badge.color + "40" }}>
-                    <Award size={22} color={badge.color} />
-                  </View>
-                  <Text style={{ fontSize: fs.xxs, fontWeight: WEIGHT.semibold, color: t.sub }}>{badge.label}</Text>
+      {profile && (
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
+          {/* プロフィールヘッダー */}
+          <View style={{ alignItems: "center", paddingVertical: SPACE.xxl, paddingHorizontal: SPACE.xl }}>
+            <View style={{ position: "relative", marginBottom: SPACE.lg }}>
+              <Image source={{ uri: profile.avatar }} style={{ width: 80, height: 80, borderRadius: 40, borderWidth: 3, borderColor: t.accent + "40" }} contentFit="cover" />
+              {profile.verified && (
+                <View style={{ position: "absolute", bottom: 0, right: 0, width: 24, height: 24, borderRadius: 12, backgroundColor: t.blue, alignItems: "center", justifyContent: "center", borderWidth: 2, borderColor: t.surface }}>
+                  <UserCheck size={12} color="#fff" />
                 </View>
-              ))}
-            </ScrollView>
-          </View>
-        )}
+              )}
+            </View>
 
-        {/* 最近の投稿 */}
-        {userPosts.length > 0 && (
-          <View style={{ paddingHorizontal: SPACE.xl, paddingTop: SPACE.xxl }}>
-            <Text style={[s.textSubheading, { marginBottom: SPACE.md }]}>最近の投稿</Text>
-            {userPosts.map((post: any) => {
-              // Supabase Post と モック FeedPost の両方に対応
-              const imgUri = post.image_url ?? post.image;
-              const caption = post.title ?? post.caption;
-              const time = post.created_at
-                ? new Date(post.created_at).toLocaleDateString("ja-JP")
-                : post.time;
-              const likes = post.likes_count ?? post.likes ?? 0;
-              const comments = post.comments_count ?? 3;
+            <Text style={{ fontSize: fs.xxl, fontWeight: WEIGHT.extrabold, color: t.text }}>{profile.name}</Text>
+            {profile.bio ? (
+              <Text style={{ fontSize: fs.base, color: t.sub, textAlign: "center", lineHeight: 22, marginTop: SPACE.sm, marginHorizontal: SPACE.xl }}>
+                {profile.bio}
+              </Text>
+            ) : null}
 
-              return (
-              <Pressable
-                key={post.id}
-                onPress={() => router.push(`/feed/${post.id}` as any)}
-                style={({ pressed }) => ({
-                  flexDirection: "row",
-                  gap: SPACE.md,
-                  padding: SPACE.md,
-                  marginBottom: SPACE.sm,
-                  borderRadius: RADIUS.md,
-                  backgroundColor: t.surface,
-                  borderWidth: 1,
-                  borderColor: t.border,
-                  opacity: pressed ? 0.7 : 1,
-                })}
+            {/* メタ情報 */}
+            <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.lg, marginTop: SPACE.md }}>
+              {profile.location ? (
+                <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.xs }}>
+                  <MapPin size={14} color={t.muted} />
+                  <Text style={{ fontSize: fs.sm, color: t.muted }}>{profile.location}</Text>
+                </View>
+              ) : null}
+              <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.xs }}>
+                <Calendar size={14} color={t.muted} />
+                <Text style={{ fontSize: fs.sm, color: t.muted }}>{profile.joinDate}から</Text>
+              </View>
+            </View>
+
+            {/* フォローボタン */}
+            <Pressable style={({ pressed }) => ({ marginTop: SPACE.lg, opacity: pressed ? 0.8 : 1 })}>
+              <LinearGradient
+                colors={[t.accent, t.blue]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{ borderRadius: RADIUS.full, paddingHorizontal: SPACE.xxxl, paddingVertical: SPACE.md }}
               >
-                {imgUri && <Image source={{ uri: imgUri }} style={{ width: 60, height: 60, borderRadius: RADIUS.sm }} contentFit="cover" />}
-                <View style={{ flex: 1, justifyContent: "center" }}>
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.sm, marginBottom: SPACE.xs }}>
-                    <CatPill cat={post.category} small />
-                    <Text style={{ fontSize: fs.xs, color: t.muted }}>{time}</Text>
-                  </View>
-                  <Text style={{ fontSize: fs.base, fontWeight: WEIGHT.semibold, color: t.text }} numberOfLines={2}>
-                    {caption}
-                  </Text>
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.lg, marginTop: SPACE.xs }}>
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.xs }}>
-                      <Heart size={12} color={t.muted} />
-                      <Text style={{ fontSize: fs.xs, color: t.muted }}>{likes}</Text>
-                    </View>
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.xs }}>
-                      <MessageCircle size={12} color={t.muted} />
-                      <Text style={{ fontSize: fs.xs, color: t.muted }}>{comments}</Text>
-                    </View>
-                  </View>
-                </View>
-              </Pressable>
-              );
-            })}
+                <Text style={{ fontSize: fs.base, fontWeight: WEIGHT.bold, color: "#000" }}>フォローする</Text>
+              </LinearGradient>
+            </Pressable>
           </View>
-        )}
 
-        {/* 投稿がない場合 */}
-        {userPosts.length === 0 && userTalks.length === 0 && (
-          <View style={{ alignItems: "center", paddingVertical: SPACE.xxxl, paddingHorizontal: SPACE.xl }}>
-            <Text style={{ fontSize: fs.lg, fontWeight: WEIGHT.semibold, color: t.sub }}>まだ投稿がありません</Text>
+          {/* 統計 */}
+          <View style={{ flexDirection: "row", justifyContent: "space-around", paddingVertical: SPACE.lg, backgroundColor: t.surface, borderTopWidth: 1, borderTopColor: t.border, borderBottomWidth: 1, borderBottomColor: t.border }}>
+            <View style={{ alignItems: "center" }}>
+              <Text style={{ fontSize: fs.xxl, fontWeight: WEIGHT.extrabold, color: t.accent }}>{posts.length}</Text>
+              <Text style={{ fontSize: fs.xs, color: t.muted }}>投稿</Text>
+            </View>
+            <View style={{ alignItems: "center" }}>
+              <Text style={{ fontSize: fs.xxl, fontWeight: WEIGHT.extrabold, color: t.accent }}>{talks.length}</Text>
+              <Text style={{ fontSize: fs.xs, color: t.muted }}>ひとこと</Text>
+            </View>
           </View>
-        )}
-      </ScrollView>
+
+          {/* 最近の投稿 */}
+          {posts.length > 0 && (
+            <View style={{ paddingHorizontal: SPACE.xl, paddingTop: SPACE.xxl }}>
+              <Text style={[s.textSubheading, { marginBottom: SPACE.md }]}>最近の投稿</Text>
+              {posts.map((post) => (
+                <Pressable
+                  key={post.id}
+                  onPress={() => router.push(`/feed/${post.id}` as any)}
+                  style={({ pressed }) => ({
+                    flexDirection: "row",
+                    gap: SPACE.md,
+                    padding: SPACE.md,
+                    marginBottom: SPACE.sm,
+                    borderRadius: RADIUS.md,
+                    backgroundColor: t.surface,
+                    borderWidth: 1,
+                    borderColor: t.border,
+                    opacity: pressed ? 0.7 : 1,
+                  })}
+                >
+                  {post.image_url && <Image source={{ uri: post.image_url }} style={{ width: 60, height: 60, borderRadius: RADIUS.sm }} contentFit="cover" />}
+                  <View style={{ flex: 1, justifyContent: "center" }}>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.sm, marginBottom: SPACE.xs }}>
+                      <CatPill cat={post.category} small />
+                      <Text style={{ fontSize: fs.xs, color: t.muted }}>
+                        {new Date(post.created_at).toLocaleDateString("ja-JP")}
+                      </Text>
+                    </View>
+                    <Text style={{ fontSize: fs.base, fontWeight: WEIGHT.semibold, color: t.text }} numberOfLines={2}>
+                      {post.title}
+                    </Text>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.lg, marginTop: SPACE.xs }}>
+                      <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.xs }}>
+                        <Heart size={12} color={t.muted} />
+                        <Text style={{ fontSize: fs.xs, color: t.muted }}>{post.likes_count}</Text>
+                      </View>
+                      <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.xs }}>
+                        <MessageCircle size={12} color={t.muted} />
+                        <Text style={{ fontSize: fs.xs, color: t.muted }}>{post.comments_count}</Text>
+                      </View>
+                    </View>
+                  </View>
+                </Pressable>
+              ))}
+            </View>
+          )}
+
+          {/* 投稿がない場合 */}
+          {posts.length === 0 && talks.length === 0 && (
+            <View style={{ alignItems: "center", paddingVertical: SPACE.xxxl, paddingHorizontal: SPACE.xl }}>
+              <Text style={{ fontSize: fs.lg, fontWeight: WEIGHT.semibold, color: t.sub }}>まだ投稿がありません</Text>
+            </View>
+          )}
+        </ScrollView>
+      )}
     </View>
   );
 }
