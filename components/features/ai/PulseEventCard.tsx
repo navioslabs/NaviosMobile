@@ -4,6 +4,7 @@ import { Navigation, Flame } from "@/lib/icons";
 import type { ThemeTokens } from "@/constants/theme";
 import type { FeedPost } from "@/types";
 import { distLabel } from "@/lib/utils";
+import { FONT_SIZE, WEIGHT, SPACE } from "@/lib/styles";
 import CatPill from "@/components/ui/CatPill";
 import MatchBadge from "@/components/ui/MatchBadge";
 import UrgencyBar from "@/components/ui/UrgencyBar";
@@ -22,35 +23,34 @@ export default function PulseEventCard({ event, t }: PulseEventCardProps) {
 
   return (
     <View
-      className="rounded-[18px] overflow-hidden relative"
-      style={{ backgroundColor: t.surface, borderWidth: isHot ? 1.5 : 1, borderColor: isHot ? t.accent + "35" : t.border }}
+      style={{ borderRadius: 18, overflow: "hidden", position: "relative", backgroundColor: t.surface, borderWidth: isHot ? 1.5 : 1, borderColor: isHot ? t.accent + "35" : t.border }}
     >
       {isHot && <HotStrip />}
-      <View className="flex-row gap-3 p-3.5">
-        <Image source={{ uri: event.image }} className="w-16 h-16 rounded-[14px]" contentFit="cover" />
-        <View className="flex-1">
-          <View className="flex-row items-center gap-1.5 mb-1">
+      <View style={{ flexDirection: "row", gap: 12, padding: 14 }}>
+        <Image source={{ uri: event.image }} style={{ width: 64, height: 64, borderRadius: 14 }} contentFit="cover" />
+        <View style={{ flex: 1 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 4 }}>
             {isHot && (
-              <View className="flex-row items-center gap-[3px] px-[7px] py-0.5 rounded-pill bg-danger">
-                <Flame size={9} color="#fff" />
-                <Text className="text-white text-[9px] font-bold">HOT</Text>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 3, paddingHorizontal: 7, paddingVertical: 2, borderRadius: 9999, backgroundColor: "#F0425C" }}>
+                <Flame size={10} color="#fff" />
+                <Text style={{ color: "#fff", fontSize: FONT_SIZE.xxs, fontWeight: WEIGHT.bold }}>HOT</Text>
               </View>
             )}
             <CatPill cat={event.category} small />
           </View>
-          <Text className="text-sm font-bold leading-[18px] mb-[5px]" numberOfLines={1} style={{ color: t.text }}>
+          <Text style={{ fontSize: FONT_SIZE.base, fontWeight: WEIGHT.bold, lineHeight: 20, marginBottom: 5, color: t.text }} numberOfLines={1}>
             {event.user.name}
           </Text>
-          <View className="flex-row items-center gap-2 flex-wrap">
-            <View className="flex-row items-center gap-[3px]">
-              <Navigation size={10} color={t.accent} />
-              <Text className="text-[11px] font-semibold" style={{ color: t.accent }}>{distLabel(event.distance)}</Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
+              <Navigation size={11} color={t.accent} />
+              <Text style={{ fontSize: FONT_SIZE.xs, fontWeight: WEIGHT.semibold, color: t.accent }}>{distLabel(event.distance)}</Text>
             </View>
             <UrgencyBar timeLeft={event.timeLeft} subColor={t.sub} />
             {event.crowd ? <CrowdTag crowd={event.crowd} /> : null}
           </View>
         </View>
-        <View className="items-end justify-between">
+        <View style={{ alignItems: "flex-end", justifyContent: "space-between" }}>
           <MatchBadge score={event.matchScore} />
           <GoButton small />
         </View>

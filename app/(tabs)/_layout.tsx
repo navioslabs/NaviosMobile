@@ -1,6 +1,6 @@
 import { View, StyleSheet } from "react-native";
 import { Tabs } from "expo-router";
-import { Calendar, MessageCircle, Radio, Sparkles, Settings } from "@/lib/icons";
+import { Rss, MessageCircle, Sparkles, Radio, Settings } from "@/lib/icons";
 import { makeTokens } from "@/constants/theme";
 import { useThemeStore } from "@/stores/themeStore";
 import Header from "@/components/layout/Header";
@@ -12,7 +12,7 @@ export default function TabLayout() {
   const t = makeTokens(isDark);
 
   return (
-    <View className="flex-1" style={{ backgroundColor: t.bg }}>
+    <View style={{ flex: 1, backgroundColor: t.bg }}>
       <Header t={t} />
       <Tabs
         screenOptions={{
@@ -25,27 +25,27 @@ export default function TabLayout() {
             borderTopWidth: 1,
             paddingBottom: 6,
           },
-          tabBarLabelStyle: { fontSize: 9, fontWeight: "600" },
+          tabBarLabelStyle: { fontSize: 10, fontWeight: "600" },
         }}
       >
         <Tabs.Screen
           name="index"
           options={{
-            title: "Feed",
-            tabBarIcon: ({ color, size }) => <Calendar size={size} color={color} />,
+            title: "ホーム",
+            tabBarIcon: ({ color, size }) => <Rss size={size} color={color} />,
           }}
         />
         <Tabs.Screen
           name="talk"
           options={{
-            title: "Talk",
+            title: "ひとこと",
             tabBarIcon: ({ color, size }) => <MessageCircle size={size} color={color} />,
           }}
         />
         <Tabs.Screen
-          name="nearby"
+          name="ai"
           options={{
-            title: "NearBy",
+            title: "さがす",
             tabBarIcon: ({ color, focused }) => (
               <View
                 style={[
@@ -57,16 +57,16 @@ export default function TabLayout() {
                   },
                 ]}
               >
-                <Radio size={20} color={focused ? "#000" : t.sub} />
+                <Sparkles size={20} color={focused ? "#000" : t.sub} />
               </View>
             ),
           }}
         />
         <Tabs.Screen
-          name="ai"
+          name="nearby"
           options={{
-            title: "AI",
-            tabBarIcon: ({ color, size }) => <Sparkles size={size} color={color} />,
+            title: "ちかく",
+            tabBarIcon: ({ color, size }) => <Radio size={size} color={color} />,
           }}
         />
         <Tabs.Screen

@@ -1,6 +1,7 @@
 import { View, Text, Pressable } from "react-native";
 import { Moon, Sun } from "@/lib/icons";
 import type { ThemeTokens } from "@/constants/theme";
+import { FONT_SIZE, SPACE } from "@/lib/styles";
 
 interface ThemeToggleProps {
   t: ThemeTokens;
@@ -11,22 +12,18 @@ interface ThemeToggleProps {
 /** テーマ切替トグル */
 export default function ThemeToggle({ t, isDark, onToggle }: ThemeToggleProps) {
   return (
-    <View className="mt-2" style={{ backgroundColor: t.surface, borderTopWidth: 1, borderTopColor: t.border, borderBottomWidth: 1, borderBottomColor: t.border }}>
-      <View className="flex-row items-center justify-between py-3.5 px-5">
-        <View className="flex-row items-center gap-3">
-          {isDark ? <Moon size={18} color={t.purple} /> : <Sun size={18} color="#F5A623" />}
-          <Text className="text-[15px]" style={{ color: t.text }}>テーマ</Text>
+    <View style={{ marginTop: SPACE.sm, backgroundColor: t.surface, borderTopWidth: 1, borderTopColor: t.border, borderBottomWidth: 1, borderBottomColor: t.border }}>
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: SPACE.lg, paddingHorizontal: SPACE.xl }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.md }}>
+          {isDark ? <Moon size={20} color={t.purple} /> : <Sun size={20} color="#F5A623" />}
+          <Text style={{ fontSize: FONT_SIZE.lg + 1, color: t.text }}>テーマ</Text>
         </View>
         <Pressable
           onPress={onToggle}
-          className="w-[50px] h-7 rounded-full justify-center"
-          style={{ backgroundColor: isDark ? t.accent : t.surface3 }}
+          style={{ width: 52, height: 30, borderRadius: 15, justifyContent: "center", backgroundColor: isDark ? t.accent : t.surface3 }}
         >
-          <View
-            className="absolute top-0.5 w-6 h-6 rounded-full items-center justify-center shadow"
-            style={{ backgroundColor: isDark ? "#000" : "#fff", transform: [{ translateX: isDark ? 24 : 2 }] }}
-          >
-            {isDark ? <Moon size={11} color={t.accent} /> : <Sun size={11} color="#F5A623" />}
+          <View style={{ position: "absolute", top: 3, width: 24, height: 24, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: isDark ? "#000" : "#fff", transform: [{ translateX: isDark ? 25 : 3 }], shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.2, shadowRadius: 4, elevation: 2 }}>
+            {isDark ? <Moon size={12} color={t.accent} /> : <Sun size={12} color="#F5A623" />}
           </View>
         </Pressable>
       </View>

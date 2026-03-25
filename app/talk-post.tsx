@@ -5,19 +5,20 @@ import { LinearGradient } from "expo-linear-gradient";
 import { User, MapPin, Camera, ImageIcon, Send } from "@/lib/icons";
 import { makeTokens } from "@/constants/theme";
 import { useThemeStore } from "@/stores/themeStore";
+import { createStyles, FONT_SIZE, WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 
 /** つぶやき投稿画面 */
 export default function TalkPostScreen() {
   const { isDark } = useThemeStore();
   const t = makeTokens(isDark);
+  const s = createStyles(t);
   const [msg, setMsg] = useState("");
 
   return (
-    <ScrollView className="flex-1" style={{ backgroundColor: t.bg }} contentContainerClassName="p-5 pb-10 gap-4" showsVerticalScrollIndicator={false}>
-      {/* Avatar + input */}
-      <View className="flex-row gap-3 items-start">
-        <LinearGradient colors={[t.accent, t.blue]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} className="w-[42px] h-[42px] rounded-full items-center justify-center">
-          <User size={20} color="#fff" />
+    <ScrollView style={s.screen} contentContainerStyle={{ padding: SPACE.xl, paddingBottom: 40, gap: SPACE.lg }} showsVerticalScrollIndicator={false}>
+      <View style={{ flexDirection: "row", gap: SPACE.md, alignItems: "flex-start" }}>
+        <LinearGradient colors={[t.accent, t.blue]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center" }}>
+          <User size={22} color="#fff" />
         </LinearGradient>
         <TextInput
           value={msg}
@@ -26,31 +27,27 @@ export default function TalkPostScreen() {
           placeholderTextColor={t.sub}
           multiline
           autoFocus
-          className="flex-1 text-base min-h-[120px] leading-6"
-          style={{ color: t.text, textAlignVertical: "top" }}
+          style={{ flex: 1, fontSize: FONT_SIZE.xl, minHeight: 120, lineHeight: 26, color: t.text, textAlignVertical: "top" }}
         />
       </View>
 
-      {/* Location tag */}
-      <View className="flex-row items-center gap-2 p-2.5 rounded-xl" style={{ backgroundColor: t.surface, borderWidth: 1, borderColor: t.border }}>
-        <MapPin size={15} color={t.accent} />
-        <Text className="text-xs font-semibold" style={{ color: t.accent }}>📍 越谷市・現在地周辺</Text>
-        <Text className="ml-auto text-[10px]" style={{ color: t.muted }}>自動検出</Text>
+      <View style={[s.card, { flexDirection: "row", alignItems: "center", gap: SPACE.sm }]}>
+        <MapPin size={16} color={t.accent} />
+        <Text style={{ fontSize: FONT_SIZE.md, fontWeight: WEIGHT.semibold, color: t.accent }}>📍 越谷市・現在地周辺</Text>
+        <Text style={{ marginLeft: "auto", fontSize: FONT_SIZE.xs, color: t.muted }}>自動検出</Text>
       </View>
 
-      {/* Photo options */}
-      <View className="flex-row gap-2">
+      <View style={{ flexDirection: "row", gap: SPACE.sm }}>
         {[{ Icon: Camera, l: "撮影" }, { Icon: ImageIcon, l: "選択" }].map(({ Icon, l }) => (
-          <Pressable key={l} className="w-[60px] h-[60px] rounded-[14px] items-center justify-center gap-1" style={{ borderWidth: 1.5, borderStyle: "dashed", borderColor: t.border, backgroundColor: t.surface }}>
-            <Icon size={18} color={t.sub} />
-            <Text className="text-[9px]" style={{ color: t.sub }}>{l}</Text>
+          <Pressable key={l} style={{ width: 60, height: 60, borderRadius: RADIUS.lg, alignItems: "center", justifyContent: "center", gap: SPACE.xs, borderWidth: 1.5, borderStyle: "dashed", borderColor: t.border, backgroundColor: t.surface }}>
+            <Icon size={20} color={t.sub} />
+            <Text style={{ fontSize: FONT_SIZE.xxs, color: t.sub }}>{l}</Text>
           </Pressable>
         ))}
       </View>
 
-      {/* Character count + submit */}
-      <View className="flex-row items-center justify-between">
-        <Text className="text-[11px]" style={{ color: msg.length > 140 ? t.red : t.muted }}>
+      <View style={s.rowBetween}>
+        <Text style={{ fontSize: FONT_SIZE.sm, color: msg.length > 140 ? t.red : t.muted }}>
           {msg.length}/140
         </Text>
         <Pressable onPress={() => { if (msg.length > 0) router.back(); }}>
@@ -58,10 +55,10 @@ export default function TalkPostScreen() {
             colors={msg.length > 0 ? [t.accent, t.blue] : [t.surface2, t.surface2]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            className="flex-row items-center gap-1.5 rounded-[14px] px-7 py-[11px]"
+            style={{ flexDirection: "row", alignItems: "center", gap: 6, borderRadius: RADIUS.lg, paddingHorizontal: SPACE.xxl + 4, paddingVertical: SPACE.md }}
           >
-            <Send size={14} color={msg.length > 0 ? "#000" : t.muted} />
-            <Text className="font-extrabold text-sm" style={{ color: msg.length > 0 ? "#000" : t.muted }}>つぶやく</Text>
+            <Send size={15} color={msg.length > 0 ? "#000" : t.muted} />
+            <Text style={{ fontWeight: WEIGHT.extrabold, fontSize: FONT_SIZE.lg, color: msg.length > 0 ? "#000" : t.muted }}>つぶやく</Text>
           </LinearGradient>
         </Pressable>
       </View>

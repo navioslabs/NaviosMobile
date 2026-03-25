@@ -1,13 +1,17 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { View, Text, FlatList } from "react-native";
-import { Calendar } from "@/lib/icons";
+import { Calendar, Inbox } from "@/lib/icons";
 import { makeTokens } from "@/constants/theme";
 import { FEED_POSTS } from "@/data/mockData";
 import type { FeedPost } from "@/types";
 import { useThemeStore } from "@/stores/themeStore";
+import { createStyles, FONT_SIZE, WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 import DatePicker from "@/components/features/feed/DatePicker";
+import FeedSummary from "@/components/features/feed/FeedSummary";
 import CategoryChips from "@/components/features/feed/CategoryChips";
 import FeedPostCard from "@/components/features/feed/FeedPostCard";
+
+type FilterType = "top" | "nearby" | "urgent" | null;
 
 const getPostsForDate = (offset: number): FeedPost[] => {
   if (offset === 0) return FEED_POSTS.filter((p) => p.hoursAgo <= 24);
@@ -28,12 +32,27 @@ const getDateLabel = (offset: number): string => {
 export default function FeedScreen() {
   const { isDark } = useThemeStore();
   const t = makeTokens(isDark);
+  const s = createStyles(t);
 
   const [selDate, setSelDate] = useState(0);
   const [selCat, setSelCat] = useState("all");
+  const [summaryFilter, setSummaryFilter] = useState<FilterType>(null);
 
   const datePosts = getPostsForDate(selDate);
-  const filtered = selCat === "all" ? datePosts : datePosts.filter((p) => p.category === selCat);
+
+  const filtered = useMemo(() => {
+    let posts = selCat === "all" ? datePosts : datePosts.filter((p) => p.category === selCat);
+
+    if (summaryFilter === "top") {
+      posts = [...posts].sort((a, b) => b.matchScore - a.matchScore);
+    } else if (summaryFilter === "nearby") {
+      posts = posts.filter((p) => p.distance <= 200);
+    } else if (summaryFilter === "urgent") {
+      posts = [...posts].sort((a, b) => a.timeLeft - b.timeLeft);
+    }
+
+    return posts;
+  }, [datePosts, selCat, summaryFilter]);
 
   const getPostCount = useCallback((offset: number) => getPostsForDate(offset).length, []);
   const renderItem = useCallback(
@@ -41,21 +60,32 @@ export default function FeedScreen() {
     [t, isDark]
   );
 
+  const ListHeader = (
+    <>
+      <FeedSummary
+        t={t}
+        posts={datePosts}
+        dateLabel={getDateLabel(selDate)}
+        totalCount={filtered.length}
+        activeFilter={summaryFilter}
+        onFilterChange={setSummaryFilter}
+      />
+      <CategoryChips t={t} selected={selCat} onSelect={setSelCat} />
+    </>
+  );
+
   return (
-    <View style={{ flex: 1, backgroundColor: t.bg }}>
+    <View style={s.screen}>
       <DatePicker t={t} selectedDate={selDate} onSelectDate={setSelDate} getPostCount={getPostCount} />
 
-      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 20, paddingTop: 10, paddingBottom: 4 }}>
-        <Text style={{ fontSize: 12, color: t.sub }}>{getDateLabel(selDate)}</Text>
-        <Text style={{ fontSize: 11, fontWeight: "600", color: t.accent }}>{filtered.length}件</Text>
-      </View>
-
-      <CategoryChips t={t} selected={selCat} onSelect={setSelCat} />
-
       {filtered.length === 0 ? (
-        <View style={{ paddingVertical: 60, paddingHorizontal: 20, alignItems: "center" }}>
-          <Calendar size={32} color={t.muted} />
-          <Text style={{ fontSize: 14, fontWeight: "600", marginTop: 12, color: t.sub }}>この日の投稿はまだありません</Text>
+        <View style={{ flex: 1 }}>
+          {ListHeader}
+          <View style={{ paddingVertical: 60, paddingHorizontal: SPACE.xl, alignItems: "center" }}>
+            <Inbox size={40} color={t.muted} />
+            <Text style={[s.textSubheading, { marginTop: SPACE.md, color: t.text }]}>この日の投稿はまだありません</Text>
+            <Text style={[s.textLabel, { marginTop: SPACE.xs, color: t.sub }]}>他の日付を選ぶか、投稿してみましょう</Text>
+          </View>
         </View>
       ) : (
         <FlatList
@@ -63,6 +93,7 @@ export default function FeedScreen() {
           renderItem={renderItem}
           keyExtractor={(item) => item.id.toString()}
           showsVerticalScrollIndicator={false}
+          ListHeaderComponent={ListHeader}
           contentContainerStyle={{ paddingBottom: 90 }}
         />
       )}

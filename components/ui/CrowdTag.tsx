@@ -10,8 +10,8 @@ export default function CrowdTag({ crowd }: CrowdTagProps) {
   const color = crowd === "混雑" ? "#F0425C" : crowd === "やや混み" ? "#F5A623" : "#00D4A1";
 
   return (
-    <View className="flex-row items-center gap-[3px] rounded-lg px-[7px] py-0.5" style={{ backgroundColor: color + "18" }}>
-      <View className="w-[5px] h-[5px] rounded-full" style={{ backgroundColor: color }} />
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 3, borderRadius: 8, paddingHorizontal: 7, paddingVertical: 2, backgroundColor: color + "18" }}>
+      <View style={{ width: 5, height: 5, borderRadius: 2.5, backgroundColor: color }} />
       <Text style={{ fontSize: 11, fontWeight: "600", color }}>{crowd}</Text>
     </View>
   );

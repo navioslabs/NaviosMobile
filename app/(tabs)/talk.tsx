@@ -4,12 +4,15 @@ import { makeTokens } from "@/constants/theme";
 import { useThemeStore } from "@/stores/themeStore";
 import { CHAT_ROOMS } from "@/data/mockData";
 import type { ChatRoom } from "@/types";
+import { createStyles, SPACE } from "@/lib/styles";
 import TalkItem from "@/components/features/talk/TalkItem";
+import StateView from "@/components/ui/StateView";
 
 /** Talk画面 */
 export default function TalkScreen() {
   const { isDark } = useThemeStore();
   const t = makeTokens(isDark);
+  const s = createStyles(t);
 
   const renderItem = useCallback(
     ({ item }: { item: ChatRoom }) => <TalkItem chat={item} t={t} />,
@@ -17,18 +20,22 @@ export default function TalkScreen() {
   );
 
   return (
-    <View className="flex-1" style={{ backgroundColor: t.bg }}>
-      <View className="px-5 pt-3.5 pb-2.5">
-        <Text className="text-xl font-extrabold" style={{ color: t.text }}>Talk</Text>
-        <Text className="text-xs" style={{ color: t.sub }}>近くのつぶやきをキャッチ</Text>
+    <View style={s.screen}>
+      <View style={{ paddingHorizontal: SPACE.xl, paddingTop: SPACE.lg, paddingBottom: SPACE.sm }}>
+        <Text style={s.textScreenTitle}>ひとこと</Text>
+        <Text style={s.textLabel}>ご近所のリアルタイム情報</Text>
       </View>
-      <FlatList
-        data={CHAT_ROOMS}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id.toString()}
-        showsVerticalScrollIndicator={false}
-        contentContainerClassName="pb-[90px]"
-      />
+      {CHAT_ROOMS.length === 0 ? (
+        <StateView t={t} type="empty" message="最初のひとことを投稿してみましょう" />
+      ) : (
+        <FlatList
+          data={CHAT_ROOMS}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id.toString()}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 100 }}
+        />
+      )}
     </View>
   );
 }

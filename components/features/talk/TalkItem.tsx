@@ -4,6 +4,7 @@ import { Image } from "expo-image";
 import { MapPin, MessageCircle, Heart, Share } from "@/lib/icons";
 import type { ThemeTokens } from "@/constants/theme";
 import type { ChatRoom } from "@/types";
+import { FONT_SIZE, WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 
 interface TalkItemProps {
   chat: ChatRoom;
@@ -15,46 +16,41 @@ export default function TalkItem({ chat, t }: TalkItemProps) {
   const [isLiked, setIsLiked] = useState(false);
 
   return (
-    <View className="flex-row gap-2.5 py-3.5 px-5" style={{ borderBottomWidth: 1, borderBottomColor: t.border }}>
-      <Image source={{ uri: chat.avatar }} className="w-10 h-10 rounded-full" contentFit="cover" />
-      <View className="flex-1">
-        {/* Name + time */}
-        <View className="flex-row items-center gap-1.5 mb-[3px]">
-          <Text className="text-[13px] font-bold" style={{ color: t.text }}>@{chat.user}</Text>
-          <Text className="text-[11px]" style={{ color: t.muted }}>•</Text>
-          <Text className="text-[11px]" style={{ color: t.muted }}>{chat.time}</Text>
+    <View style={{ flexDirection: "row", gap: SPACE.sm + 2, paddingVertical: SPACE.lg, paddingHorizontal: SPACE.xl, borderBottomWidth: 1, borderBottomColor: t.border }}>
+      <Image source={{ uri: chat.avatar }} style={{ width: 44, height: 44, borderRadius: 22 }} contentFit="cover" />
+      <View style={{ flex: 1 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 3 }}>
+          <Text style={{ fontSize: FONT_SIZE.base, fontWeight: WEIGHT.bold, color: t.text }}>@{chat.user}</Text>
+          <Text style={{ fontSize: FONT_SIZE.sm, color: t.muted }}>•</Text>
+          <Text style={{ fontSize: FONT_SIZE.sm, color: t.muted }}>{chat.time}</Text>
         </View>
 
-        {/* Location tag */}
-        <View className="self-start flex-row items-center gap-[3px] rounded-full px-2 py-0.5 mb-1.5" style={{ backgroundColor: t.accent + "12" }}>
-          <MapPin size={9} color={t.accent} />
-          <Text className="text-[10px] font-semibold" style={{ color: t.accent }}>{chat.location}</Text>
+        <View style={{ alignSelf: "flex-start", flexDirection: "row", alignItems: "center", gap: 3, borderRadius: RADIUS.full, paddingHorizontal: SPACE.sm, paddingVertical: 3, marginBottom: 6, backgroundColor: t.accent + "12" }}>
+          <MapPin size={10} color={t.accent} />
+          <Text style={{ fontSize: FONT_SIZE.xs, fontWeight: WEIGHT.semibold, color: t.accent }}>{chat.location}</Text>
         </View>
 
-        {/* Message */}
-        <Text className="text-sm leading-[21px]" style={{ color: t.text }}>{chat.msg}</Text>
+        <Text style={{ fontSize: FONT_SIZE.lg, lineHeight: 22, color: t.text }}>{chat.msg}</Text>
 
-        {/* Image thumbnail */}
         {chat.image && (
-          <View className="w-full h-[140px] rounded-[14px] overflow-hidden mt-2.5" style={{ borderWidth: 1, borderColor: t.border }}>
-            <Image source={{ uri: chat.image }} className="w-full h-full" contentFit="cover" />
+          <View style={{ width: "100%", height: 140, borderRadius: RADIUS.lg, overflow: "hidden", marginTop: SPACE.sm + 2, borderWidth: 1, borderColor: t.border }}>
+            <Image source={{ uri: chat.image }} style={{ width: "100%", height: "100%" }} contentFit="cover" />
           </View>
         )}
 
-        {/* Actions */}
-        <View className="flex-row items-center gap-5 mt-2">
-          <View className="flex-row items-center gap-[5px]">
-            <MessageCircle size={15} color={t.muted} />
-            <Text className="text-[11px] font-semibold" style={{ color: t.muted }}>{chat.count}</Text>
-          </View>
-          <Pressable onPress={() => setIsLiked(!isLiked)} className="flex-row items-center gap-[5px]">
-            <Heart size={15} fill={isLiked ? t.red : "none"} color={isLiked ? t.red : t.muted} />
-            <Text className="text-[11px] font-semibold" style={{ color: isLiked ? t.red : t.muted }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.xl, marginTop: SPACE.sm }}>
+          <Pressable style={({ pressed }) => ({ flexDirection: "row" as const, alignItems: "center" as const, gap: 5, padding: SPACE.xs, opacity: pressed ? 0.7 : 1 })}>
+            <MessageCircle size={20} color={t.muted} />
+            <Text style={{ fontSize: FONT_SIZE.sm, fontWeight: WEIGHT.semibold, color: t.muted }}>{chat.count}</Text>
+          </Pressable>
+          <Pressable onPress={() => setIsLiked(!isLiked)} style={({ pressed }) => ({ flexDirection: "row" as const, alignItems: "center" as const, gap: 5, padding: SPACE.xs, opacity: pressed ? 0.7 : 1 })}>
+            <Heart size={20} fill={isLiked ? t.red : "none"} color={isLiked ? t.red : t.muted} />
+            <Text style={{ fontSize: FONT_SIZE.sm, fontWeight: WEIGHT.semibold, color: isLiked ? t.red : t.muted }}>
               {chat.likes + (isLiked ? 1 : 0)}
             </Text>
           </Pressable>
-          <Pressable className="flex-row items-center gap-[5px]">
-            <Share size={15} color={t.muted} />
+          <Pressable style={({ pressed }) => ({ flexDirection: "row" as const, alignItems: "center" as const, gap: 5, padding: SPACE.xs, opacity: pressed ? 0.7 : 1 })}>
+            <Share size={20} color={t.muted} />
           </Pressable>
         </View>
       </View>

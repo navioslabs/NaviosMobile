@@ -1,6 +1,7 @@
 import { View, Text } from "react-native";
 import { Radio, Eye } from "@/lib/icons";
 import type { ThemeTokens } from "@/constants/theme";
+import { FONT_SIZE, WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 
 interface ScanHeaderProps {
   t: ThemeTokens;
@@ -8,24 +9,30 @@ interface ScanHeaderProps {
   postCount: number;
 }
 
-/** スキャンヘッダー */
+/** スキャンヘッダー（Pulseスコア統合版） */
 export default function ScanHeader({ t, isDark, postCount }: ScanHeaderProps) {
   return (
-    <View
-      className="py-4 px-5"
-      style={{ backgroundColor: isDark ? "rgba(0,212,161,0.05)" : "rgba(0,212,161,0.07)", borderBottomWidth: 1, borderBottomColor: t.border }}
-    >
-      <View className="flex-row items-center gap-2.5">
-        <View className="w-[42px] h-[42px] rounded-[14px] items-center justify-center" style={{ backgroundColor: t.accent + "18" }}>
+    <View style={{ paddingVertical: SPACE.lg, paddingHorizontal: SPACE.xl, backgroundColor: isDark ? "rgba(0,212,161,0.05)" : "rgba(0,212,161,0.07)", borderBottomWidth: 1, borderBottomColor: t.border }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.sm + 2 }}>
+        <View style={{ width: 42, height: 42, borderRadius: RADIUS.lg, alignItems: "center", justifyContent: "center", backgroundColor: t.accent + "18" }}>
           <Radio size={20} color={t.accent} />
         </View>
-        <View className="flex-1">
-          <Text className="text-sm font-bold" style={{ color: t.text }}>周辺をスキャン中</Text>
-          <Text className="text-[11px] mt-0.5" style={{ color: t.sub }}>{postCount}件のイベントを検出 • 越谷市周辺</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontSize: FONT_SIZE.lg, fontWeight: WEIGHT.bold, color: t.text }}>周辺をスキャン中</Text>
+          <Text style={{ fontSize: FONT_SIZE.sm, marginTop: 2, color: t.sub }}>{postCount}件のイベントを検出 • 越谷市周辺</Text>
         </View>
-        <View className="flex-row items-center gap-[3px] rounded-[10px] px-2.5 py-[5px] bg-accent">
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 3, borderRadius: RADIUS.sm + 2, paddingHorizontal: SPACE.sm + 2, paddingVertical: 5, backgroundColor: t.accent }}>
           <Eye size={12} color="#000" />
-          <Text className="text-[11px] font-extrabold text-black">LIVE</Text>
+          <Text style={{ fontSize: FONT_SIZE.sm, fontWeight: WEIGHT.extrabold, color: "#000" }}>LIVE</Text>
+        </View>
+      </View>
+
+      {/* Pulseスコア統合 */}
+      <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.sm, marginTop: SPACE.md, paddingTop: SPACE.sm, borderTopWidth: 1, borderTopColor: t.accent + "15" }}>
+        <Text style={{ fontSize: FONT_SIZE.sm, fontWeight: WEIGHT.semibold, color: t.sub }}>盛り上がり度</Text>
+        <Text style={{ fontSize: FONT_SIZE.base, fontWeight: WEIGHT.bold, color: t.text }}>82 / 100</Text>
+        <View style={{ borderRadius: RADIUS.sm, paddingHorizontal: SPACE.sm, paddingVertical: 2, backgroundColor: t.accent, marginLeft: "auto" }}>
+          <Text style={{ fontSize: FONT_SIZE.xxs, fontWeight: WEIGHT.extrabold, color: "#000" }}>HOT</Text>
         </View>
       </View>
     </View>

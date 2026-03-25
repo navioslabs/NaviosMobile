@@ -3,6 +3,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Navigation, Bell, User } from "@/lib/icons";
 import type { ThemeTokens } from "@/constants/theme";
+import { createStyles, FONT_SIZE, WEIGHT, SPACE } from "@/lib/styles";
 
 interface HeaderProps {
   t: ThemeTokens;
@@ -11,40 +12,28 @@ interface HeaderProps {
 /** アプリ共通ヘッダー（Naviosロゴ + アクションボタン） */
 export default function Header({ t }: HeaderProps) {
   const insets = useSafeAreaInsets();
+  const s = createStyles(t);
 
   return (
-    <View
-      className="flex-row items-center justify-between px-5 pb-3"
-      style={{ paddingTop: insets.top + 8, backgroundColor: t.surface, borderBottomWidth: 1, borderBottomColor: t.border }}
-    >
-      {/* Logo */}
-      <View className="flex-row items-center gap-2">
+    <View style={[s.rowBetween, { paddingHorizontal: SPACE.xl, paddingBottom: SPACE.md, paddingTop: insets.top + SPACE.sm, backgroundColor: t.surface, borderBottomWidth: 1, borderBottomColor: t.border }]}>
+      <View style={[s.row, { gap: SPACE.sm }]}>
         <LinearGradient
           colors={[t.accent, t.blue]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          className="w-[30px] h-[30px] rounded-[9px] items-center justify-center"
+          style={{ width: 32, height: 32, borderRadius: 10, alignItems: "center", justifyContent: "center" }}
         >
-          <Navigation size={14} color="#000" />
+          <Navigation size={15} color="#000" />
         </LinearGradient>
-        <Text className="text-[19px] font-extrabold tracking-tight text-accent">
-          Navios
-        </Text>
+        <Text style={{ fontSize: FONT_SIZE.xxl, fontWeight: WEIGHT.extrabold, letterSpacing: -0.3, color: t.accent }}>Navios</Text>
       </View>
 
-      {/* Action buttons */}
-      <View className="flex-row items-center gap-2">
-        <Pressable
-          className="w-[34px] h-[34px] rounded-full items-center justify-center"
-          style={{ backgroundColor: t.surface2, borderWidth: 1, borderColor: t.border }}
-        >
-          <Bell size={15} color={t.sub} />
+      <View style={[s.row, { gap: SPACE.sm }]}>
+        <Pressable style={s.iconButton}>
+          <Bell size={16} color={t.sub} />
         </Pressable>
-        <Pressable
-          className="w-[34px] h-[34px] rounded-full items-center justify-center"
-          style={{ backgroundColor: t.surface2, borderWidth: 1, borderColor: t.border }}
-        >
-          <User size={15} color={t.sub} />
+        <Pressable style={s.iconButton}>
+          <User size={16} color={t.sub} />
         </Pressable>
       </View>
     </View>

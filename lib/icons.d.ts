@@ -3,6 +3,7 @@
  */
 import type { LucideIcon } from "lucide-react-native";
 
+export declare const AlertCircle: LucideIcon;
 export declare const Bell: LucideIcon;
 export declare const Bookmark: LucideIcon;
 export declare const Building2: LucideIcon;
@@ -15,6 +16,7 @@ export declare const Eye: LucideIcon;
 export declare const Flame: LucideIcon;
 export declare const Heart: LucideIcon;
 export declare const ImageIcon: LucideIcon;
+export declare const Inbox: LucideIcon;
 export declare const Locate: LucideIcon;
 export declare const Lock: LucideIcon;
 export declare const MapPin: LucideIcon;
@@ -24,6 +26,7 @@ export declare const Mic: LucideIcon;
 export declare const Moon: LucideIcon;
 export declare const Navigation: LucideIcon;
 export declare const Package: LucideIcon;
+export declare const PenLine: LucideIcon;
 export declare const Plus: LucideIcon;
 export declare const Radio: LucideIcon;
 export declare const Rss: LucideIcon;

@@ -9,7 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Name**: NaviOs — 地域情報共有モバイルアプリ
 - **Stack**: Expo ~55 + React Native 0.83 + TypeScript 5.9
 - **Backend**: Supabase (Auth, Postgres, PostGIS, Storage)
-- **UI**: Nativewind（Tailwind CSS for RN）+ React Native Reanimated (アニメーション) + React Native Gesture Handler　(ジェスチャー) + React Hook Form + Zod
+- **UI**: StyleSheet（style prop統一）+ React Native Reanimated (アニメーション) + React Native Gesture Handler (ジェスチャー) + React Hook Form + Zod
 - **テーマ**: Dark / Light 切替（`ThemeProvider` + `useTheme()`）
 - **対応言語**: 日本語のみ
 - **エントリポイント**: `index.ts` → `App.tsx`

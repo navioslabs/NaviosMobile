@@ -1,6 +1,7 @@
 import { View, Text, Pressable, ScrollView } from "react-native";
 import { Calendar } from "@/lib/icons";
 import type { ThemeTokens } from "@/constants/theme";
+import { FONT_SIZE, WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 
 interface DateDay {
   offset: number;
@@ -34,16 +35,16 @@ export default function DatePicker({ t, selectedDate, onSelectDate, getPostCount
 
   return (
     <View style={{ backgroundColor: t.surface, borderBottomColor: t.border, borderBottomWidth: 1 }}>
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 4, paddingTop: 10, paddingLeft: 16, paddingBottom: 4 }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.xs, paddingTop: SPACE.sm, paddingLeft: SPACE.lg, paddingBottom: SPACE.xs }}>
         <Calendar size={14} color={t.accent} />
-        <Text style={{ fontSize: 13, fontWeight: "700", color: t.text }}>
+        <Text style={{ fontSize: FONT_SIZE.md, fontWeight: WEIGHT.bold, color: t.text }}>
           {dateDays[selectedDate]?.month}月
         </Text>
       </View>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ gap: 6, paddingHorizontal: 16, paddingTop: 4, paddingBottom: 12 }}
+        contentContainerStyle={{ gap: 6, paddingHorizontal: SPACE.lg, paddingTop: SPACE.xs, paddingBottom: SPACE.md }}
       >
         {dateDays.map((dd) => {
           const active = selectedDate === dd.offset;
@@ -53,21 +54,29 @@ export default function DatePicker({ t, selectedDate, onSelectDate, getPostCount
             <Pressable
               key={dd.offset}
               onPress={() => onSelectDate(dd.offset)}
-              style={{
-                width: 50,
+              style={({ pressed }) => ({
+                width: 56,
                 alignItems: "center",
                 gap: 2,
-                borderRadius: 14,
-                paddingVertical: 8,
+                borderRadius: RADIUS.lg,
+                paddingVertical: SPACE.sm,
                 backgroundColor: active ? t.accent : "transparent",
                 borderWidth: active ? 0 : 1,
                 borderColor: active ? undefined : isToday ? t.accent + "50" : t.border,
-              }}
+                opacity: pressed ? 0.7 : 1,
+              })}
             >
-              <Text style={{ fontSize: 10, fontWeight: "600", color: active ? "#000" : dd.isWeekend ? t.red : t.muted }}>
-                {dd.weekday}
-              </Text>
-              <Text style={{ fontSize: 20, fontWeight: "800", color: active ? "#000" : t.text }}>
+              {isToday && (
+                <Text style={{ fontSize: FONT_SIZE.xxs, fontWeight: WEIGHT.bold, color: active ? "#000" : t.accent, marginBottom: 1 }}>
+                  今日
+                </Text>
+              )}
+              {!isToday && (
+                <Text style={{ fontSize: FONT_SIZE.xxs, fontWeight: WEIGHT.semibold, color: active ? "#000" : dd.isWeekend ? t.red : t.muted }}>
+                  {dd.weekday}
+                </Text>
+              )}
+              <Text style={{ fontSize: FONT_SIZE.xxl, fontWeight: WEIGHT.extrabold, color: active ? "#000" : t.text }}>
                 {dd.day}
               </Text>
               {count > 0 && (

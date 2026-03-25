@@ -5,92 +5,101 @@ import { Sparkles, Search, Mic, Zap, MapPin } from "@/lib/icons";
 import { makeTokens } from "@/constants/theme";
 import { useThemeStore } from "@/stores/themeStore";
 import { FEED_POSTS } from "@/data/mockData";
-import PulseScoreCard from "@/components/features/ai/PulseScoreCard";
+import { createStyles, FONT_SIZE, WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 import QuickActions from "@/components/features/ai/QuickActions";
 import PulseEventCard from "@/components/features/ai/PulseEventCard";
+import SuggestionChips from "@/components/features/ai/SuggestionChips";
 
 /** AI画面 */
 export default function AiScreen() {
   const { isDark } = useThemeStore();
   const t = makeTokens(isDark);
+  const s = createStyles(t);
   const [query, setQuery] = useState("");
 
   const pulseEvents = [...FEED_POSTS].sort((a, b) => a.timeLeft - b.timeLeft).slice(0, 4);
 
   return (
-    <ScrollView className="flex-1" style={{ backgroundColor: t.bg }} contentContainerClassName="p-5 pb-[100px]" showsVerticalScrollIndicator={false}>
-      {/* Logo */}
-      <View className="items-center mb-8">
-        <View className="relative mb-4">
-          {/* Glow背景 */}
-          <View
-            className="absolute -inset-3 rounded-[24px] opacity-30"
-            style={{ backgroundColor: t.accent, shadowColor: t.accent, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.6, shadowRadius: 20 }}
-          />
-          <LinearGradient
-            colors={[t.accent, t.blue]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            className="w-[68px] h-[68px] rounded-[20px] items-center justify-center"
-          >
-            <Sparkles size={32} color="#fff" />
-          </LinearGradient>
-        </View>
-        <Text className="text-[28px] font-extrabold tracking-tight" style={{ color: t.text }}>Navios AI</Text>
-        <Text className="text-sm mt-1" style={{ color: t.sub }}>あなたの地域を、もっとスマートに</Text>
+    <ScrollView style={s.screen} contentContainerStyle={{ padding: SPACE.xl, paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
+      {/* Logo — 縮小版 */}
+      <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.md, marginBottom: SPACE.lg }}>
+        <LinearGradient
+          colors={[t.accent, t.blue]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{ width: 40, height: 40, borderRadius: 12, alignItems: "center", justifyContent: "center" }}
+        >
+          <Sparkles size={20} color="#fff" />
+        </LinearGradient>
+        <Text style={[s.textSectionTitle, { color: t.text }]}>Navios AI</Text>
       </View>
 
-      {/* Search */}
-      <View className="flex-row items-center rounded-2xl p-3 gap-2.5 mb-6" style={{ backgroundColor: t.surface, borderWidth: 1, borderColor: t.border }}>
-        <Search size={17} color={t.sub} />
+      {/* Primary Action: Search */}
+      <View style={[s.card, { flexDirection: "row", alignItems: "center", gap: SPACE.sm + 2, marginBottom: SPACE.sm }]}>
+        <Search size={18} color={t.sub} />
         <TextInput
           value={query}
           onChangeText={setQuery}
           placeholder="何をお探しですか？"
           placeholderTextColor={t.sub}
-          className="flex-1 text-sm"
-          style={{ color: t.text }}
+          style={{ flex: 1, fontSize: FONT_SIZE.lg, color: t.text }}
         />
-        <Pressable>
-          <LinearGradient colors={[t.accent, t.blue]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} className="w-9 h-9 rounded-full items-center justify-center">
-            <Mic size={15} color="#fff" />
+        <Pressable style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
+          <LinearGradient
+            colors={[t.accent, t.blue]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{ width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" }}
+          >
+            <Mic size={16} color="#fff" />
           </LinearGradient>
         </Pressable>
       </View>
 
-      <PulseScoreCard t={t} isDark={isDark} />
-      <QuickActions t={t} isDark={isDark} />
+      {/* Search helper / query preview */}
+      {query ? (
+        <Text style={{ fontSize: FONT_SIZE.sm, color: t.accent, marginBottom: SPACE.sm, paddingHorizontal: SPACE.xs }}>
+          「{query}」で検索...
+        </Text>
+      ) : (
+        <Text style={{ fontSize: FONT_SIZE.xs, color: t.muted, marginBottom: SPACE.sm, paddingHorizontal: SPACE.xs }}>
+          例: 空いてるカフェ / 近いイベント / 今日締切
+        </Text>
+      )}
+
+      {/* Suggestion Chips */}
+      <SuggestionChips t={t} onSelect={(q) => setQuery(q)} />
 
       {/* Pulse Feed */}
-      <View className="mb-5">
-        <View className="flex-row items-center justify-between mb-2.5">
-          <View className="flex-row items-center gap-[5px]">
-            <Zap size={14} color={t.accent} />
-            <Text className="text-[13px] font-bold" style={{ color: t.text }}>今すぐ行くべき順</Text>
+      <View style={{ marginBottom: SPACE.xl }}>
+        <View style={[s.rowBetween, { marginBottom: SPACE.sm + 2 }]}>
+          <View style={[s.row, { gap: 5 }]}>
+            <Zap size={15} color={t.accent} />
+            <Text style={s.textBodyBold}>今すぐ行くべき順</Text>
           </View>
-          <Text className="text-[10px] font-semibold" style={{ color: t.accent }}>リアルタイム</Text>
+          <Text style={[s.textCaption, { color: t.accent }]}>リアルタイム</Text>
         </View>
-        <View className="gap-2.5">
+        <View style={{ gap: SPACE.sm + 2 }}>
           {pulseEvents.map((ev) => (
             <PulseEventCard key={ev.id} event={ev} t={t} />
           ))}
         </View>
       </View>
 
+      {/* Quick Actions — subdued */}
+      <QuickActions t={t} isDark={isDark} />
+
       {/* Auto check-in */}
-      <View
-        className="flex-row items-center gap-3 rounded-2xl p-3.5"
-        style={{ backgroundColor: isDark ? "#0F1A14" : "#EAF9F4", borderWidth: 1, borderColor: t.accent + "28" }}
-      >
-        <View className="w-10 h-10 rounded-xl items-center justify-center" style={{ backgroundColor: t.accent + "20" }}>
-          <MapPin size={20} color={t.accent} />
+      <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.md, borderRadius: RADIUS.xl, padding: SPACE.lg, backgroundColor: isDark ? "#0F1A14" : "#EAF9F4", borderWidth: 1, borderColor: t.accent + "28" }}>
+        <View style={{ width: 44, height: 44, borderRadius: RADIUS.md, alignItems: "center", justifyContent: "center", backgroundColor: t.accent + "20" }}>
+          <MapPin size={22} color={t.accent} />
         </View>
-        <View className="flex-1">
-          <Text className="text-xs font-bold" style={{ color: t.text }}>AIオートチェックイン</Text>
-          <Text className="text-[11px] leading-[15px]" style={{ color: t.sub }}>現地に近づいたら自動で通知</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={[s.textLabel, { color: t.text, fontWeight: WEIGHT.bold }]}>AIオートチェックイン</Text>
+          <Text style={[s.textMeta, { color: t.sub, lineHeight: 16 }]}>現地に近づいたら自動で通知</Text>
         </View>
-        <Pressable className="rounded-pill px-3 py-1.5 bg-accent">
-          <Text className="text-[11px] font-bold text-black">ON</Text>
+        <Pressable style={({ pressed }) => ({ borderRadius: RADIUS.full, paddingHorizontal: SPACE.lg, paddingVertical: SPACE.sm, backgroundColor: t.accent, opacity: pressed ? 0.7 : 1 })}>
+          <Text style={{ fontSize: FONT_SIZE.sm, fontWeight: WEIGHT.bold, color: "#000" }}>ON</Text>
         </Pressable>
       </View>
     </ScrollView>

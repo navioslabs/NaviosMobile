@@ -13,12 +13,12 @@ export default function UrgencyBar({ timeLeft, subColor }: UrgencyBarProps) {
   const color = urgent ? "#F0425C" : warn ? "#F5A623" : subColor;
 
   return (
-    <View className="flex-row items-center gap-1">
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
       <Timer size={12} color={color} />
       <Text style={{ fontSize: 12, fontWeight: urgent ? "700" : "600", color }}>
         あと{timeLeft}分
       </Text>
-      {urgent && <View className="w-[5px] h-[5px] rounded-full bg-danger" />}
+      {urgent && <View style={{ width: 5, height: 5, borderRadius: 2.5, backgroundColor: "#F0425C" }} />}
     </View>
   );
 }

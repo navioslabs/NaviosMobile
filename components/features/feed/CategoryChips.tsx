@@ -2,6 +2,7 @@ import { View, Text, Pressable, ScrollView } from "react-native";
 import { Rss } from "@/lib/icons";
 import { CAT_CONFIG, type CategoryId } from "@/constants/categories";
 import type { ThemeTokens } from "@/constants/theme";
+import { FONT_SIZE, WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 
 interface CategoryChipsProps {
   t: ThemeTokens;
@@ -21,37 +22,40 @@ export default function CategoryChips({ t, selected, onSelect }: CategoryChipsPr
   ];
 
   return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={{ gap: 10, paddingHorizontal: 20, paddingTop: 8, paddingBottom: 16 }}
-    >
-      {cats.map((cat) => {
-        const Icon = cat.icon;
-        const active = selected === cat.id;
-        return (
-          <Pressable
-            key={cat.id}
-            onPress={() => onSelect(cat.id)}
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 8,
-              borderRadius: 9999,
-              paddingHorizontal: 16,
-              paddingVertical: 10,
-              backgroundColor: active ? t.accent : t.surface,
-              borderWidth: 1.5,
-              borderColor: active ? t.accent : t.border,
-            }}
-          >
-            <Icon size={16} color={active ? "#000" : t.sub} />
-            <Text style={{ fontSize: 14, fontWeight: "600", color: active ? "#000" : t.sub }}>
-              {cat.label}
-            </Text>
-          </Pressable>
-        );
-      })}
-    </ScrollView>
+    <View style={{ height: 60 }}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ alignItems: "center", paddingHorizontal: SPACE.xl, gap: SPACE.sm + 2 }}
+      >
+        {cats.map((cat) => {
+          const Icon = cat.icon;
+          const active = selected === cat.id;
+          return (
+            <Pressable
+              key={cat.id}
+              onPress={() => onSelect(cat.id)}
+              style={({ pressed }) => ({
+                flexDirection: "row" as const,
+                alignItems: "center" as const,
+                height: 44,
+                opacity: pressed ? 0.7 : 1,
+                gap: SPACE.sm,
+                borderRadius: RADIUS.full,
+                paddingHorizontal: SPACE.lg,
+                backgroundColor: active ? t.accent : t.surface,
+                borderWidth: 1.5,
+                borderColor: active ? t.accent : t.border,
+              })}
+            >
+              <Icon size={16} color={active ? "#000" : t.sub} />
+              <Text style={{ fontSize: FONT_SIZE.base, fontWeight: WEIGHT.semibold, color: active ? "#000" : t.sub, includeFontPadding: false }}>
+                {cat.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+    </View>
   );
 }

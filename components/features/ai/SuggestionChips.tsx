@@ -1,0 +1,41 @@
+import { View, Text, Pressable } from "react-native";
+import type { ThemeTokens } from "@/constants/theme";
+import { FONT_SIZE, WEIGHT, SPACE, RADIUS } from "@/lib/styles";
+
+interface SuggestionChipsProps {
+  t: ThemeTokens;
+  onSelect: (query: string) => void;
+}
+
+const SUGGESTIONS = [
+  "空いてるカフェ",
+  "今近いイベント",
+  "子連れ向け",
+  "野菜が買える場所",
+  "無料で参加OK",
+];
+
+/** AI検索のサジェスションチップ（折り返し表示） */
+export default function SuggestionChips({ t, onSelect }: SuggestionChipsProps) {
+  return (
+    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: SPACE.sm, marginBottom: SPACE.lg }}>
+      {SUGGESTIONS.map((s) => (
+        <Pressable
+          key={s}
+          onPress={() => onSelect(s)}
+          style={({ pressed }) => ({
+            paddingHorizontal: SPACE.md,
+            paddingVertical: SPACE.sm,
+            borderRadius: RADIUS.full,
+            backgroundColor: t.surface2,
+            borderWidth: 1,
+            borderColor: t.border,
+            opacity: pressed ? 0.7 : 1,
+          })}
+        >
+          <Text style={{ fontSize: FONT_SIZE.sm, fontWeight: WEIGHT.medium, color: t.sub }}>{s}</Text>
+        </Pressable>
+      ))}
+    </View>
+  );
+}
