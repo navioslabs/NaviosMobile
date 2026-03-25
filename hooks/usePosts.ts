@@ -25,12 +25,17 @@ export function usePost(id: string) {
   });
 }
 
-/** ちかく一覧 */
+/**
+ * ちかく一覧
+ * queryKey に座標を含めず、100m閾値で手動 invalidate する方式
+ */
 export function useNearbyPosts(lat: number, lng: number, radius?: number) {
   return useQuery({
-    queryKey: ["posts", "nearby", { lat, lng, radius }],
+    queryKey: ["posts", "nearby"],
     queryFn: () => fetchNearbyPosts(lat, lng, radius),
     enabled: lat !== 0 && lng !== 0,
+    staleTime: 1000 * 30,
+    refetchInterval: 1000 * 60,
   });
 }
 

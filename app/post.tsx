@@ -1,25 +1,27 @@
 import { useState, useEffect, useRef } from "react";
 import { View, Text, TextInput, Pressable, ScrollView, Alert, ActivityIndicator } from "react-native";
-import Animated, { useSharedValue, useAnimatedStyle, withSpring, withSequence } from "react-native-reanimated";
+import Animated, { useSharedValue, useAnimatedStyle, withSpring, withSequence, FadeIn } from "react-native-reanimated";
 import { router } from "expo-router";
 import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Image } from "expo-image";
-import { Camera, ImageIcon, MapPin, Locate } from "@/lib/icons";
+import * as Haptics from "expo-haptics";
+import { Camera, ImageIcon, MapPin, Locate, Check } from "@/lib/icons";
 import { CAT_CONFIG, type CategoryId } from "@/constants/categories";
 import { useCreatePost } from "@/hooks/usePosts";
 import { useImagePicker } from "@/hooks/useImagePicker";
 import { useLocation } from "@/hooks/useLocation";
 import { uploadImage } from "@/lib/storage";
+import { getUserMessage } from "@/lib/appError";
 import { useAppStyles } from "@/hooks/useAppStyles";
 import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 
 /** カテゴリ別の説明文 */
 const CAT_HINTS: Record<CategoryId, string> = {
-  stock: "食料品、日用品など物資の共有に",
-  event: "地域のイベント・集まりの告知に",
-  help: "困りごとの相談・助け合いに",
-  admin: "行政からのお知らせ・手続き情報に",
+  stock: "食料品、日用品など物資の共有に\n例: 野菜入荷 / パンの在庫 / おすそ分け",
+  event: "地域のイベント・集まりの告知に\n例: お祭り / 体験会 / 集まり",
+  help: "困りごとの相談・助け合いに\n例: 手伝ってほしい / 手伝えます",
+  admin: "行政からのお知らせ・手続き情報に\n例: 手続き / お知らせ / 公的案内",
 };
 
 /** 新規投稿画面 */
@@ -35,6 +37,7 @@ export default function PostScreen() {
   const [cat, setCat] = useState<CategoryId>("stock");
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [submitted, setSubmitted] = useState(false);
 
   const hasContent = title.trim().length > 0 || content.trim().length > 0 || imageUri !== null;
 
@@ -74,16 +77,58 @@ export default function PostScreen() {
         lat: granted ? lat : undefined,
         lng: granted ? lng : undefined,
       });
-      Alert.alert("投稿完了", "投稿が作成されました", [
-        { text: "OK", onPress: () => { submittedRef.current = true; router.back(); } },
-      ]);
+      setSubmitted(true);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setTimeout(() => {
+        submittedRef.current = true;
+        router.back();
+      }, 800);
     } catch (e: any) {
       Alert.alert("エラー", e.message ?? "投稿に失敗しました");
     }
   };
 
+  /** 投稿成功画面 */
+  if (submitted) {
+    return (
+      <View style={[s.screen, { flex: 1, justifyContent: "center", alignItems: "center" }]}>
+        <Animated.View entering={FadeIn.duration(300)} style={{ alignItems: "center", gap: SPACE.md }}>
+          <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: t.accent, alignItems: "center", justifyContent: "center" }}>
+            <Check size={32} color="#000" />
+          </View>
+          <Text style={{ fontSize: fs.lg, fontWeight: WEIGHT.bold, color: t.text }}>近くの人へ届けました</Text>
+        </Animated.View>
+      </View>
+    );
+  }
+
+  /** 投稿ボタン下の補助テキスト */
+  const renderGuideText = () => {
+    if (title.trim().length === 0) {
+      return (
+        <Text style={{ fontSize: fs.sm, color: t.muted, textAlign: "center", marginTop: SPACE.xs }}>
+          タイトルを入力すると投稿できます
+        </Text>
+      );
+    }
+    if (!imageUri && !granted) {
+      return (
+        <Text style={{ fontSize: fs.sm, color: t.muted, textAlign: "center", marginTop: SPACE.xs }}>
+          写真や位置情報を添えるとさらに伝わります
+        </Text>
+      );
+    }
+    return null;
+  };
+
   return (
     <ScrollView style={s.screen} contentContainerStyle={{ padding: SPACE.xl, paddingBottom: 40, gap: SPACE.lg }} showsVerticalScrollIndicator={false}>
+      {/* イントロヘッダー */}
+      <View style={{ marginBottom: SPACE.sm }}>
+        <Text style={{ fontSize: fs.lg, fontWeight: WEIGHT.bold, color: t.text }}>近くの人に、今必要な情報を届ける</Text>
+        <Text style={{ fontSize: fs.xs, color: t.sub, marginTop: SPACE.xs }}>今の情報が、近くの誰かの判断を助けます</Text>
+      </View>
+
       {/* カテゴリ */}
       <View>
         <Text style={[s.textSectionLabel, { marginBottom: SPACE.sm }]}>カテゴリ <Text style={{ color: t.red }}>*</Text></Text>
@@ -104,8 +149,9 @@ export default function PostScreen() {
 
       {/* タイトル */}
       <View>
-        <Text style={[s.textSectionLabel, { marginBottom: SPACE.sm }]}>タイトル <Text style={{ color: t.red }}>*</Text></Text>
-        <TextInput style={s.input} placeholder="タイトルを入力" placeholderTextColor={t.sub} value={title} onChangeText={setTitle} />
+        <Text style={[s.textSectionLabel, { marginBottom: SPACE.xs }]}>タイトル <Text style={{ color: t.red }}>*</Text></Text>
+        <Text style={{ fontSize: fs.xxs, color: t.muted, marginBottom: SPACE.sm }}>ひと目で内容が伝わる短い見出しにする</Text>
+        <TextInput style={s.input} placeholder="例: 越谷駅前で野菜販売 / 今日16時から体操教室" placeholderTextColor={t.sub} value={title} onChangeText={setTitle} />
       </View>
 
       {/* 詳細 */}
@@ -114,13 +160,13 @@ export default function PostScreen() {
           <Text style={s.textSectionLabel}>詳細</Text>
           <Text style={{ fontSize: fs.xxs, color: t.muted }}>任意</Text>
         </View>
-        <TextInput style={[s.input, { height: 100, textAlignVertical: "top" }]} placeholder="詳細を入力" placeholderTextColor={t.sub} value={content} onChangeText={setContent} multiline />
+        <TextInput style={[s.input, { height: 100, textAlignVertical: "top" }]} placeholder="例: 日時、場所、持ち物、対象者など" placeholderTextColor={t.sub} value={content} onChangeText={setContent} multiline />
       </View>
 
       {/* 写真 */}
       <View>
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: SPACE.sm }}>
-          <Text style={s.textSectionLabel}>写真</Text>
+          <Text style={s.textSectionLabel}>写真を添えると伝わりやすくなります</Text>
           <Text style={{ fontSize: fs.xxs, color: t.muted }}>任意</Text>
         </View>
         <View style={{ flexDirection: "row", gap: SPACE.sm }}>
@@ -152,11 +198,20 @@ export default function PostScreen() {
         <View style={[s.card, { flexDirection: "row" as const, alignItems: "center" as const, gap: SPACE.sm + 2 }]}>
           <MapPin size={18} color={granted ? t.accent : t.sub} />
           <Text style={{ flex: 1, fontSize: fs.base, color: granted ? t.text : t.sub }}>
-            {granted ? `📍 現在地を取得済み` : "位置情報の許可が必要です"}
+            {granted ? "📍 位置情報つきで近くの人に届きやすくなります" : "位置なしでも投稿できます（許可すると届きやすい）"}
           </Text>
           <Locate size={16} color={granted ? t.accent : t.sub} />
         </View>
       </View>
+
+      {/* エラーバナー */}
+      {createPostMutation.error && (
+        <View style={{ backgroundColor: "#FF4D4F20", padding: SPACE.md, borderRadius: RADIUS.md }}>
+          <Text style={{ fontSize: fs.sm, color: "#FF4D4F" }}>
+            {getUserMessage(createPostMutation.error)}
+          </Text>
+        </View>
+      )}
 
       {/* 投稿ボタン */}
       <AnimatedSubmitButton
@@ -167,11 +222,7 @@ export default function PostScreen() {
         t={t}
         fs={fs}
       />
-      {!canSubmit && (
-        <Text style={{ fontSize: fs.sm, color: t.muted, textAlign: "center", marginTop: SPACE.xs }}>
-          タイトルを入力すると投稿できます
-        </Text>
-      )}
+      {renderGuideText()}
     </ScrollView>
   );
 }

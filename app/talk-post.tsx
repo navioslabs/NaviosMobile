@@ -1,9 +1,10 @@
-import { useState, useEffect, useRef } from "react";
-import { View, Text, TextInput, Pressable, ScrollView, Alert } from "react-native";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { View, Text, TextInput, Pressable, ScrollView, Alert, ActivityIndicator } from "react-native";
 import { router } from "expo-router";
 import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Image } from "expo-image";
+import * as Haptics from "expo-haptics";
 import { User, MapPin, Camera, ImageIcon, Send } from "@/lib/icons";
 import { useCreateTalk } from "@/hooks/useTalks";
 import { useImagePicker } from "@/hooks/useImagePicker";
@@ -11,6 +12,17 @@ import { useLocation } from "@/hooks/useLocation";
 import { uploadImage } from "@/lib/storage";
 import { useAppStyles } from "@/hooks/useAppStyles";
 import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
+
+const MAX_LENGTH = 140;
+
+/** ローテーション用プレースホルダー例 */
+const PLACEHOLDER_EXAMPLES = [
+  "例: パン残り少なめです",
+  "例: 公園に人多めです",
+  "例: 道路工事で渋滞してます",
+  "例: カフェ空いてて快適です",
+  "例: 桜がきれいに咲いてます",
+];
 
 /** つぶやき投稿画面 */
 export default function TalkPostScreen() {
@@ -21,9 +33,22 @@ export default function TalkPostScreen() {
   const navigation = useNavigation();
   const submittedRef = useRef(false);
   const [msg, setMsg] = useState("");
+  const [placeholderIndex, setPlaceholderIndex] = useState(0);
 
   const hasContent = msg.trim().length > 0 || imageUri !== null;
+  const remaining = MAX_LENGTH - msg.length;
+  const isValid = msg.trim().length > 0 && remaining >= 0;
+  const isPending = createTalkMutation.isPending;
 
+  // プレースホルダーのローテーション
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setPlaceholderIndex((prev) => (prev + 1) % PLACEHOLDER_EXAMPLES.length);
+    }, 3000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // 破棄確認
   useEffect(() => {
     if (!hasContent) return;
 
@@ -43,8 +68,8 @@ export default function TalkPostScreen() {
     return unsubscribe;
   }, [hasContent, navigation]);
 
-  const handleSend = async () => {
-    if (!msg.trim()) return;
+  const handleSend = useCallback(async () => {
+    if (!msg.trim() || isPending) return;
     try {
       let image_url: string | undefined;
       if (imageUri) {
@@ -57,14 +82,27 @@ export default function TalkPostScreen() {
         lng: granted ? lng : undefined,
       });
       submittedRef.current = true;
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       router.back();
     } catch (e: any) {
       Alert.alert("エラー", e.message ?? "投稿に失敗しました");
     }
-  };
+  }, [msg, isPending, imageUri, granted, lat, lng, createTalkMutation]);
+
+  /** 文字数カウントの色を決定 */
+  const countColor = remaining < 0 ? t.red : remaining <= 20 ? t.amber : t.muted;
+
+  /** 文字数表示テキスト */
+  const countText = remaining >= 0 ? `あと ${remaining}文字` : `${Math.abs(remaining)}文字オーバー`;
 
   return (
     <ScrollView style={s.screen} contentContainerStyle={{ padding: SPACE.xl, paddingBottom: 40, gap: SPACE.lg }} showsVerticalScrollIndicator={false}>
+      {/* イントロテキスト */}
+      <Text style={{ fontSize: fs.sm, color: t.sub }}>
+        短くて大丈夫。今の様子をそのまま届けよう
+      </Text>
+
+      {/* アバター + テキスト入力 */}
       <View style={{ flexDirection: "row", gap: SPACE.md, alignItems: "flex-start" }}>
         <LinearGradient colors={[t.accent, t.blue]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center" }}>
           <User size={22} color="#fff" />
@@ -72,7 +110,7 @@ export default function TalkPostScreen() {
         <TextInput
           value={msg}
           onChangeText={setMsg}
-          placeholder="この場所で何が起きてる？"
+          placeholder={PLACEHOLDER_EXAMPLES[placeholderIndex]}
           placeholderTextColor={t.sub}
           multiline
           autoFocus
@@ -80,28 +118,29 @@ export default function TalkPostScreen() {
         />
       </View>
 
-      <View style={[s.card, { gap: SPACE.xs }]}>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.sm }}>
-          <MapPin size={16} color={granted ? t.accent : t.muted} />
-          <Text style={{ fontSize: fs.md, fontWeight: WEIGHT.semibold, color: granted ? t.accent : t.muted }}>
-            {granted ? "📍 現在地を取得済み" : "位置情報の許可が必要です"}
-          </Text>
-          <Text style={{ marginLeft: "auto", fontSize: fs.xs, color: t.muted }}>{granted ? "自動検出" : ""}</Text>
-        </View>
-        <Text style={{ fontSize: fs.xxs, color: t.muted, paddingLeft: SPACE.xxl }}>
-          {granted ? "位置情報つきで投稿されます" : "設定から位置情報を許可してください"}
+      {/* コンパクト位置情報（インライン1行） */}
+      <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.xs }}>
+        <MapPin size={14} color={granted ? t.accent : t.muted} />
+        <Text style={{ fontSize: fs.sm, color: granted ? t.accent : t.muted }}>
+          {granted ? "📍 近くの人に届きやすくなります" : "位置なしでも投稿できます"}
         </Text>
       </View>
 
-      <View style={{ flexDirection: "row", gap: SPACE.sm }}>
-        <Pressable onPress={takePhoto} style={{ width: 60, height: 60, borderRadius: RADIUS.lg, alignItems: "center", justifyContent: "center", gap: SPACE.xs, borderWidth: 1.5, borderStyle: "dashed", borderColor: t.border, backgroundColor: t.surface }}>
-          <Camera size={20} color={t.sub} />
-          <Text style={{ fontSize: fs.xxs, color: t.sub }}>撮影</Text>
-        </Pressable>
-        <Pressable onPress={pickImage} style={{ width: 60, height: 60, borderRadius: RADIUS.lg, alignItems: "center", justifyContent: "center", gap: SPACE.xs, borderWidth: 1.5, borderStyle: "dashed", borderColor: t.border, backgroundColor: t.surface }}>
-          <ImageIcon size={20} color={t.sub} />
-          <Text style={{ fontSize: fs.xxs, color: t.sub }}>選択</Text>
-        </Pressable>
+      {/* 写真セクション */}
+      <View style={{ gap: SPACE.xs }}>
+        <Text style={{ fontSize: fs.xs, color: t.sub }}>
+          様子が伝わりやすくなります
+        </Text>
+        <View style={{ flexDirection: "row", gap: SPACE.sm }}>
+          <Pressable onPress={takePhoto} style={{ width: 60, height: 60, borderRadius: RADIUS.lg, alignItems: "center", justifyContent: "center", gap: SPACE.xs, borderWidth: 1.5, borderStyle: "dashed", borderColor: t.border, backgroundColor: t.surface }}>
+            <Camera size={20} color={t.sub} />
+            <Text style={{ fontSize: fs.xxs, color: t.sub }}>撮影</Text>
+          </Pressable>
+          <Pressable onPress={pickImage} style={{ width: 60, height: 60, borderRadius: RADIUS.lg, alignItems: "center", justifyContent: "center", gap: SPACE.xs, borderWidth: 1.5, borderStyle: "dashed", borderColor: t.border, backgroundColor: t.surface }}>
+            <ImageIcon size={20} color={t.sub} />
+            <Text style={{ fontSize: fs.xxs, color: t.sub }}>選択</Text>
+          </Pressable>
+        </View>
       </View>
       {imageUri && (
         <View style={{ position: "relative" }}>
@@ -112,31 +151,46 @@ export default function TalkPostScreen() {
         </View>
       )}
 
-      {/* 文字数超過警告 */}
-      {msg.length > 140 && (
+      {/* 文字数超過警告バナー */}
+      {remaining < 0 && (
         <View style={{ backgroundColor: t.red + "15", borderRadius: RADIUS.md, padding: SPACE.md, borderWidth: 1, borderColor: t.red + "30" }}>
           <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.semibold, color: t.red }}>
-            140文字を超えています（{msg.length - 140}文字オーバー）
+            140文字を超えています（{Math.abs(remaining)}文字オーバー）
           </Text>
         </View>
       )}
 
+      {/* 文字数カウント + 送信ボタン */}
       <View style={s.rowBetween}>
-        <Text style={{ fontSize: fs.sm, fontWeight: msg.length > 140 ? WEIGHT.bold : WEIGHT.normal, color: msg.length > 140 ? t.red : msg.length > 120 ? t.amber : t.muted }}>
-          {msg.length}/140
+        <Text style={{ fontSize: fs.sm, fontWeight: remaining < 0 ? WEIGHT.bold : WEIGHT.normal, color: countColor }}>
+          {countText}
         </Text>
         <Pressable
           onPress={handleSend}
-          disabled={msg.length === 0 || msg.length > 140 || createTalkMutation.isPending}
+          disabled={!isValid || isPending}
         >
           <LinearGradient
-            colors={msg.length > 0 && msg.length <= 140 ? [t.accent, t.blue] : [t.surface2, t.surface2]}
+            colors={[t.accent, t.blue]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={{ flexDirection: "row", alignItems: "center", gap: 6, borderRadius: RADIUS.lg, paddingHorizontal: SPACE.xxl + 4, paddingVertical: SPACE.md }}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 6,
+              borderRadius: RADIUS.lg,
+              paddingHorizontal: SPACE.xxl + 4,
+              paddingVertical: SPACE.md,
+              opacity: isValid && !isPending ? 1 : 0.3,
+            }}
           >
-            <Send size={15} color={msg.length > 0 && msg.length <= 140 ? "#000" : t.muted} />
-            <Text style={{ fontWeight: WEIGHT.extrabold, fontSize: fs.lg, color: msg.length > 0 && msg.length <= 140 ? "#000" : t.muted }}>投稿する</Text>
+            {isPending ? (
+              <ActivityIndicator size="small" color="#000" />
+            ) : (
+              <Send size={15} color={isValid ? "#000" : t.muted} />
+            )}
+            <Text style={{ fontWeight: WEIGHT.extrabold, fontSize: fs.lg, color: isValid ? "#000" : t.muted }}>
+              {isPending ? "投稿中..." : "投稿する"}
+            </Text>
           </LinearGradient>
         </Pressable>
       </View>
