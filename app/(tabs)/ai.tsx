@@ -2,19 +2,16 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { View, Text, TextInput, Pressable, ScrollView, ActivityIndicator } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Sparkles, Search, Mic, Zap } from "@/lib/icons";
-import { makeTokens } from "@/constants/theme";
-import { useThemeStore } from "@/stores/themeStore";
 import { FEED_POSTS } from "@/data/mockData";
-import { createStyles, FONT_SIZE, WEIGHT, SPACE, RADIUS } from "@/lib/styles";
+import { useAppStyles } from "@/hooks/useAppStyles";
+import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 import PulseEventCard from "@/components/features/ai/PulseEventCard";
 import SuggestionChips from "@/components/features/ai/SuggestionChips";
 import StateView from "@/components/ui/StateView";
 
 /** AI画面（さがす） */
 export default function AiScreen() {
-  const { isDark } = useThemeStore();
-  const t = makeTokens(isDark);
-  const s = createStyles(t);
+  const { s, t, fs } = useAppStyles();
   const [query, setQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -77,7 +74,7 @@ export default function AiScreen() {
           onChangeText={handleQueryChange}
           placeholder="何をお探しですか？"
           placeholderTextColor={t.sub}
-          style={{ flex: 1, fontSize: FONT_SIZE.lg, color: t.text }}
+          style={{ flex: 1, fontSize: fs.lg, color: t.text }}
         />
         {isSearching ? (
           <Pressable
@@ -92,7 +89,7 @@ export default function AiScreen() {
               opacity: pressed ? 0.7 : 1,
             })}
           >
-            <Text style={{ fontSize: FONT_SIZE.lg, color: t.sub }}>✕</Text>
+            <Text style={{ fontSize: fs.lg, color: t.sub }}>✕</Text>
           </Pressable>
         ) : (
           <Pressable style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
@@ -110,7 +107,7 @@ export default function AiScreen() {
 
       {/* 検索ヘルパー */}
       {!isSearching && (
-        <Text style={{ fontSize: FONT_SIZE.xs, color: t.muted, marginBottom: SPACE.sm, paddingHorizontal: SPACE.xs }}>
+        <Text style={{ fontSize: fs.xs, color: t.muted, marginBottom: SPACE.sm, paddingHorizontal: SPACE.xs }}>
           例: 空いてるカフェ / 近いイベント / 今日締切
         </Text>
       )}
@@ -121,11 +118,11 @@ export default function AiScreen() {
           {isLoading ? (
             <View style={{ alignItems: "center", paddingVertical: SPACE.xxxl }}>
               <ActivityIndicator size="large" color={t.accent} />
-              <Text style={{ fontSize: FONT_SIZE.base, color: t.sub, marginTop: SPACE.lg }}>検索中...</Text>
+              <Text style={{ fontSize: fs.base, color: t.sub, marginTop: SPACE.lg }}>検索中...</Text>
             </View>
           ) : searchResults && searchResults.length > 0 ? (
             <View>
-              <Text style={{ fontSize: FONT_SIZE.sm, fontWeight: WEIGHT.semibold, color: t.accent, marginBottom: SPACE.lg }}>
+              <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.semibold, color: t.accent, marginBottom: SPACE.lg }}>
                 「{query}」の検索結果 — {searchResults.length}件
               </Text>
               <View style={{ gap: SPACE.sm + 2 }}>
@@ -137,7 +134,7 @@ export default function AiScreen() {
           ) : (
             <View style={{ paddingVertical: SPACE.xxxl }}>
               <StateView t={t} type="empty" message="該当する投稿が見つかりませんでした" />
-              <Text style={{ fontSize: FONT_SIZE.sm, color: t.muted, textAlign: "center", marginTop: SPACE.lg }}>
+              <Text style={{ fontSize: fs.sm, color: t.muted, textAlign: "center", marginTop: SPACE.lg }}>
                 別のキーワードを試してみてください
               </Text>
               {/* 代替サジェスト */}

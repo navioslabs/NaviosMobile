@@ -3,10 +3,9 @@ import { View, Text, TextInput, Pressable, ScrollView, Alert } from "react-nativ
 import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { Camera, ImageIcon, MapPin, Locate } from "@/lib/icons";
-import { makeTokens } from "@/constants/theme";
 import { CAT_CONFIG, type CategoryId } from "@/constants/categories";
-import { useThemeStore } from "@/stores/themeStore";
-import { createStyles, FONT_SIZE, WEIGHT, SPACE, RADIUS } from "@/lib/styles";
+import { useAppStyles } from "@/hooks/useAppStyles";
+import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 
 /** カテゴリ別の説明文 */
 const CAT_HINTS: Record<CategoryId, string> = {
@@ -18,9 +17,7 @@ const CAT_HINTS: Record<CategoryId, string> = {
 
 /** 新規投稿画面 */
 export default function PostScreen() {
-  const { isDark } = useThemeStore();
-  const t = makeTokens(isDark);
-  const s = createStyles(t);
+  const { s, t, fs } = useAppStyles();
 
   const [cat, setCat] = useState<CategoryId>("stock");
   const [title, setTitle] = useState("");
@@ -47,12 +44,12 @@ export default function PostScreen() {
             return (
               <Pressable key={id} onPress={() => setCat(id)} style={({ pressed }) => ({ flex: 1, alignItems: "center" as const, gap: 6, borderRadius: RADIUS.lg, paddingVertical: SPACE.md, paddingHorizontal: 6, borderWidth: active ? 2 : 1, borderColor: active ? c.color : t.border, backgroundColor: active ? c.color + "18" : t.surface, opacity: pressed ? 0.7 : 1 })}>
                 <Icon size={20} color={active ? c.color : t.sub} />
-                <Text style={{ fontSize: FONT_SIZE.xs, fontWeight: WEIGHT.semibold, color: active ? c.color : t.sub }}>{c.label}</Text>
+                <Text style={{ fontSize: fs.xs, fontWeight: WEIGHT.semibold, color: active ? c.color : t.sub }}>{c.label}</Text>
               </Pressable>
             );
           })}
         </View>
-        <Text style={{ fontSize: FONT_SIZE.xxs, color: t.muted, marginTop: SPACE.sm }}>{CAT_HINTS[cat]}</Text>
+        <Text style={{ fontSize: fs.xxs, color: t.muted, marginTop: SPACE.sm }}>{CAT_HINTS[cat]}</Text>
       </View>
 
       {/* タイトル */}
@@ -65,7 +62,7 @@ export default function PostScreen() {
       <View>
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: SPACE.sm }}>
           <Text style={s.textSectionLabel}>詳細</Text>
-          <Text style={{ fontSize: FONT_SIZE.xxs, color: t.muted }}>任意</Text>
+          <Text style={{ fontSize: fs.xxs, color: t.muted }}>任意</Text>
         </View>
         <TextInput style={[s.input, { height: 100, textAlignVertical: "top" }]} placeholder="詳細を入力" placeholderTextColor={t.sub} value={content} onChangeText={setContent} multiline />
       </View>
@@ -74,13 +71,13 @@ export default function PostScreen() {
       <View>
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: SPACE.sm }}>
           <Text style={s.textSectionLabel}>写真</Text>
-          <Text style={{ fontSize: FONT_SIZE.xxs, color: t.muted }}>任意</Text>
+          <Text style={{ fontSize: fs.xxs, color: t.muted }}>任意</Text>
         </View>
         <View style={{ flexDirection: "row", gap: SPACE.sm }}>
           {[{ Icon: Camera, l: "撮影" }, { Icon: ImageIcon, l: "選択" }].map(({ Icon, l }) => (
             <Pressable key={l} style={({ pressed }) => ({ width: 72, height: 72, borderRadius: RADIUS.lg, alignItems: "center" as const, justifyContent: "center" as const, gap: 5, borderWidth: 1.5, borderStyle: "dashed" as const, borderColor: t.border, backgroundColor: t.surface, opacity: pressed ? 0.7 : 1 })}>
               <Icon size={22} color={t.sub} />
-              <Text style={{ fontSize: FONT_SIZE.xs, color: t.sub }}>{l}</Text>
+              <Text style={{ fontSize: fs.xs, color: t.sub }}>{l}</Text>
             </Pressable>
           ))}
         </View>
@@ -90,11 +87,11 @@ export default function PostScreen() {
       <View>
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: SPACE.sm }}>
           <Text style={s.textSectionLabel}>場所</Text>
-          <Text style={{ fontSize: FONT_SIZE.xxs, color: t.muted }}>任意</Text>
+          <Text style={{ fontSize: fs.xxs, color: t.muted }}>任意</Text>
         </View>
         <Pressable style={({ pressed }) => [s.card, { flexDirection: "row" as const, alignItems: "center" as const, gap: SPACE.sm + 2, opacity: pressed ? 0.7 : 1 }]}>
           <MapPin size={18} color={t.sub} />
-          <Text style={{ flex: 1, fontSize: FONT_SIZE.base, color: t.sub }}>場所を設定</Text>
+          <Text style={{ flex: 1, fontSize: fs.base, color: t.sub }}>場所を設定</Text>
           <Locate size={16} color={t.sub} />
         </Pressable>
       </View>
@@ -111,11 +108,11 @@ export default function PostScreen() {
           end={{ x: 1, y: 1 }}
           style={{ borderRadius: RADIUS.lg, padding: SPACE.lg, alignItems: "center" }}
         >
-          <Text style={{ color: canSubmit ? "#000" : t.muted, fontWeight: WEIGHT.extrabold, fontSize: FONT_SIZE.lg + 1 }}>投稿する</Text>
+          <Text style={{ color: canSubmit ? "#000" : t.muted, fontWeight: WEIGHT.extrabold, fontSize: fs.lg + 1 }}>投稿する</Text>
         </LinearGradient>
       </Pressable>
       {!canSubmit && (
-        <Text style={{ fontSize: FONT_SIZE.sm, color: t.muted, textAlign: "center", marginTop: SPACE.xs }}>
+        <Text style={{ fontSize: fs.sm, color: t.muted, textAlign: "center", marginTop: SPACE.xs }}>
           タイトルを入力すると投稿できます
         </Text>
       )}

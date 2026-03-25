@@ -28,6 +28,24 @@ export const FONT_SIZE = {
   hero: 28,
 } as const;
 
+/** スケール適用済みフォントサイズを返す */
+export function getScaledFontSize(scale: number) {
+  return {
+    xxs: Math.round(FONT_SIZE.xxs * scale),
+    xs: Math.round(FONT_SIZE.xs * scale),
+    sm: Math.round(FONT_SIZE.sm * scale),
+    md: Math.round(FONT_SIZE.md * scale),
+    base: Math.round(FONT_SIZE.base * scale),
+    lg: Math.round(FONT_SIZE.lg * scale),
+    xl: Math.round(FONT_SIZE.xl * scale),
+    xxl: Math.round(FONT_SIZE.xxl * scale),
+    xxxl: Math.round(FONT_SIZE.xxxl * scale),
+    hero: Math.round(FONT_SIZE.hero * scale),
+  };
+}
+
+export type ScaledFontSize = ReturnType<typeof getScaledFontSize>;
+
 // ═══════════════════════════════════════════════════════════════
 // フォントウェイト
 // ═══════════════════════════════════════════════════════════════
@@ -78,84 +96,85 @@ export const RADIUS = {
  * <Text style={s.textTitle}>タイトル</Text>
  * <View style={s.card}>...</View>
  */
-export const createStyles = (t: ThemeTokens) =>
-  StyleSheet.create({
+export const createStyles = (t: ThemeTokens, scale = 1) => {
+  const f = getScaledFontSize(scale);
+  return StyleSheet.create({
     // ── テキスト ──────────────────────────────────────
     /** ヒーロー見出し (28px, 800) */
     textHero: {
-      fontSize: FONT_SIZE.hero,
+      fontSize: f.hero,
       fontWeight: WEIGHT.extrabold,
       color: t.text,
       letterSpacing: -0.5,
     },
     /** 画面タイトル (22px, 800) */
     textScreenTitle: {
-      fontSize: FONT_SIZE.xxxl,
+      fontSize: f.xxxl,
       fontWeight: WEIGHT.extrabold,
       color: t.text,
     },
     /** セクションタイトル (20px, 800) */
     textSectionTitle: {
-      fontSize: FONT_SIZE.xxl,
+      fontSize: f.xxl,
       fontWeight: WEIGHT.extrabold,
       color: t.text,
     },
     /** 見出し (17px, 700) */
     textHeading: {
-      fontSize: FONT_SIZE.xl,
+      fontSize: f.xl,
       fontWeight: WEIGHT.bold,
       color: t.text,
     },
     /** 小見出し / カード名 (15px, 700) */
     textSubheading: {
-      fontSize: FONT_SIZE.lg,
+      fontSize: f.lg,
       fontWeight: WEIGHT.bold,
       color: t.text,
     },
     /** 本文 (14px, 400) */
     textBody: {
-      fontSize: FONT_SIZE.base,
+      fontSize: f.base,
       color: t.text,
-      lineHeight: 20,
+      lineHeight: Math.round(20 * scale),
     },
     /** 本文太字 (14px, 700) */
     textBodyBold: {
-      fontSize: FONT_SIZE.base,
+      fontSize: f.base,
       fontWeight: WEIGHT.bold,
       color: t.text,
     },
     /** ラベル (13px, 600) */
     textLabel: {
-      fontSize: FONT_SIZE.md,
+      fontSize: f.md,
       fontWeight: WEIGHT.semibold,
       color: t.sub,
     },
     /** メタ情報 (12px, 400) */
     textMeta: {
-      fontSize: FONT_SIZE.sm,
+      fontSize: f.sm,
       color: t.muted,
     },
     /** メタ情報太字 (12px, 600) */
     textMetaBold: {
-      fontSize: FONT_SIZE.sm,
+      fontSize: f.sm,
       fontWeight: WEIGHT.semibold,
       color: t.muted,
     },
     /** キャプション (11px, 600) */
     textCaption: {
-      fontSize: FONT_SIZE.xs,
+      fontSize: f.xs,
       fontWeight: WEIGHT.semibold,
       color: t.sub,
     },
     /** 極小ラベル (10px, 700) */
     textBadge: {
-      fontSize: FONT_SIZE.xxs,
+      fontSize: f.xxs,
       fontWeight: WEIGHT.bold,
       color: t.sub,
     },
     /** セクションヘッダーラベル (12px, 700, uppercase) */
     textSectionLabel: {
-      fontSize: FONT_SIZE.sm,
+      fontSize: f.sm,
       fontWeight: WEIGHT.bold,
       letterSpacing: 0.5,
       color: t.sub,
@@ -232,6 +251,7 @@ export const createStyles = (t: ThemeTokens) =>
       borderBottomColor: t.border,
     },
   });
+};
 
 // ═══════════════════════════════════════════════════════════════
 // 型エクスポート

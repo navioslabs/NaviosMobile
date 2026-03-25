@@ -1,7 +1,8 @@
 import { View, Text, Pressable, ScrollView } from "react-native";
 import { Calendar } from "@/lib/icons";
 import type { ThemeTokens } from "@/constants/theme";
-import { FONT_SIZE, WEIGHT, SPACE, RADIUS } from "@/lib/styles";
+import { WEIGHT, SPACE, RADIUS, getScaledFontSize } from "@/lib/styles";
+import { useFontSizeStore } from "@/stores/fontSizeStore";
 
 interface DateDay {
   offset: number;
@@ -20,6 +21,8 @@ interface DatePickerProps {
 
 /** 日付横スクロールピッカー */
 export default function DatePicker({ t, selectedDate, onSelectDate, getPostCount }: DatePickerProps) {
+  const { scale } = useFontSizeStore();
+  const fs = getScaledFontSize(scale);
   const dateDays: DateDay[] = Array.from({ length: 14 }, (_, i) => {
     const d = new Date();
     d.setDate(d.getDate() + i);
@@ -37,7 +40,7 @@ export default function DatePicker({ t, selectedDate, onSelectDate, getPostCount
     <View style={{ backgroundColor: t.surface, borderBottomColor: t.border, borderBottomWidth: 1 }}>
       <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.xs, paddingTop: SPACE.sm, paddingLeft: SPACE.lg, paddingBottom: SPACE.xs }}>
         <Calendar size={14} color={t.accent} />
-        <Text style={{ fontSize: FONT_SIZE.md, fontWeight: WEIGHT.bold, color: t.text }}>
+        <Text style={{ fontSize: fs.md, fontWeight: WEIGHT.bold, color: t.text }}>
           {dateDays[selectedDate]?.month}月
         </Text>
       </View>
@@ -67,16 +70,16 @@ export default function DatePicker({ t, selectedDate, onSelectDate, getPostCount
               })}
             >
               {isToday && (
-                <Text style={{ fontSize: FONT_SIZE.xxs, fontWeight: WEIGHT.bold, color: active ? "#000" : t.accent, marginBottom: 1 }}>
+                <Text style={{ fontSize: fs.xxs, fontWeight: WEIGHT.bold, color: active ? "#000" : t.accent, marginBottom: 1 }}>
                   今日
                 </Text>
               )}
               {!isToday && (
-                <Text style={{ fontSize: FONT_SIZE.xxs, fontWeight: WEIGHT.semibold, color: active ? "#000" : dd.isWeekend ? t.red : t.muted }}>
+                <Text style={{ fontSize: fs.xxs, fontWeight: WEIGHT.semibold, color: active ? "#000" : dd.isWeekend ? t.red : t.muted }}>
                   {dd.weekday}
                 </Text>
               )}
-              <Text style={{ fontSize: FONT_SIZE.xxl, fontWeight: WEIGHT.extrabold, color: active ? "#000" : t.text }}>
+              <Text style={{ fontSize: fs.xxl, fontWeight: WEIGHT.extrabold, color: active ? "#000" : t.text }}>
                 {dd.day}
               </Text>
               {count > 0 && (

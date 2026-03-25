@@ -12,13 +12,15 @@ import {
   Bookmark,
   Check,
   Timer,
+  Ellipsis,
 } from "@/lib/icons";
-import { makeTokens } from "@/constants/theme";
+import ReportModal from "@/components/ui/ReportModal";
 import { CAT_CONFIG } from "@/constants/categories";
 import { useThemeStore } from "@/stores/themeStore";
 import { FEED_POSTS } from "@/data/mockData";
 import { distLabel } from "@/lib/utils";
-import { createStyles, FONT_SIZE, WEIGHT, SPACE, RADIUS } from "@/lib/styles";
+import { useAppStyles } from "@/hooks/useAppStyles";
+import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 import CatPill from "@/components/ui/CatPill";
 
 /** 徒歩時間の概算（80m/分） */
@@ -43,18 +45,18 @@ const REQUIRED_ITEMS: Record<string, string[]> = {
 export default function FeedDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { isDark } = useThemeStore();
-  const t = makeTokens(isDark);
-  const s = createStyles(t);
+  const { s, t, fs } = useAppStyles();
 
   const post = FEED_POSTS.find((p) => p.id === Number(id));
   const [isSaved, setIsSaved] = useState(false);
+  const [showReport, setShowReport] = useState(false);
 
   if (!post) {
     return (
       <View style={[s.screen, { alignItems: "center", justifyContent: "center" }]}>
         <Text style={s.textSubheading}>投稿が見つかりません</Text>
         <Pressable onPress={() => router.back()} style={{ marginTop: SPACE.lg }}>
-          <Text style={{ color: t.accent, fontSize: FONT_SIZE.base, fontWeight: WEIGHT.bold }}>戻る</Text>
+          <Text style={{ color: t.accent, fontSize: fs.base, fontWeight: WEIGHT.bold }}>戻る</Text>
         </Pressable>
       </View>
     );
@@ -99,12 +101,12 @@ export default function FeedDetailScreen() {
           <View style={{ position: "absolute", top: 56, left: SPACE.lg + 46, flexDirection: "row", gap: SPACE.sm }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 4, borderRadius: RADIUS.full, paddingHorizontal: 10, paddingVertical: 5, backgroundColor: catConfig.color, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 4, elevation: 3 }}>
               <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "#fff" }} />
-              <Text style={{ fontSize: FONT_SIZE.xxs, fontWeight: WEIGHT.extrabold, color: "#fff" }}>{catConfig.label}</Text>
+              <Text style={{ fontSize: fs.xxs, fontWeight: WEIGHT.extrabold, color: "#fff" }}>{catConfig.label}</Text>
             </View>
             {isUrgent && (
               <View style={{ flexDirection: "row", alignItems: "center", gap: 4, borderRadius: RADIUS.full, paddingHorizontal: 10, paddingVertical: 5, backgroundColor: t.red, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 4, elevation: 3 }}>
                 <Timer size={12} color="#fff" />
-                <Text style={{ fontSize: FONT_SIZE.xxs, fontWeight: WEIGHT.extrabold, color: "#fff" }}>急ぎ</Text>
+                <Text style={{ fontSize: fs.xxs, fontWeight: WEIGHT.extrabold, color: "#fff" }}>急ぎ</Text>
               </View>
             )}
           </View>
@@ -142,6 +144,22 @@ export default function FeedDetailScreen() {
             >
               <Bookmark size={17} fill={isSaved ? t.text : "none"} color={t.sub} />
             </Pressable>
+            <Pressable
+              onPress={() => setShowReport(true)}
+              style={({ pressed }) => ({
+                width: 38,
+                height: 38,
+                borderRadius: 12,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: t.surface,
+                borderWidth: 1,
+                borderColor: t.border,
+                opacity: pressed ? 0.7 : 1,
+              })}
+            >
+              <Ellipsis size={17} color={t.sub} />
+            </Pressable>
           </View>
 
         </View>
@@ -150,12 +168,12 @@ export default function FeedDetailScreen() {
         <View style={{ padding: SPACE.xl }}>
           {/* タイトル + 距離バッジ（横並び） */}
           <View style={{ flexDirection: "row", alignItems: "flex-start", gap: SPACE.md, marginBottom: SPACE.xl }}>
-            <Text style={{ flex: 1, fontSize: FONT_SIZE.xxl, fontWeight: WEIGHT.extrabold, color: t.text, lineHeight: 30 }}>
+            <Text style={{ flex: 1, fontSize: fs.xxl, fontWeight: WEIGHT.extrabold, color: t.text, lineHeight: 30 }}>
               {post.caption}
             </Text>
             <View style={{ alignItems: "center", backgroundColor: isDark ? t.surface2 : "#F0EFEB", borderRadius: RADIUS.lg, paddingHorizontal: SPACE.md, paddingVertical: SPACE.sm + 2, borderWidth: 1, borderColor: t.border, minWidth: 60 }}>
-              <Text style={{ fontSize: FONT_SIZE.xl, fontWeight: WEIGHT.extrabold, color: t.text }}>{distLabel(post.distance)}</Text>
-              <Text style={{ fontSize: FONT_SIZE.xxs, color: t.muted }}>{walkTime(post.distance)}</Text>
+              <Text style={{ fontSize: fs.xl, fontWeight: WEIGHT.extrabold, color: t.text }}>{distLabel(post.distance)}</Text>
+              <Text style={{ fontSize: fs.xxs, color: t.muted }}>{walkTime(post.distance)}</Text>
             </View>
           </View>
 
@@ -172,9 +190,9 @@ export default function FeedDetailScreen() {
           >
             <Image source={{ uri: post.user.avatar }} style={{ width: 44, height: 44, borderRadius: 22, borderWidth: 1.5, borderColor: t.border }} contentFit="cover" />
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: FONT_SIZE.xs, color: t.muted, marginBottom: 2 }}>発信者</Text>
+              <Text style={{ fontSize: fs.xs, color: t.muted, marginBottom: 2 }}>発信者</Text>
               <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.xs }}>
-                <Text style={{ fontSize: FONT_SIZE.base, fontWeight: WEIGHT.bold, color: t.text }}>{post.user.name}</Text>
+                <Text style={{ fontSize: fs.base, fontWeight: WEIGHT.bold, color: t.text }}>{post.user.name}</Text>
                 {post.user.verified && (
                   <View style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: t.blue, alignItems: "center", justifyContent: "center" }}>
                     <UserCheck size={9} color="#fff" />
@@ -184,13 +202,13 @@ export default function FeedDetailScreen() {
             </View>
             <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.xs }}>
               <Clock size={13} color={t.muted} />
-              <Text style={{ fontSize: FONT_SIZE.sm, color: t.muted }}>{post.time}</Text>
+              <Text style={{ fontSize: fs.sm, color: t.muted }}>{post.time}</Text>
             </View>
           </Pressable>
 
           {/* ═══ 概要 ═══ */}
-          <Text style={{ fontSize: FONT_SIZE.xs, fontWeight: WEIGHT.semibold, color: t.muted, marginBottom: SPACE.sm, letterSpacing: 0.5 }}>概要</Text>
-          <Text style={{ fontSize: FONT_SIZE.base, color: t.text, lineHeight: 24, marginBottom: SPACE.xxl }}>
+          <Text style={{ fontSize: fs.xs, fontWeight: WEIGHT.semibold, color: t.muted, marginBottom: SPACE.sm, letterSpacing: 0.5 }}>概要</Text>
+          <Text style={{ fontSize: fs.base, color: t.text, lineHeight: 24, marginBottom: SPACE.xxl }}>
             {post.caption}
           </Text>
 
@@ -203,10 +221,10 @@ export default function FeedDetailScreen() {
             borderWidth: 1,
             borderColor: t.amber + "30",
           }}>
-            <Text style={{ fontSize: FONT_SIZE.xs, fontWeight: WEIGHT.semibold, color: t.amber, marginBottom: SPACE.xs }}>締め切り</Text>
+            <Text style={{ fontSize: fs.xs, fontWeight: WEIGHT.semibold, color: t.amber, marginBottom: SPACE.xs }}>締め切り</Text>
             <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.sm }}>
               <Clock size={20} color={t.amber} />
-              <Text style={{ fontSize: FONT_SIZE.xl, fontWeight: WEIGHT.extrabold, color: t.text }}>
+              <Text style={{ fontSize: fs.xl, fontWeight: WEIGHT.extrabold, color: t.text }}>
                 {deadlineLabel(post.timeLeft)}
               </Text>
             </View>
@@ -224,12 +242,12 @@ export default function FeedDetailScreen() {
             }}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.sm, marginBottom: SPACE.md }}>
                 <Check size={16} color={t.accent} />
-                <Text style={{ fontSize: FONT_SIZE.sm, fontWeight: WEIGHT.bold, color: t.accent }}>必要な持ち物</Text>
+                <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.bold, color: t.accent }}>必要な持ち物</Text>
               </View>
               {items.map((item) => (
                 <View key={item} style={{ flexDirection: "row", alignItems: "center", gap: SPACE.md, marginBottom: SPACE.md }}>
                   <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: t.accent }} />
-                  <Text style={{ fontSize: FONT_SIZE.base, fontWeight: WEIGHT.semibold, color: t.text }}>{item}</Text>
+                  <Text style={{ fontSize: fs.base, fontWeight: WEIGHT.semibold, color: t.text }}>{item}</Text>
                 </View>
               ))}
             </View>
@@ -238,6 +256,14 @@ export default function FeedDetailScreen() {
 
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      <ReportModal
+        visible={showReport}
+        onClose={() => setShowReport(false)}
+        t={t}
+        targetType="feed"
+        targetId={post.id}
+      />
     </View>
   );
 }

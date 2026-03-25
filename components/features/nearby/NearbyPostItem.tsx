@@ -6,7 +6,8 @@ import { Clock, Navigation, Flame } from "@/lib/icons";
 import type { ThemeTokens } from "@/constants/theme";
 import type { NearbyPost } from "@/types";
 import { distLabel } from "@/lib/utils";
-import { FONT_SIZE, WEIGHT, SPACE, RADIUS } from "@/lib/styles";
+import { WEIGHT, SPACE, RADIUS, getScaledFontSize } from "@/lib/styles";
+import { useFontSizeStore } from "@/stores/fontSizeStore";
 import CatPill from "@/components/ui/CatPill";
 import MatchBadge from "@/components/ui/MatchBadge";
 import FeaturedGlow from "@/components/ui/FeaturedGlow";
@@ -23,6 +24,8 @@ interface NearbyPostItemProps {
 
 /** 近隣投稿リストアイテム */
 export default function NearbyPostItem({ post, t, featured, isDark = true }: NearbyPostItemProps) {
+  const { scale } = useFontSizeStore();
+  const fs = getScaledFontSize(scale);
   const isClose = post.distance <= 200;
 
   if (featured) {
@@ -47,10 +50,10 @@ export default function NearbyPostItem({ post, t, featured, isDark = true }: Nea
           {/* 注目バッジ */}
           <View style={{ position: "absolute", top: SPACE.sm, left: SPACE.sm, flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "rgba(240,66,92,0.9)", borderRadius: RADIUS.full, paddingHorizontal: SPACE.sm + 2, paddingVertical: SPACE.xs }}>
             <Flame size={12} color="#fff" />
-            <Text style={{ fontSize: FONT_SIZE.xxs, fontWeight: WEIGHT.extrabold, color: "#fff" }}>注目</Text>
+            <Text style={{ fontSize: fs.xxs, fontWeight: WEIGHT.extrabold, color: "#fff" }}>注目</Text>
           </View>
           <View style={{ position: "absolute", bottom: SPACE.sm + 2, left: SPACE.md, right: SPACE.md }}>
-            <Text style={{ fontSize: FONT_SIZE.xl, fontWeight: WEIGHT.extrabold, color: "#fff" }} numberOfLines={1}>
+            <Text style={{ fontSize: fs.xl, fontWeight: WEIGHT.extrabold, color: "#fff" }} numberOfLines={1}>
               {post.title}
             </Text>
           </View>
@@ -60,15 +63,15 @@ export default function NearbyPostItem({ post, t, featured, isDark = true }: Nea
             <CatPill cat={post.category} />
             <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.xs, borderRadius: RADIUS.full, paddingHorizontal: SPACE.sm, paddingVertical: 2, backgroundColor: t.accent + "20" }}>
               <Navigation size={10} color={t.accent} />
-              <Text style={{ fontSize: FONT_SIZE.xxs, fontWeight: WEIGHT.bold, color: t.accent }}>{distLabel(post.distance)} • 最も近い</Text>
+              <Text style={{ fontSize: fs.xxs, fontWeight: WEIGHT.bold, color: t.accent }}>{distLabel(post.distance)} • 最も近い</Text>
             </View>
           </View>
-          <Text style={{ fontSize: FONT_SIZE.base, color: t.sub, lineHeight: 20 }}>{post.content}</Text>
+          <Text style={{ fontSize: fs.base, color: t.sub, lineHeight: 20 }}>{post.content}</Text>
           <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.xs }}>
-            <Text style={{ fontSize: FONT_SIZE.sm, color: t.muted }}>{post.author}</Text>
-            <Text style={{ fontSize: FONT_SIZE.sm, color: t.muted }}>•</Text>
+            <Text style={{ fontSize: fs.sm, color: t.muted }}>{post.author}</Text>
+            <Text style={{ fontSize: fs.sm, color: t.muted }}>•</Text>
             <Clock size={10} color={t.muted} />
-            <Text style={{ fontSize: FONT_SIZE.sm, color: t.muted }}>{post.time}</Text>
+            <Text style={{ fontSize: fs.sm, color: t.muted }}>{post.time}</Text>
           </View>
         </View>
       </Pressable>
@@ -113,22 +116,22 @@ export default function NearbyPostItem({ post, t, featured, isDark = true }: Nea
 
         <View style={{ flex: 1 }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.sm, marginBottom: SPACE.xs }}>
-            <Text style={{ fontSize: FONT_SIZE.sm, fontWeight: WEIGHT.extrabold, color: isClose ? t.accent : t.muted }}>
+            <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.extrabold, color: isClose ? t.accent : t.muted }}>
               {distLabel(post.distance)}
             </Text>
-            <Text style={{ fontSize: FONT_SIZE.xxs, color: t.muted }}>({walkTime(post.distance)})</Text>
+            <Text style={{ fontSize: fs.xxs, color: t.muted }}>({walkTime(post.distance)})</Text>
             <CatPill cat={post.category} small />
           </View>
 
-          <Text style={{ fontSize: FONT_SIZE.lg, fontWeight: WEIGHT.bold, color: t.text, marginBottom: 2 }} numberOfLines={1}>
+          <Text style={{ fontSize: fs.lg, fontWeight: WEIGHT.bold, color: t.text, marginBottom: 2 }} numberOfLines={1}>
             {post.title}
           </Text>
 
           <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.xs }}>
-            <Text style={{ fontSize: FONT_SIZE.xs, color: t.muted }}>{post.author}</Text>
-            <Text style={{ fontSize: FONT_SIZE.xs, color: t.muted }}>•</Text>
+            <Text style={{ fontSize: fs.xs, color: t.muted }}>{post.author}</Text>
+            <Text style={{ fontSize: fs.xs, color: t.muted }}>•</Text>
             <Clock size={10} color={t.muted} />
-            <Text style={{ fontSize: FONT_SIZE.xs, color: t.muted }}>{post.time}</Text>
+            <Text style={{ fontSize: fs.xs, color: t.muted }}>{post.time}</Text>
           </View>
         </View>
       </View>

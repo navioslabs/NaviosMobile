@@ -1,7 +1,8 @@
 import { View, Text, Pressable } from "react-native";
 import { Package, Calendar, Users, Building2 } from "@/lib/icons";
 import type { ThemeTokens } from "@/constants/theme";
-import { FONT_SIZE, WEIGHT, SPACE, RADIUS } from "@/lib/styles";
+import { WEIGHT, SPACE, RADIUS, getScaledFontSize } from "@/lib/styles";
+import { useFontSizeStore } from "@/stores/fontSizeStore";
 
 interface QuickActionsProps {
   t: ThemeTokens;
@@ -10,6 +11,9 @@ interface QuickActionsProps {
 
 /** クイックアクショングリッド（セカンダリ） */
 export default function QuickActions({ t, isDark }: QuickActionsProps) {
+  const { scale } = useFontSizeStore();
+  const fs = getScaledFontSize(scale);
+
   const actions = [
     { icon: Package, label: "今すぐ買える", dc: t.accent, bg: isDark ? "#0D2B1E" : "#F5FAF8" },
     { icon: Calendar, label: "今日のイベント", dc: "#F5A623", bg: isDark ? "#2D1F0A" : "#FEFAF3" },
@@ -19,7 +23,7 @@ export default function QuickActions({ t, isDark }: QuickActionsProps) {
 
   return (
     <View style={{ marginBottom: SPACE.xl }}>
-      <Text style={{ fontSize: FONT_SIZE.xs, fontWeight: WEIGHT.semibold, marginBottom: SPACE.sm, letterSpacing: 0.5, color: t.muted }}>
+      <Text style={{ fontSize: fs.xs, fontWeight: WEIGHT.semibold, marginBottom: SPACE.sm, letterSpacing: 0.5, color: t.muted }}>
         クイックアクション
       </Text>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: SPACE.sm }}>
@@ -30,7 +34,7 @@ export default function QuickActions({ t, isDark }: QuickActionsProps) {
               <View style={{ width: 30, height: 30, borderRadius: SPACE.sm, alignItems: "center", justifyContent: "center", backgroundColor: a.dc + "15" }}>
                 <Icon size={15} color={a.dc} />
               </View>
-              <Text style={{ fontSize: FONT_SIZE.sm, fontWeight: WEIGHT.semibold, color: t.text, flex: 1 }} numberOfLines={1}>{a.label}</Text>
+              <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.semibold, color: t.text, flex: 1 }} numberOfLines={1}>{a.label}</Text>
             </Pressable>
           );
         })}

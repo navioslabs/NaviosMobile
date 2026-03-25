@@ -1,7 +1,8 @@
 import { View, Text, Pressable } from "react-native";
 import { Moon, Sun } from "@/lib/icons";
 import type { ThemeTokens } from "@/constants/theme";
-import { FONT_SIZE, SPACE } from "@/lib/styles";
+import { SPACE, getScaledFontSize } from "@/lib/styles";
+import { useFontSizeStore } from "@/stores/fontSizeStore";
 
 interface ThemeToggleProps {
   t: ThemeTokens;
@@ -11,12 +12,15 @@ interface ThemeToggleProps {
 
 /** テーマ切替トグル */
 export default function ThemeToggle({ t, isDark, onToggle }: ThemeToggleProps) {
+  const { scale } = useFontSizeStore();
+  const fs = getScaledFontSize(scale);
+
   return (
     <View style={{ marginTop: SPACE.sm, backgroundColor: t.surface, borderTopWidth: 1, borderTopColor: t.border, borderBottomWidth: 1, borderBottomColor: t.border }}>
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: SPACE.lg, paddingHorizontal: SPACE.xl }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.md }}>
           {isDark ? <Moon size={20} color={t.purple} /> : <Sun size={20} color="#F5A623" />}
-          <Text style={{ fontSize: FONT_SIZE.lg + 1, color: t.text }}>テーマ</Text>
+          <Text style={{ fontSize: fs.lg + 1, color: t.text }}>テーマ</Text>
         </View>
         <Pressable
           onPress={onToggle}

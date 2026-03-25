@@ -2,7 +2,8 @@ import { View, Text, Pressable, ScrollView } from "react-native";
 import { Rss } from "@/lib/icons";
 import { CAT_CONFIG, type CategoryId } from "@/constants/categories";
 import type { ThemeTokens } from "@/constants/theme";
-import { FONT_SIZE, WEIGHT, SPACE, RADIUS } from "@/lib/styles";
+import { WEIGHT, SPACE, RADIUS, getScaledFontSize } from "@/lib/styles";
+import { useFontSizeStore } from "@/stores/fontSizeStore";
 
 interface CategoryChipsProps {
   t: ThemeTokens;
@@ -12,6 +13,8 @@ interface CategoryChipsProps {
 
 /** カテゴリフィルターチップ */
 export default function CategoryChips({ t, selected, onSelect }: CategoryChipsProps) {
+  const { scale } = useFontSizeStore();
+  const fs = getScaledFontSize(scale);
   const cats = [
     { id: "all" as const, label: "すべて", icon: Rss },
     ...Object.entries(CAT_CONFIG).map(([id, c]) => ({
@@ -49,7 +52,7 @@ export default function CategoryChips({ t, selected, onSelect }: CategoryChipsPr
               })}
             >
               <Icon size={16} color={active ? "#000" : t.sub} />
-              <Text style={{ fontSize: FONT_SIZE.base, fontWeight: WEIGHT.semibold, color: active ? "#000" : t.sub, includeFontPadding: false }}>
+              <Text style={{ fontSize: fs.base, fontWeight: WEIGHT.semibold, color: active ? "#000" : t.sub, includeFontPadding: false }}>
                 {cat.label}
               </Text>
             </Pressable>

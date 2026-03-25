@@ -11,10 +11,9 @@ import {
   MessageCircle,
   Heart,
 } from "@/lib/icons";
-import { makeTokens } from "@/constants/theme";
-import { useThemeStore } from "@/stores/themeStore";
 import { FEED_POSTS, CHAT_ROOMS } from "@/data/mockData";
-import { createStyles, FONT_SIZE, WEIGHT, SPACE, RADIUS } from "@/lib/styles";
+import { useAppStyles } from "@/hooks/useAppStyles";
+import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 import CatPill from "@/components/ui/CatPill";
 
 /** モックユーザープロフィール */
@@ -29,9 +28,7 @@ const MOCK_PROFILES: Record<number, { name: string; avatar: string; bio: string;
 /** ユーザープロフィール画面 */
 export default function ProfileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { isDark } = useThemeStore();
-  const t = makeTokens(isDark);
-  const s = createStyles(t);
+  const { s, t, fs } = useAppStyles();
 
   const profileId = Number(id);
   const profile = MOCK_PROFILES[profileId] || {
@@ -76,8 +73,8 @@ export default function ProfileScreen() {
             )}
           </View>
 
-          <Text style={{ fontSize: FONT_SIZE.xxl, fontWeight: WEIGHT.extrabold, color: t.text }}>{profile.name}</Text>
-          <Text style={{ fontSize: FONT_SIZE.base, color: t.sub, textAlign: "center", lineHeight: 22, marginTop: SPACE.sm, marginHorizontal: SPACE.xl }}>
+          <Text style={{ fontSize: fs.xxl, fontWeight: WEIGHT.extrabold, color: t.text }}>{profile.name}</Text>
+          <Text style={{ fontSize: fs.base, color: t.sub, textAlign: "center", lineHeight: 22, marginTop: SPACE.sm, marginHorizontal: SPACE.xl }}>
             {profile.bio}
           </Text>
 
@@ -85,24 +82,24 @@ export default function ProfileScreen() {
           <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.lg, marginTop: SPACE.md }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.xs }}>
               <MapPin size={14} color={t.muted} />
-              <Text style={{ fontSize: FONT_SIZE.sm, color: t.muted }}>{profile.location}</Text>
+              <Text style={{ fontSize: fs.sm, color: t.muted }}>{profile.location}</Text>
             </View>
             <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.xs }}>
               <Calendar size={14} color={t.muted} />
-              <Text style={{ fontSize: FONT_SIZE.sm, color: t.muted }}>{profile.joinDate}から</Text>
+              <Text style={{ fontSize: fs.sm, color: t.muted }}>{profile.joinDate}から</Text>
             </View>
           </View>
 
           {/* フォロー情報 */}
           <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.xl, marginTop: SPACE.lg }}>
             <View style={{ alignItems: "center" }}>
-              <Text style={{ fontSize: FONT_SIZE.xl, fontWeight: WEIGHT.extrabold, color: t.text }}>{profile.followers}</Text>
-              <Text style={{ fontSize: FONT_SIZE.xs, color: t.muted }}>フォロワー</Text>
+              <Text style={{ fontSize: fs.xl, fontWeight: WEIGHT.extrabold, color: t.text }}>{profile.followers}</Text>
+              <Text style={{ fontSize: fs.xs, color: t.muted }}>フォロワー</Text>
             </View>
             <View style={{ width: 1, height: 24, backgroundColor: t.border }} />
             <View style={{ alignItems: "center" }}>
-              <Text style={{ fontSize: FONT_SIZE.xl, fontWeight: WEIGHT.extrabold, color: t.text }}>{profile.following}</Text>
-              <Text style={{ fontSize: FONT_SIZE.xs, color: t.muted }}>フォロー中</Text>
+              <Text style={{ fontSize: fs.xl, fontWeight: WEIGHT.extrabold, color: t.text }}>{profile.following}</Text>
+              <Text style={{ fontSize: fs.xs, color: t.muted }}>フォロー中</Text>
             </View>
           </View>
 
@@ -114,7 +111,7 @@ export default function ProfileScreen() {
               end={{ x: 1, y: 1 }}
               style={{ borderRadius: RADIUS.full, paddingHorizontal: SPACE.xxxl, paddingVertical: SPACE.md }}
             >
-              <Text style={{ fontSize: FONT_SIZE.base, fontWeight: WEIGHT.bold, color: "#000" }}>フォローする</Text>
+              <Text style={{ fontSize: fs.base, fontWeight: WEIGHT.bold, color: "#000" }}>フォローする</Text>
             </LinearGradient>
           </Pressable>
         </View>
@@ -122,16 +119,16 @@ export default function ProfileScreen() {
         {/* 統計 */}
         <View style={{ flexDirection: "row", justifyContent: "space-around", paddingVertical: SPACE.lg, backgroundColor: t.surface, borderTopWidth: 1, borderTopColor: t.border, borderBottomWidth: 1, borderBottomColor: t.border }}>
           <View style={{ alignItems: "center" }}>
-            <Text style={{ fontSize: FONT_SIZE.xxl, fontWeight: WEIGHT.extrabold, color: t.accent }}>{profile.checkins}</Text>
-            <Text style={{ fontSize: FONT_SIZE.xs, color: t.muted }}>チェックイン</Text>
+            <Text style={{ fontSize: fs.xxl, fontWeight: WEIGHT.extrabold, color: t.accent }}>{profile.checkins}</Text>
+            <Text style={{ fontSize: fs.xs, color: t.muted }}>チェックイン</Text>
           </View>
           <View style={{ alignItems: "center" }}>
-            <Text style={{ fontSize: FONT_SIZE.xxl, fontWeight: WEIGHT.extrabold, color: t.accent }}>{profile.badges}</Text>
-            <Text style={{ fontSize: FONT_SIZE.xs, color: t.muted }}>バッジ</Text>
+            <Text style={{ fontSize: fs.xxl, fontWeight: WEIGHT.extrabold, color: t.accent }}>{profile.badges}</Text>
+            <Text style={{ fontSize: fs.xs, color: t.muted }}>バッジ</Text>
           </View>
           <View style={{ alignItems: "center" }}>
-            <Text style={{ fontSize: FONT_SIZE.xxl, fontWeight: WEIGHT.extrabold, color: t.accent }}>{userPosts.length + userTalks.length}</Text>
-            <Text style={{ fontSize: FONT_SIZE.xs, color: t.muted }}>投稿数</Text>
+            <Text style={{ fontSize: fs.xxl, fontWeight: WEIGHT.extrabold, color: t.accent }}>{userPosts.length + userTalks.length}</Text>
+            <Text style={{ fontSize: fs.xs, color: t.muted }}>投稿数</Text>
           </View>
         </View>
 
@@ -151,7 +148,7 @@ export default function ProfileScreen() {
                   <View style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: badge.color + "20", alignItems: "center", justifyContent: "center", borderWidth: 1.5, borderColor: badge.color + "40" }}>
                     <Award size={22} color={badge.color} />
                   </View>
-                  <Text style={{ fontSize: FONT_SIZE.xxs, fontWeight: WEIGHT.semibold, color: t.sub }}>{badge.label}</Text>
+                  <Text style={{ fontSize: fs.xxs, fontWeight: WEIGHT.semibold, color: t.sub }}>{badge.label}</Text>
                 </View>
               ))}
             </ScrollView>
@@ -182,19 +179,19 @@ export default function ProfileScreen() {
                 <View style={{ flex: 1, justifyContent: "center" }}>
                   <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.sm, marginBottom: SPACE.xs }}>
                     <CatPill cat={post.category} small />
-                    <Text style={{ fontSize: FONT_SIZE.xs, color: t.muted }}>{post.time}</Text>
+                    <Text style={{ fontSize: fs.xs, color: t.muted }}>{post.time}</Text>
                   </View>
-                  <Text style={{ fontSize: FONT_SIZE.base, fontWeight: WEIGHT.semibold, color: t.text }} numberOfLines={2}>
+                  <Text style={{ fontSize: fs.base, fontWeight: WEIGHT.semibold, color: t.text }} numberOfLines={2}>
                     {post.caption}
                   </Text>
                   <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.lg, marginTop: SPACE.xs }}>
                     <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.xs }}>
                       <Heart size={12} color={t.muted} />
-                      <Text style={{ fontSize: FONT_SIZE.xs, color: t.muted }}>{post.likes}</Text>
+                      <Text style={{ fontSize: fs.xs, color: t.muted }}>{post.likes}</Text>
                     </View>
                     <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.xs }}>
                       <MessageCircle size={12} color={t.muted} />
-                      <Text style={{ fontSize: FONT_SIZE.xs, color: t.muted }}>3</Text>
+                      <Text style={{ fontSize: fs.xs, color: t.muted }}>3</Text>
                     </View>
                   </View>
                 </View>
@@ -206,7 +203,7 @@ export default function ProfileScreen() {
         {/* 投稿がない場合 */}
         {userPosts.length === 0 && userTalks.length === 0 && (
           <View style={{ alignItems: "center", paddingVertical: SPACE.xxxl, paddingHorizontal: SPACE.xl }}>
-            <Text style={{ fontSize: FONT_SIZE.lg, fontWeight: WEIGHT.semibold, color: t.sub }}>まだ投稿がありません</Text>
+            <Text style={{ fontSize: fs.lg, fontWeight: WEIGHT.semibold, color: t.sub }}>まだ投稿がありません</Text>
           </View>
         )}
       </ScrollView>

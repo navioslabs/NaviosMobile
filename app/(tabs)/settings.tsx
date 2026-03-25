@@ -1,9 +1,9 @@
 import { View, Text, Pressable, ScrollView } from "react-native";
 import { Bell, Lock, Moon, Sun, Settings, MapPin, Eye } from "@/lib/icons";
-import { makeTokens } from "@/constants/theme";
 import { useThemeStore } from "@/stores/themeStore";
 import { useFontSizeStore, FONT_SIZE_LABELS, FONT_SIZE_LEVELS } from "@/stores/fontSizeStore";
-import { createStyles, FONT_SIZE, WEIGHT, SPACE, RADIUS } from "@/lib/styles";
+import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
+import { useAppStyles } from "@/hooks/useAppStyles";
 import ProfileSection from "@/components/features/settings/ProfileSection";
 import PremiumCard from "@/components/features/settings/PremiumCard";
 import SettingsSection from "@/components/features/settings/SettingsSection";
@@ -13,8 +13,7 @@ import SettingsRow from "@/components/features/settings/SettingsRow";
 export default function SettingsScreen() {
   const { isDark, toggle } = useThemeStore();
   const { level, setLevel } = useFontSizeStore();
-  const t = makeTokens(isDark);
-  const s = createStyles(t);
+  const { s, t, fs } = useAppStyles();
 
   const ThemeToggle = (
     <Pressable
@@ -44,7 +43,7 @@ export default function SettingsScreen() {
             opacity: pressed ? 0.7 : 1,
           })}
         >
-          <Text style={{ fontSize: l === "xlarge" ? FONT_SIZE.base : l === "large" ? FONT_SIZE.sm : FONT_SIZE.xs, fontWeight: WEIGHT.bold, color: level === l ? "#000" : t.sub }}>
+          <Text style={{ fontSize: l === "xlarge" ? fs.base : l === "large" ? fs.sm : fs.xs, fontWeight: WEIGHT.bold, color: level === l ? "#000" : t.sub }}>
             {FONT_SIZE_LABELS[l]}
           </Text>
         </Pressable>
@@ -55,7 +54,7 @@ export default function SettingsScreen() {
   /** オートチェックイントグル */
   const CheckInToggle = (
     <Pressable style={({ pressed }) => ({ borderRadius: RADIUS.full, paddingHorizontal: SPACE.lg, paddingVertical: SPACE.sm, backgroundColor: t.accent, opacity: pressed ? 0.7 : 1 })}>
-      <Text style={{ fontSize: FONT_SIZE.sm, fontWeight: WEIGHT.bold, color: "#000" }}>ON</Text>
+      <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.bold, color: "#000" }}>ON</Text>
     </Pressable>
   );
 

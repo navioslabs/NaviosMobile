@@ -1,5 +1,22 @@
 import type { CategoryId } from "@/constants/categories";
 
+/** 通報理由ID */
+export type ReportReasonId =
+  | "spam"
+  | "inappropriate"
+  | "misleading"
+  | "harassment"
+  | "dangerous"
+  | "other";
+
+/** 通報データ */
+export interface Report {
+  targetType: "feed" | "talk" | "nearby";
+  targetId: number;
+  reason: ReportReasonId;
+  detail: string;
+}
+
 /** フィード投稿 */
 export interface FeedPost {
   id: number;

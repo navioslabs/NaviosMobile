@@ -2,7 +2,8 @@ import { View, Text, Pressable, ScrollView } from "react-native";
 import { Flame, MapPin, Timer } from "@/lib/icons";
 import type { ThemeTokens } from "@/constants/theme";
 import type { FeedPost } from "@/types";
-import { FONT_SIZE, WEIGHT, SPACE, RADIUS } from "@/lib/styles";
+import { WEIGHT, SPACE, RADIUS, getScaledFontSize } from "@/lib/styles";
+import { useFontSizeStore } from "@/stores/fontSizeStore";
 
 type FilterType = "top" | "nearby" | "urgent" | null;
 
@@ -17,6 +18,8 @@ interface FeedSummaryProps {
 
 /** フィード上部のサマリーブロック + 日付ラベル */
 export default function FeedSummary({ t, posts, dateLabel, totalCount, activeFilter, onFilterChange }: FeedSummaryProps) {
+  const { scale } = useFontSizeStore();
+  const fs = getScaledFontSize(scale);
   const nearbyCount = posts.filter((p) => p.distance <= 200).length;
   const urgentCount = posts.filter((p) => p.timeLeft <= 60).length;
   const topMatch = posts.length > 0 ? posts.reduce((a, b) => (a.matchScore > b.matchScore ? a : b)) : null;
@@ -75,20 +78,20 @@ export default function FeedSummary({ t, posts, dateLabel, totalCount, activeFil
             >
               <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.xs }}>
                 <Icon size={14} color={b.color} />
-                <Text style={{ fontSize: FONT_SIZE.xs, fontWeight: WEIGHT.semibold, color: b.color }}>{b.label}</Text>
+                <Text style={{ fontSize: fs.xs, fontWeight: WEIGHT.semibold, color: b.color }}>{b.label}</Text>
               </View>
-              <Text style={{ fontSize: FONT_SIZE.xl, fontWeight: WEIGHT.extrabold, color: t.text }} numberOfLines={1}>
+              <Text style={{ fontSize: fs.xl, fontWeight: WEIGHT.extrabold, color: t.text }} numberOfLines={1}>
                 {b.value}
               </Text>
-              {b.sub ? <Text style={{ fontSize: FONT_SIZE.xxs, color: t.muted }}>{b.sub}</Text> : null}
+              {b.sub ? <Text style={{ fontSize: fs.xxs, color: t.muted }}>{b.sub}</Text> : null}
             </Pressable>
           );
         })}
       </ScrollView>
       {/* Date label + count integrated */}
       <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: SPACE.xl, paddingTop: SPACE.xs, paddingBottom: SPACE.xs }}>
-        <Text style={{ fontSize: FONT_SIZE.sm, color: t.sub }}>{dateLabel}</Text>
-        <Text style={{ fontSize: FONT_SIZE.xs, fontWeight: WEIGHT.semibold, color: t.accent }}>{totalCount}件</Text>
+        <Text style={{ fontSize: fs.sm, color: t.sub }}>{dateLabel}</Text>
+        <Text style={{ fontSize: fs.xs, fontWeight: WEIGHT.semibold, color: t.accent }}>{totalCount}件</Text>
       </View>
     </View>
   );

@@ -1,10 +1,9 @@
 import { SectionList, View, Text } from "react-native";
 import { useMemo } from "react";
-import { makeTokens } from "@/constants/theme";
-import { useThemeStore } from "@/stores/themeStore";
 import { NEARBY_POSTS } from "@/data/mockData";
 import type { NearbyPost } from "@/types";
-import { createStyles, FONT_SIZE, SPACE } from "@/lib/styles";
+import { useAppStyles } from "@/hooks/useAppStyles";
+import { SPACE } from "@/lib/styles";
 import ScanHeader from "@/components/features/nearby/ScanHeader";
 import NearbyPostItem from "@/components/features/nearby/NearbyPostItem";
 import DistanceSectionHeader from "@/components/features/nearby/DistanceSectionHeader";
@@ -18,9 +17,7 @@ interface NearbySection {
 
 /** NearBy画面 */
 export default function NearByScreen() {
-  const { isDark } = useThemeStore();
-  const t = makeTokens(isDark);
-  const s = createStyles(t);
+  const { s, t, fs, isDark } = useAppStyles();
 
   const sections: NearbySection[] = useMemo(() => {
     const sorted = [...NEARBY_POSTS].sort((a, b) => a.distance - b.distance);
@@ -51,7 +48,7 @@ export default function NearByScreen() {
         renderSectionFooter={({ section }) =>
           section.data.length === 0 ? (
             <View style={{ paddingVertical: SPACE.xl, paddingHorizontal: SPACE.xl, alignItems: "center" }}>
-              <Text style={{ fontSize: FONT_SIZE.base, color: t.sub, textAlign: "center" }}>
+              <Text style={{ fontSize: fs.base, color: t.sub, textAlign: "center" }}>
                 200m以内にイベントはありません{"\n"}少し足を伸ばしてみましょう
               </Text>
             </View>

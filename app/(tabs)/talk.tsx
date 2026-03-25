@@ -3,19 +3,16 @@ import { useCallback, useState } from "react";
 import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { MapPin, Send, User } from "@/lib/icons";
-import { makeTokens } from "@/constants/theme";
-import { useThemeStore } from "@/stores/themeStore";
 import { CHAT_ROOMS } from "@/data/mockData";
 import type { ChatRoom } from "@/types";
-import { createStyles, FONT_SIZE, WEIGHT, SPACE, RADIUS } from "@/lib/styles";
+import { useAppStyles } from "@/hooks/useAppStyles";
+import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 import TalkItem from "@/components/features/talk/TalkItem";
 import StateView from "@/components/ui/StateView";
 
 /** ひとこと画面 */
 export default function TalkScreen() {
-  const { isDark } = useThemeStore();
-  const t = makeTokens(isDark);
-  const s = createStyles(t);
+  const { s, t, fs } = useAppStyles();
   const [quickMsg, setQuickMsg] = useState("");
   const [refreshing, setRefreshing] = useState(false);
 
@@ -56,14 +53,14 @@ export default function TalkScreen() {
         </LinearGradient>
 
         {/* プレースホルダー入力エリア */}
-        <Text style={{ flex: 1, fontSize: FONT_SIZE.base, color: t.muted }}>
+        <Text style={{ flex: 1, fontSize: fs.base, color: t.muted }}>
           今どんな感じ？つぶやいてみよう
         </Text>
 
         {/* 位置情報 */}
         <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
           <MapPin size={12} color={t.accent} />
-          <Text style={{ fontSize: FONT_SIZE.xxs, color: t.accent }}>越谷市</Text>
+          <Text style={{ fontSize: fs.xxs, color: t.accent }}>越谷市</Text>
         </View>
       </Pressable>
     </View>

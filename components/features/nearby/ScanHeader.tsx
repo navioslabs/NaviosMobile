@@ -1,7 +1,8 @@
 import { View, Text, Pressable } from "react-native";
 import { Radio, Eye, Clock } from "@/lib/icons";
 import type { ThemeTokens } from "@/constants/theme";
-import { FONT_SIZE, WEIGHT, SPACE, RADIUS } from "@/lib/styles";
+import { WEIGHT, SPACE, RADIUS, getScaledFontSize } from "@/lib/styles";
+import { useFontSizeStore } from "@/stores/fontSizeStore";
 
 interface ScanHeaderProps {
   t: ThemeTokens;
@@ -11,6 +12,8 @@ interface ScanHeaderProps {
 
 /** スキャンヘッダー（Pulseスコア + 更新時刻） */
 export default function ScanHeader({ t, isDark, postCount }: ScanHeaderProps) {
+  const { scale } = useFontSizeStore();
+  const fs = getScaledFontSize(scale);
   const now = new Date();
   const timeStr = `${now.getHours()}:${String(now.getMinutes()).padStart(2, "0")}`;
 
@@ -21,25 +24,25 @@ export default function ScanHeader({ t, isDark, postCount }: ScanHeaderProps) {
           <Radio size={20} color={t.accent} />
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={{ fontSize: FONT_SIZE.lg, fontWeight: WEIGHT.bold, color: t.text }}>周辺をスキャン中</Text>
-          <Text style={{ fontSize: FONT_SIZE.sm, marginTop: 2, color: t.sub }}>{postCount}件のイベントを検出 • 越谷市周辺</Text>
+          <Text style={{ fontSize: fs.lg, fontWeight: WEIGHT.bold, color: t.text }}>周辺をスキャン中</Text>
+          <Text style={{ fontSize: fs.sm, marginTop: 2, color: t.sub }}>{postCount}件のイベントを検出 • 越谷市周辺</Text>
         </View>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 3, borderRadius: RADIUS.sm + 2, paddingHorizontal: SPACE.sm + 2, paddingVertical: 5, backgroundColor: t.accent }}>
           <Eye size={12} color="#000" />
-          <Text style={{ fontSize: FONT_SIZE.sm, fontWeight: WEIGHT.extrabold, color: "#000" }}>LIVE</Text>
+          <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.extrabold, color: "#000" }}>LIVE</Text>
         </View>
       </View>
 
       {/* Pulseスコア + 更新時刻 */}
       <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.sm, marginTop: SPACE.md, paddingTop: SPACE.sm, borderTopWidth: 1, borderTopColor: t.accent + "15" }}>
-        <Text style={{ fontSize: FONT_SIZE.sm, fontWeight: WEIGHT.semibold, color: t.sub }}>盛り上がり度</Text>
-        <Text style={{ fontSize: FONT_SIZE.base, fontWeight: WEIGHT.bold, color: t.text }}>82 / 100</Text>
+        <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.semibold, color: t.sub }}>盛り上がり度</Text>
+        <Text style={{ fontSize: fs.base, fontWeight: WEIGHT.bold, color: t.text }}>82 / 100</Text>
         <View style={{ borderRadius: RADIUS.sm, paddingHorizontal: SPACE.sm, paddingVertical: 2, backgroundColor: t.accent }}>
-          <Text style={{ fontSize: FONT_SIZE.xxs, fontWeight: WEIGHT.extrabold, color: "#000" }}>HOT</Text>
+          <Text style={{ fontSize: fs.xxs, fontWeight: WEIGHT.extrabold, color: "#000" }}>HOT</Text>
         </View>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 3, marginLeft: "auto" }}>
           <Clock size={11} color={t.muted} />
-          <Text style={{ fontSize: FONT_SIZE.xxs, color: t.muted }}>{timeStr} 更新</Text>
+          <Text style={{ fontSize: fs.xxs, color: t.muted }}>{timeStr} 更新</Text>
         </View>
       </View>
     </View>

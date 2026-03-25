@@ -9,15 +9,14 @@ import {
   MapPin,
   Check,
 } from "@/lib/icons";
-import { makeTokens } from "@/constants/theme";
-import { useThemeStore } from "@/stores/themeStore";
-import { createStyles, FONT_SIZE, WEIGHT, SPACE, RADIUS } from "@/lib/styles";
+import type { ThemeTokens } from "@/constants/theme";
+import { useAppStyles } from "@/hooks/useAppStyles";
+import { useFontSizeStore } from "@/stores/fontSizeStore";
+import { getScaledFontSize, WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 
 /** プロフィール編集画面 */
 export default function ProfileEditScreen() {
-  const { isDark } = useThemeStore();
-  const t = makeTokens(isDark);
-  const s = createStyles(t);
+  const { s, t, fs } = useAppStyles();
 
   const [name, setName] = useState("ゲストユーザー");
   const [bio, setBio] = useState("");
@@ -47,7 +46,7 @@ export default function ProfileEditScreen() {
             opacity: pressed && isValid ? 0.7 : 1,
           })}
         >
-          <Text style={{ fontSize: FONT_SIZE.sm, fontWeight: WEIGHT.bold, color: isValid ? "#000" : t.muted }}>保存</Text>
+          <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.bold, color: isValid ? "#000" : t.muted }}>保存</Text>
         </Pressable>
       </View>
 
@@ -82,7 +81,7 @@ export default function ProfileEditScreen() {
               <Camera size={14} color="#000" />
             </Pressable>
           </View>
-          <Text style={{ fontSize: FONT_SIZE.sm, color: t.accent, fontWeight: WEIGHT.semibold, marginTop: SPACE.md }}>写真を変更</Text>
+          <Text style={{ fontSize: fs.sm, color: t.accent, fontWeight: WEIGHT.semibold, marginTop: SPACE.md }}>写真を変更</Text>
         </View>
 
         {/* フォーム */}
@@ -95,10 +94,10 @@ export default function ProfileEditScreen() {
               onChangeText={setName}
               placeholder="表示名を入力"
               placeholderTextColor={t.muted}
-              style={[s.input, { fontSize: FONT_SIZE.lg }]}
+              style={[s.input, { fontSize: fs.lg }]}
               maxLength={20}
             />
-            <Text style={{ fontSize: FONT_SIZE.xs, color: t.muted, marginTop: SPACE.xs, textAlign: "right" }}>
+            <Text style={{ fontSize: fs.xs, color: t.muted, marginTop: SPACE.xs, textAlign: "right" }}>
               {name.length}/20
             </Text>
           </View>
@@ -115,7 +114,7 @@ export default function ProfileEditScreen() {
               multiline
               maxLength={150}
             />
-            <Text style={{ fontSize: FONT_SIZE.xs, color: bio.length > 140 ? t.red : t.muted, marginTop: SPACE.xs, textAlign: "right" }}>
+            <Text style={{ fontSize: fs.xs, color: bio.length > 140 ? t.red : t.muted, marginTop: SPACE.xs, textAlign: "right" }}>
               {bio.length}/150
             </Text>
           </View>
@@ -130,7 +129,7 @@ export default function ProfileEditScreen() {
                 onChangeText={setLocation}
                 placeholder="地域を入力"
                 placeholderTextColor={t.muted}
-                style={{ flex: 1, fontSize: FONT_SIZE.lg, color: t.text }}
+                style={{ flex: 1, fontSize: fs.lg, color: t.text }}
               />
             </View>
           </View>
@@ -155,7 +154,9 @@ export default function ProfileEditScreen() {
 }
 
 /** プライバシー設定トグル行 */
-function PrivacyToggle({ item, t }: { item: { label: string; desc: string; enabled: boolean }; t: ReturnType<typeof makeTokens> }) {
+function PrivacyToggle({ item, t }: { item: { label: string; desc: string; enabled: boolean }; t: ThemeTokens }) {
+  const { scale } = useFontSizeStore();
+  const fs = getScaledFontSize(scale);
   const [enabled, setEnabled] = useState(item.enabled);
 
   return (
@@ -174,8 +175,8 @@ function PrivacyToggle({ item, t }: { item: { label: string; desc: string; enabl
       })}
     >
       <View style={{ flex: 1 }}>
-        <Text style={{ fontSize: FONT_SIZE.base, fontWeight: WEIGHT.semibold, color: t.text }}>{item.label}</Text>
-        <Text style={{ fontSize: FONT_SIZE.xs, color: t.muted, marginTop: 2 }}>{item.desc}</Text>
+        <Text style={{ fontSize: fs.base, fontWeight: WEIGHT.semibold, color: t.text }}>{item.label}</Text>
+        <Text style={{ fontSize: fs.xs, color: t.muted, marginTop: 2 }}>{item.desc}</Text>
       </View>
       <View style={{ width: 48, height: 28, borderRadius: 14, justifyContent: "center", backgroundColor: enabled ? t.accent : t.surface3 }}>
         <View style={{ position: "absolute", top: 2, width: 24, height: 24, borderRadius: 12, backgroundColor: enabled ? "#000" : "#fff", transform: [{ translateX: enabled ? 22 : 2 }], alignItems: "center", justifyContent: "center" }}>

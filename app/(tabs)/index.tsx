@@ -3,11 +3,10 @@ import { View, Text, FlatList, RefreshControl, Pressable } from "react-native";
 import { Inbox } from "@/lib/icons";
 import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
-import { makeTokens } from "@/constants/theme";
 import { FEED_POSTS } from "@/data/mockData";
 import type { FeedPost } from "@/types";
-import { useThemeStore } from "@/stores/themeStore";
-import { createStyles, FONT_SIZE, WEIGHT, SPACE, RADIUS } from "@/lib/styles";
+import { useAppStyles } from "@/hooks/useAppStyles";
+import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 import DatePicker from "@/components/features/feed/DatePicker";
 import FeedSummary from "@/components/features/feed/FeedSummary";
 import CategoryChips from "@/components/features/feed/CategoryChips";
@@ -32,9 +31,7 @@ const getDateLabel = (offset: number): string => {
 
 /** Feed画面 */
 export default function FeedScreen() {
-  const { isDark } = useThemeStore();
-  const t = makeTokens(isDark);
-  const s = createStyles(t);
+  const { s, t, fs, isDark } = useAppStyles();
 
   const [selDate, setSelDate] = useState(0);
   const [selCat, setSelCat] = useState("all");
@@ -100,7 +97,7 @@ export default function FeedScreen() {
                 onPress={() => setSelDate(0)}
                 style={({ pressed }) => ({ paddingHorizontal: SPACE.xl, paddingVertical: SPACE.md, borderRadius: RADIUS.full, backgroundColor: t.surface2, borderWidth: 1, borderColor: t.border, opacity: pressed ? 0.7 : 1 })}
               >
-                <Text style={{ fontSize: FONT_SIZE.sm, fontWeight: WEIGHT.bold, color: t.text }}>今日を見る</Text>
+                <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.bold, color: t.text }}>今日を見る</Text>
               </Pressable>
               <Pressable
                 onPress={() => router.push("/post")}
@@ -112,7 +109,7 @@ export default function FeedScreen() {
                   end={{ x: 1, y: 1 }}
                   style={{ paddingHorizontal: SPACE.xl, paddingVertical: SPACE.md, borderRadius: RADIUS.full }}
                 >
-                  <Text style={{ fontSize: FONT_SIZE.sm, fontWeight: WEIGHT.bold, color: "#000" }}>投稿する</Text>
+                  <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.bold, color: "#000" }}>投稿する</Text>
                 </LinearGradient>
               </Pressable>
             </View>

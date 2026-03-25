@@ -9,12 +9,13 @@ import {
   Share,
   MapPin,
   Send,
+  Ellipsis,
 } from "@/lib/icons";
+import ReportModal from "@/components/ui/ReportModal";
 import { LinearGradient } from "expo-linear-gradient";
-import { makeTokens } from "@/constants/theme";
-import { useThemeStore } from "@/stores/themeStore";
 import { CHAT_ROOMS } from "@/data/mockData";
-import { createStyles, FONT_SIZE, WEIGHT, SPACE, RADIUS } from "@/lib/styles";
+import { useAppStyles } from "@/hooks/useAppStyles";
+import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 
 /** モック返信データ */
 const MOCK_REPLIES = [
@@ -27,20 +28,19 @@ const MOCK_REPLIES = [
 /** Talk詳細画面（返信スレッド） */
 export default function TalkDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { isDark } = useThemeStore();
-  const t = makeTokens(isDark);
-  const s = createStyles(t);
+  const { s, t, fs } = useAppStyles();
 
   const chat = CHAT_ROOMS.find((c) => c.id === Number(id));
   const [isLiked, setIsLiked] = useState(false);
   const [replyText, setReplyText] = useState("");
+  const [showReport, setShowReport] = useState(false);
 
   if (!chat) {
     return (
       <View style={[s.screen, { alignItems: "center", justifyContent: "center" }]}>
         <Text style={s.textSubheading}>投稿が見つかりません</Text>
         <Pressable onPress={() => router.back()} style={{ marginTop: SPACE.lg }}>
-          <Text style={{ color: t.accent, fontSize: FONT_SIZE.base, fontWeight: WEIGHT.bold }}>戻る</Text>
+          <Text style={{ color: t.accent, fontSize: fs.base, fontWeight: WEIGHT.bold }}>戻る</Text>
         </Pressable>
       </View>
     );
@@ -56,7 +56,13 @@ export default function TalkDetailScreen() {
         >
           <ChevronLeft size={24} color={t.text} />
         </Pressable>
-        <Text style={s.textHeading}>スレッド</Text>
+        <Text style={[s.textHeading, { flex: 1 }]}>スレッド</Text>
+        <Pressable
+          onPress={() => setShowReport(true)}
+          style={({ pressed }) => ({ width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", opacity: pressed ? 0.7 : 1 })}
+        >
+          <Ellipsis size={22} color={t.sub} />
+        </Pressable>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
@@ -68,20 +74,20 @@ export default function TalkDetailScreen() {
             </Pressable>
             <View style={{ flex: 1 }}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.sm, marginBottom: SPACE.xs }}>
-                <Text style={{ fontSize: FONT_SIZE.lg, fontWeight: WEIGHT.bold, color: t.text }}>@{chat.user}</Text>
-                <Text style={{ fontSize: FONT_SIZE.sm, color: t.muted }}>{chat.time}</Text>
+                <Text style={{ fontSize: fs.lg, fontWeight: WEIGHT.bold, color: t.text }}>@{chat.user}</Text>
+                <Text style={{ fontSize: fs.sm, color: t.muted }}>{chat.time}</Text>
               </View>
 
               {/* 位置情報バッジ */}
               <View style={{ alignSelf: "flex-start", flexDirection: "row", alignItems: "center", gap: 3, borderRadius: RADIUS.full, paddingHorizontal: SPACE.sm, paddingVertical: 3, marginBottom: SPACE.sm, backgroundColor: t.accent + "12" }}>
                 <MapPin size={11} color={t.accent} />
-                <Text style={{ fontSize: FONT_SIZE.xs, fontWeight: WEIGHT.semibold, color: t.accent }}>{chat.location}</Text>
+                <Text style={{ fontSize: fs.xs, fontWeight: WEIGHT.semibold, color: t.accent }}>{chat.location}</Text>
               </View>
             </View>
           </View>
 
           {/* メッセージ本文 */}
-          <Text style={{ fontSize: FONT_SIZE.xl, color: t.text, lineHeight: 28, marginTop: SPACE.md }}>
+          <Text style={{ fontSize: fs.xl, color: t.text, lineHeight: 28, marginTop: SPACE.md }}>
             {chat.msg}
           </Text>
 
@@ -96,14 +102,14 @@ export default function TalkDetailScreen() {
           <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.xxxl, marginTop: SPACE.xl, paddingTop: SPACE.md, borderTopWidth: 1, borderTopColor: t.border }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.sm }}>
               <MessageCircle size={20} color={t.sub} />
-              <Text style={{ fontSize: FONT_SIZE.base, fontWeight: WEIGHT.semibold, color: t.sub }}>{chat.count + MOCK_REPLIES.length}</Text>
+              <Text style={{ fontSize: fs.base, fontWeight: WEIGHT.semibold, color: t.sub }}>{chat.count + MOCK_REPLIES.length}</Text>
             </View>
             <Pressable
               onPress={() => setIsLiked(!isLiked)}
               style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: SPACE.sm, opacity: pressed ? 0.7 : 1 })}
             >
               <Heart size={20} fill={isLiked ? t.red : "none"} color={isLiked ? t.red : t.sub} />
-              <Text style={{ fontSize: FONT_SIZE.base, fontWeight: WEIGHT.semibold, color: isLiked ? t.red : t.sub }}>
+              <Text style={{ fontSize: fs.base, fontWeight: WEIGHT.semibold, color: isLiked ? t.red : t.sub }}>
                 {chat.likes + (isLiked ? 1 : 0)}
               </Text>
             </Pressable>
@@ -124,15 +130,15 @@ export default function TalkDetailScreen() {
               </Pressable>
               <View style={{ flex: 1 }}>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.sm, marginBottom: SPACE.xs }}>
-                  <Text style={{ fontSize: FONT_SIZE.sm, fontWeight: WEIGHT.bold, color: t.text }}>@{reply.user}</Text>
-                  <Text style={{ fontSize: FONT_SIZE.xs, color: t.muted }}>{reply.time}</Text>
+                  <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.bold, color: t.text }}>@{reply.user}</Text>
+                  <Text style={{ fontSize: fs.xs, color: t.muted }}>{reply.time}</Text>
                 </View>
-                <Text style={{ fontSize: FONT_SIZE.base, color: t.text, lineHeight: 22 }}>{reply.text}</Text>
+                <Text style={{ fontSize: fs.base, color: t.text, lineHeight: 22 }}>{reply.text}</Text>
                 <Pressable
                   style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: SPACE.xs, marginTop: SPACE.sm, opacity: pressed ? 0.7 : 1 })}
                 >
                   <Heart size={14} color={t.muted} />
-                  <Text style={{ fontSize: FONT_SIZE.xs, color: t.muted }}>{reply.likes}</Text>
+                  <Text style={{ fontSize: fs.xs, color: t.muted }}>{reply.likes}</Text>
                 </Pressable>
               </View>
             </View>
@@ -147,7 +153,7 @@ export default function TalkDetailScreen() {
           onChangeText={setReplyText}
           placeholder="返信を入力..."
           placeholderTextColor={t.muted}
-          style={{ flex: 1, fontSize: FONT_SIZE.base, color: t.text, backgroundColor: t.surface2, borderRadius: RADIUS.full, paddingHorizontal: SPACE.lg, paddingVertical: SPACE.sm + 2, borderWidth: 1, borderColor: t.border }}
+          style={{ flex: 1, fontSize: fs.base, color: t.text, backgroundColor: t.surface2, borderRadius: RADIUS.full, paddingHorizontal: SPACE.lg, paddingVertical: SPACE.sm + 2, borderWidth: 1, borderColor: t.border }}
         />
         <Pressable
           style={({ pressed }) => ({ opacity: pressed && replyText.length > 0 ? 0.7 : 1 })}
@@ -163,6 +169,14 @@ export default function TalkDetailScreen() {
           </LinearGradient>
         </Pressable>
       </View>
+
+      <ReportModal
+        visible={showReport}
+        onClose={() => setShowReport(false)}
+        t={t}
+        targetType="talk"
+        targetId={chat.id}
+      />
     </View>
   );
 }

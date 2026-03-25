@@ -7,7 +7,8 @@ import { CAT_CONFIG } from "@/constants/categories";
 import type { ThemeTokens } from "@/constants/theme";
 import type { FeedPost } from "@/types";
 import { distLabel } from "@/lib/utils";
-import { FONT_SIZE, WEIGHT, SPACE, RADIUS } from "@/lib/styles";
+import { WEIGHT, SPACE, RADIUS, getScaledFontSize } from "@/lib/styles";
+import { useFontSizeStore } from "@/stores/fontSizeStore";
 import UrgencyBar from "@/components/ui/UrgencyBar";
 import CrowdTag from "@/components/ui/CrowdTag";
 import FeaturedGlow from "@/components/ui/FeaturedGlow";
@@ -31,6 +32,8 @@ interface FeedPostCardProps {
 
 /** フィード投稿カード（カテゴリ別デザイン） */
 export default function FeedPostCard({ post, t, isDark, featured }: FeedPostCardProps) {
+  const { scale } = useFontSizeStore();
+  const fs = getScaledFontSize(scale);
   const catColor = CAT_CONFIG[post.category]?.color || t.accent;
   const gradColors = CAT_GRADIENTS[post.category] || CAT_GRADIENTS.stock;
 
@@ -67,26 +70,26 @@ export default function FeedPostCard({ post, t, isDark, featured }: FeedPostCard
         {featured && (
           <View style={{ position: "absolute", top: SPACE.lg, right: SPACE.lg, flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "rgba(240,66,92,0.9)", borderRadius: RADIUS.full, paddingHorizontal: SPACE.sm + 2, paddingVertical: SPACE.xs }}>
             <Flame size={12} color="#fff" />
-            <Text style={{ fontSize: FONT_SIZE.xxs, fontWeight: WEIGHT.extrabold, color: "#fff" }}>注目</Text>
+            <Text style={{ fontSize: fs.xxs, fontWeight: WEIGHT.extrabold, color: "#fff" }}>注目</Text>
           </View>
         )}
 
         {/* Distance badge */}
         <View style={{ position: "absolute", right: SPACE.lg, top: "50%", transform: [{ translateY: -14 }], flexDirection: "row", alignItems: "center", gap: SPACE.xs, backgroundColor: "rgba(0,0,0,0.5)", borderRadius: RADIUS.full, paddingHorizontal: SPACE.md, paddingVertical: 6 }}>
           <Navigation size={13} color={catColor} />
-          <Text style={{ fontSize: FONT_SIZE.sm, fontWeight: WEIGHT.bold, color: "#fff" }}>{distLabel(post.distance)}</Text>
+          <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.bold, color: "#fff" }}>{distLabel(post.distance)}</Text>
         </View>
 
         {/* Bottom */}
         <View style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: SPACE.lg }}>
           {featured && (
             <View style={{ alignSelf: "flex-start", flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "rgba(0,0,0,0.5)", borderRadius: RADIUS.full, paddingHorizontal: SPACE.sm + 2, paddingVertical: 3, marginBottom: SPACE.xs }}>
-              <Text style={{ fontSize: FONT_SIZE.xxs, fontWeight: WEIGHT.bold, color: t.accent }}>
+              <Text style={{ fontSize: fs.xxs, fontWeight: WEIGHT.bold, color: t.accent }}>
                 {post.matchScore >= 85 ? "近くで話題" : post.timeLeft <= 60 ? "締切が近い" : "おすすめ"}
               </Text>
             </View>
           )}
-          <Text style={{ fontSize: FONT_SIZE.lg + 1, fontWeight: WEIGHT.bold, color: "#fff", lineHeight: 24 }}>{post.caption}</Text>
+          <Text style={{ fontSize: fs.lg + 1, fontWeight: WEIGHT.bold, color: "#fff", lineHeight: 24 }}>{post.caption}</Text>
           <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.sm, marginTop: SPACE.sm }}>
             <UrgencyBar timeLeft={post.timeLeft} subColor={t.sub} />
             {post.crowd ? <CrowdTag crowd={post.crowd} /> : null}

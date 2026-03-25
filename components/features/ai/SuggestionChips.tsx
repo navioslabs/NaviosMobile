@@ -1,6 +1,7 @@
 import { View, Text, Pressable } from "react-native";
 import type { ThemeTokens } from "@/constants/theme";
-import { FONT_SIZE, WEIGHT, SPACE, RADIUS } from "@/lib/styles";
+import { WEIGHT, SPACE, RADIUS, getScaledFontSize } from "@/lib/styles";
+import { useFontSizeStore } from "@/stores/fontSizeStore";
 
 interface SuggestionChipsProps {
   t: ThemeTokens;
@@ -17,6 +18,9 @@ const SUGGESTIONS = [
 
 /** AI検索のサジェスションチップ（折り返し表示） */
 export default function SuggestionChips({ t, onSelect }: SuggestionChipsProps) {
+  const { scale } = useFontSizeStore();
+  const fs = getScaledFontSize(scale);
+
   return (
     <View style={{ flexDirection: "row", flexWrap: "wrap", gap: SPACE.sm, marginBottom: SPACE.lg }}>
       {SUGGESTIONS.map((s) => (
@@ -33,7 +37,7 @@ export default function SuggestionChips({ t, onSelect }: SuggestionChipsProps) {
             opacity: pressed ? 0.7 : 1,
           })}
         >
-          <Text style={{ fontSize: FONT_SIZE.sm, fontWeight: WEIGHT.medium, color: t.sub }}>{s}</Text>
+          <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.medium, color: t.sub }}>{s}</Text>
         </Pressable>
       ))}
     </View>

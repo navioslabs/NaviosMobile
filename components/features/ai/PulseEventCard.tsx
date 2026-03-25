@@ -4,7 +4,8 @@ import { Navigation, Flame } from "@/lib/icons";
 import type { ThemeTokens } from "@/constants/theme";
 import type { FeedPost } from "@/types";
 import { distLabel } from "@/lib/utils";
-import { FONT_SIZE, WEIGHT, SPACE } from "@/lib/styles";
+import { WEIGHT, SPACE, getScaledFontSize } from "@/lib/styles";
+import { useFontSizeStore } from "@/stores/fontSizeStore";
 import CatPill from "@/components/ui/CatPill";
 import MatchBadge from "@/components/ui/MatchBadge";
 import UrgencyBar from "@/components/ui/UrgencyBar";
@@ -19,6 +20,8 @@ interface PulseEventCardProps {
 
 /** AIパルスイベントカード */
 export default function PulseEventCard({ event, t }: PulseEventCardProps) {
+  const { scale } = useFontSizeStore();
+  const fs = getScaledFontSize(scale);
   const isHot = event.matchScore >= 85;
 
   return (
@@ -33,18 +36,18 @@ export default function PulseEventCard({ event, t }: PulseEventCardProps) {
             {isHot && (
               <View style={{ flexDirection: "row", alignItems: "center", gap: 3, paddingHorizontal: 7, paddingVertical: 2, borderRadius: 9999, backgroundColor: "#F0425C" }}>
                 <Flame size={10} color="#fff" />
-                <Text style={{ color: "#fff", fontSize: FONT_SIZE.xxs, fontWeight: WEIGHT.bold }}>HOT</Text>
+                <Text style={{ color: "#fff", fontSize: fs.xxs, fontWeight: WEIGHT.bold }}>HOT</Text>
               </View>
             )}
             <CatPill cat={event.category} small />
           </View>
-          <Text style={{ fontSize: FONT_SIZE.base, fontWeight: WEIGHT.bold, lineHeight: 20, marginBottom: 5, color: t.text }} numberOfLines={1}>
+          <Text style={{ fontSize: fs.base, fontWeight: WEIGHT.bold, lineHeight: 20, marginBottom: 5, color: t.text }} numberOfLines={1}>
             {event.user.name}
           </Text>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
               <Navigation size={11} color={t.accent} />
-              <Text style={{ fontSize: FONT_SIZE.xs, fontWeight: WEIGHT.semibold, color: t.accent }}>{distLabel(event.distance)}</Text>
+              <Text style={{ fontSize: fs.xs, fontWeight: WEIGHT.semibold, color: t.accent }}>{distLabel(event.distance)}</Text>
             </View>
             <UrgencyBar timeLeft={event.timeLeft} subColor={t.sub} />
             {event.crowd ? <CrowdTag crowd={event.crowd} /> : null}

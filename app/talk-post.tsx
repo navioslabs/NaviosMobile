@@ -3,15 +3,12 @@ import { View, Text, TextInput, Pressable, ScrollView } from "react-native";
 import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { User, MapPin, Camera, ImageIcon, Send } from "@/lib/icons";
-import { makeTokens } from "@/constants/theme";
-import { useThemeStore } from "@/stores/themeStore";
-import { createStyles, FONT_SIZE, WEIGHT, SPACE, RADIUS } from "@/lib/styles";
+import { useAppStyles } from "@/hooks/useAppStyles";
+import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 
 /** つぶやき投稿画面 */
 export default function TalkPostScreen() {
-  const { isDark } = useThemeStore();
-  const t = makeTokens(isDark);
-  const s = createStyles(t);
+  const { s, t, fs } = useAppStyles();
   const [msg, setMsg] = useState("");
 
   return (
@@ -27,24 +24,24 @@ export default function TalkPostScreen() {
           placeholderTextColor={t.sub}
           multiline
           autoFocus
-          style={{ flex: 1, fontSize: FONT_SIZE.xl, minHeight: 120, lineHeight: 26, color: t.text, textAlignVertical: "top" }}
+          style={{ flex: 1, fontSize: fs.xl, minHeight: 120, lineHeight: 26, color: t.text, textAlignVertical: "top" }}
         />
       </View>
 
       <View style={[s.card, { gap: SPACE.xs }]}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.sm }}>
           <MapPin size={16} color={t.accent} />
-          <Text style={{ fontSize: FONT_SIZE.md, fontWeight: WEIGHT.semibold, color: t.accent }}>📍 越谷市・現在地周辺</Text>
-          <Text style={{ marginLeft: "auto", fontSize: FONT_SIZE.xs, color: t.muted }}>自動検出</Text>
+          <Text style={{ fontSize: fs.md, fontWeight: WEIGHT.semibold, color: t.accent }}>📍 越谷市・現在地周辺</Text>
+          <Text style={{ marginLeft: "auto", fontSize: fs.xs, color: t.muted }}>自動検出</Text>
         </View>
-        <Text style={{ fontSize: FONT_SIZE.xxs, color: t.muted, paddingLeft: SPACE.xxl }}>位置情報つきで投稿されます</Text>
+        <Text style={{ fontSize: fs.xxs, color: t.muted, paddingLeft: SPACE.xxl }}>位置情報つきで投稿されます</Text>
       </View>
 
       <View style={{ flexDirection: "row", gap: SPACE.sm }}>
         {[{ Icon: Camera, l: "撮影" }, { Icon: ImageIcon, l: "選択" }].map(({ Icon, l }) => (
           <Pressable key={l} style={{ width: 60, height: 60, borderRadius: RADIUS.lg, alignItems: "center", justifyContent: "center", gap: SPACE.xs, borderWidth: 1.5, borderStyle: "dashed", borderColor: t.border, backgroundColor: t.surface }}>
             <Icon size={20} color={t.sub} />
-            <Text style={{ fontSize: FONT_SIZE.xxs, color: t.sub }}>{l}</Text>
+            <Text style={{ fontSize: fs.xxs, color: t.sub }}>{l}</Text>
           </Pressable>
         ))}
       </View>
@@ -52,14 +49,14 @@ export default function TalkPostScreen() {
       {/* 文字数超過警告 */}
       {msg.length > 140 && (
         <View style={{ backgroundColor: t.red + "15", borderRadius: RADIUS.md, padding: SPACE.md, borderWidth: 1, borderColor: t.red + "30" }}>
-          <Text style={{ fontSize: FONT_SIZE.sm, fontWeight: WEIGHT.semibold, color: t.red }}>
+          <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.semibold, color: t.red }}>
             140文字を超えています（{msg.length - 140}文字オーバー）
           </Text>
         </View>
       )}
 
       <View style={s.rowBetween}>
-        <Text style={{ fontSize: FONT_SIZE.sm, fontWeight: msg.length > 140 ? WEIGHT.bold : WEIGHT.normal, color: msg.length > 140 ? t.red : msg.length > 120 ? t.amber : t.muted }}>
+        <Text style={{ fontSize: fs.sm, fontWeight: msg.length > 140 ? WEIGHT.bold : WEIGHT.normal, color: msg.length > 140 ? t.red : msg.length > 120 ? t.amber : t.muted }}>
           {msg.length}/140
         </Text>
         <Pressable
@@ -73,7 +70,7 @@ export default function TalkPostScreen() {
             style={{ flexDirection: "row", alignItems: "center", gap: 6, borderRadius: RADIUS.lg, paddingHorizontal: SPACE.xxl + 4, paddingVertical: SPACE.md }}
           >
             <Send size={15} color={msg.length > 0 && msg.length <= 140 ? "#000" : t.muted} />
-            <Text style={{ fontWeight: WEIGHT.extrabold, fontSize: FONT_SIZE.lg, color: msg.length > 0 && msg.length <= 140 ? "#000" : t.muted }}>投稿する</Text>
+            <Text style={{ fontWeight: WEIGHT.extrabold, fontSize: fs.lg, color: msg.length > 0 && msg.length <= 140 ? "#000" : t.muted }}>投稿する</Text>
           </LinearGradient>
         </Pressable>
       </View>

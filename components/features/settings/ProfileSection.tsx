@@ -3,7 +3,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { User, ChevronRight } from "@/lib/icons";
 import type { ThemeTokens } from "@/constants/theme";
-import { FONT_SIZE, WEIGHT, SPACE } from "@/lib/styles";
+import { WEIGHT, SPACE, getScaledFontSize } from "@/lib/styles";
+import { useFontSizeStore } from "@/stores/fontSizeStore";
 
 interface ProfileSectionProps {
   t: ThemeTokens;
@@ -11,6 +12,9 @@ interface ProfileSectionProps {
 
 /** プロフィールセクション */
 export default function ProfileSection({ t }: ProfileSectionProps) {
+  const { scale } = useFontSizeStore();
+  const fs = getScaledFontSize(scale);
+
   return (
     <Pressable
       onPress={() => router.push("/profile/edit")}
@@ -32,8 +36,8 @@ export default function ProfileSection({ t }: ProfileSectionProps) {
           <User size={24} color="#fff" />
         </LinearGradient>
         <View style={{ flex: 1 }}>
-          <Text style={{ fontSize: FONT_SIZE.xl + 1, fontWeight: WEIGHT.bold, color: t.text }}>ゲストユーザー</Text>
-          <Text style={{ fontSize: FONT_SIZE.md, marginTop: 2, color: t.sub }}>プロフィールを設定</Text>
+          <Text style={{ fontSize: fs.xl + 1, fontWeight: WEIGHT.bold, color: t.text }}>ゲストユーザー</Text>
+          <Text style={{ fontSize: fs.md, marginTop: 2, color: t.sub }}>プロフィールを設定</Text>
         </View>
         <ChevronRight size={18} color={t.muted} />
       </View>
