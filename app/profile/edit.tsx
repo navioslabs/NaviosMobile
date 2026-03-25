@@ -13,6 +13,9 @@ import type { ThemeTokens } from "@/constants/theme";
 import { useAuth } from "@/hooks/useAuth";
 import { useUpdateProfile } from "@/hooks/useProfile";
 import { useAppStyles } from "@/hooks/useAppStyles";
+import { useImagePicker } from "@/hooks/useImagePicker";
+import { uploadImage } from "@/lib/storage";
+import { Image } from "expo-image";
 import { useFontSizeStore } from "@/stores/fontSizeStore";
 import { getScaledFontSize, WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 
@@ -21,6 +24,7 @@ export default function ProfileEditScreen() {
   const { s, t, fs } = useAppStyles();
   const { profile } = useAuth();
   const updateMutation = useUpdateProfile();
+  const { imageUri: avatarUri, pickImage: pickAvatar } = useImagePicker();
 
   const [name, setName] = useState(profile?.display_name ?? "ゲストユーザー");
   const [bio, setBio] = useState(profile?.bio ?? "");
@@ -33,10 +37,15 @@ export default function ProfileEditScreen() {
   const handleSave = async () => {
     if (!isValid) return;
     try {
+      let avatar_url: string | undefined;
+      if (avatarUri) {
+        avatar_url = await uploadImage("avatars", avatarUri);
+      }
       await updateMutation.mutateAsync({
         display_name: name.trim(),
         bio: bio.trim() || undefined,
         location_text: location.trim() || undefined,
+        avatar_url,
         is_public: true,
         show_location: true,
         show_checkins: false,
@@ -78,17 +87,21 @@ export default function ProfileEditScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 60 }}>
         {/* アバター編集 */}
         <View style={{ alignItems: "center", paddingVertical: SPACE.xxl }}>
-          <View style={{ position: "relative" }}>
+          <Pressable onPress={pickAvatar} style={{ position: "relative" }}>
             <LinearGradient
               colors={[t.accent, t.blue]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
-              style={{ width: 96, height: 96, borderRadius: 48, alignItems: "center", justifyContent: "center" }}
+              style={{ width: 96, height: 96, borderRadius: 48, alignItems: "center", justifyContent: "center", overflow: "hidden" }}
             >
-              <User size={40} color="#fff" />
+              {avatarUri || profile?.avatar_url ? (
+                <Image source={{ uri: avatarUri ?? profile?.avatar_url ?? "" }} style={{ width: 90, height: 90, borderRadius: 45 }} />
+              ) : (
+                <User size={40} color="#fff" />
+              )}
             </LinearGradient>
-            <Pressable
-              style={({ pressed }) => ({
+            <View
+              style={{
                 position: "absolute",
                 bottom: 0,
                 right: 0,
@@ -100,12 +113,11 @@ export default function ProfileEditScreen() {
                 justifyContent: "center",
                 borderWidth: 3,
                 borderColor: t.bg,
-                opacity: pressed ? 0.7 : 1,
-              })}
+              }}
             >
               <Camera size={14} color="#000" />
-            </Pressable>
-          </View>
+            </View>
+          </Pressable>
           <Text style={{ fontSize: fs.sm, color: t.accent, fontWeight: WEIGHT.semibold, marginTop: SPACE.md }}>写真を変更</Text>
         </View>
 

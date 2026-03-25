@@ -1,7 +1,8 @@
 import { View, Text, Pressable, ScrollView } from "react-native";
 import { Flame, MapPin, Timer } from "@/lib/icons";
 import type { ThemeTokens } from "@/constants/theme";
-import type { FeedPost } from "@/types";
+import type { Post } from "@/types";
+import { calcMatchScore, calcTimeLeft } from "@/lib/adapters";
 import { WEIGHT, SPACE, RADIUS, getScaledFontSize } from "@/lib/styles";
 import { useFontSizeStore } from "@/stores/fontSizeStore";
 
@@ -9,7 +10,7 @@ type FilterType = "top" | "nearby" | "urgent" | null;
 
 interface FeedSummaryProps {
   t: ThemeTokens;
-  posts: FeedPost[];
+  posts: Post[];
   dateLabel: string;
   totalCount: number;
   activeFilter: FilterType;
@@ -20,9 +21,9 @@ interface FeedSummaryProps {
 export default function FeedSummary({ t, posts, dateLabel, totalCount, activeFilter, onFilterChange }: FeedSummaryProps) {
   const { scale } = useFontSizeStore();
   const fs = getScaledFontSize(scale);
-  const nearbyCount = posts.filter((p) => p.distance <= 200).length;
-  const urgentCount = posts.filter((p) => p.timeLeft <= 60).length;
-  const topMatch = posts.length > 0 ? posts.reduce((a, b) => (a.matchScore > b.matchScore ? a : b)) : null;
+  const nearbyCount = posts.filter((p) => (p.distance_m ?? 0) <= 200).length;
+  const urgentCount = posts.filter((p) => calcTimeLeft(p.deadline) <= 60).length;
+  const topMatch = posts.length > 0 ? posts.reduce((a, b) => (calcMatchScore(a.distance_m ?? 0) > calcMatchScore(b.distance_m ?? 0) ? a : b)) : null;
 
   const blocks: { id: FilterType; icon: typeof Flame; label: string; value: string; sub: string; color: string }[] = [
     {
@@ -30,7 +31,7 @@ export default function FeedSummary({ t, posts, dateLabel, totalCount, activeFil
       icon: Flame,
       label: "注目",
       value: topMatch ? `${posts.length}件` : "—",
-      sub: topMatch ? `最高マッチ ${topMatch.matchScore}%` : "",
+      sub: topMatch ? `最高マッチ ${calcMatchScore(topMatch.distance_m ?? 0)}%` : "",
       color: "#F0425C",
     },
     {

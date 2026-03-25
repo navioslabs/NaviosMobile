@@ -99,13 +99,21 @@ export async function createPost(input: {
   content?: string;
   image_url?: string;
   location_text?: string;
+  lat?: number;
+  lng?: number;
 }): Promise<Post> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("ログインが必要です");
 
+  const { lat, lng, ...rest } = input;
+  const insertData: Record<string, any> = { ...rest, author_id: user.id };
+  if (lat != null && lng != null) {
+    insertData.location = `POINT(${lng} ${lat})`;
+  }
+
   const { data, error } = await supabase
     .from("posts")
-    .insert({ ...input, author_id: user.id })
+    .insert(insertData)
     .select("*, author:profiles(*)")
     .single();
   if (error) throw error;

@@ -3,12 +3,10 @@ import { View, Text, FlatList, RefreshControl, Pressable } from "react-native";
 import { Inbox } from "@/lib/icons";
 import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
-import { FEED_POSTS } from "@/data/mockData";
-import type { FeedPost } from "@/types";
+import type { Post } from "@/types";
 import { useAppStyles } from "@/hooks/useAppStyles";
 import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 import { usePosts } from "@/hooks/usePosts";
-import { postToFeedPost } from "@/lib/adapters";
 import DatePicker from "@/components/features/feed/DatePicker";
 import FeedSummary from "@/components/features/feed/FeedSummary";
 import CategoryChips from "@/components/features/feed/CategoryChips";
@@ -16,12 +14,9 @@ import FeedPostCard from "@/components/features/feed/FeedPostCard";
 
 type FilterType = "top" | "nearby" | "urgent" | null;
 
-const getPostsForDate = (offset: number): FeedPost[] => {
-  if (offset === 0) return FEED_POSTS.filter((p) => p.hoursAgo <= 24);
-  if (offset === 1) return FEED_POSTS.filter((p) => p.hoursAgo > 24 && p.hoursAgo <= 48);
-  if (offset <= 3) return FEED_POSTS.filter((p) => p.hoursAgo > 48 && p.hoursAgo <= 96);
-  return FEED_POSTS.filter((_, i) => i % (offset + 1) === 0);
-};
+/** created_at から現在までの経過時間（時間）を算出 */
+const hoursAgo = (createdAt: string): number =>
+  (Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60);
 
 const getDateLabel = (offset: number): string => {
   if (offset === 0) return "📍 今日 • 越谷市";
@@ -43,37 +38,39 @@ export default function FeedScreen() {
     category: selCat === "all" ? undefined : selCat,
   });
 
-  /** サーバーデータがあれば使用、なければモックにフォールバック */
-  const allPosts: FeedPost[] = serverPosts && serverPosts.length > 0
-    ? serverPosts.map(postToFeedPost)
-    : FEED_POSTS;
+  const allPosts: Post[] = serverPosts ?? [];
 
-  const getPostsForDateWithData = (offset: number): FeedPost[] => {
-    if (offset === 0) return allPosts.filter((p) => p.hoursAgo <= 24);
-    if (offset === 1) return allPosts.filter((p) => p.hoursAgo > 24 && p.hoursAgo <= 48);
-    if (offset <= 3) return allPosts.filter((p) => p.hoursAgo > 48 && p.hoursAgo <= 96);
-    return allPosts.filter((_, i) => i % (offset + 1) === 0);
+  /** 日付オフセットに応じて投稿をフィルタ */
+  const getPostsForDate = (offset: number, posts: Post[]): Post[] => {
+    if (offset === 0) return posts.filter((p) => hoursAgo(p.created_at) <= 24);
+    if (offset === 1) return posts.filter((p) => hoursAgo(p.created_at) > 24 && hoursAgo(p.created_at) <= 48);
+    if (offset <= 3) return posts.filter((p) => hoursAgo(p.created_at) > 48 && hoursAgo(p.created_at) <= 96);
+    return posts.filter((_, i) => i % (offset + 1) === 0);
   };
 
-  const datePosts = getPostsForDateWithData(selDate);
+  const datePosts = getPostsForDate(selDate, allPosts);
 
   const filtered = useMemo(() => {
     let posts = selCat === "all" ? datePosts : datePosts.filter((p) => p.category === selCat);
 
     if (summaryFilter === "top") {
-      posts = [...posts].sort((a, b) => b.matchScore - a.matchScore);
+      posts = [...posts].sort((a, b) => b.likes_count - a.likes_count);
     } else if (summaryFilter === "nearby") {
-      posts = posts.filter((p) => p.distance <= 200);
+      posts = posts.filter((p) => (p.distance_m ?? Infinity) <= 200);
     } else if (summaryFilter === "urgent") {
-      posts = [...posts].sort((a, b) => a.timeLeft - b.timeLeft);
+      posts = [...posts].sort((a, b) => {
+        const aTime = a.deadline ? new Date(a.deadline).getTime() : Infinity;
+        const bTime = b.deadline ? new Date(b.deadline).getTime() : Infinity;
+        return aTime - bTime;
+      });
     }
 
     return posts;
   }, [datePosts, selCat, summaryFilter]);
 
-  const getPostCount = useCallback((offset: number) => getPostsForDateWithData(offset).length, [allPosts]);
+  const getPostCount = useCallback((offset: number) => getPostsForDate(offset, allPosts).length, [allPosts]);
   const renderItem = useCallback(
-    ({ item, index }: { item: FeedPost; index: number }) => (
+    ({ item, index }: { item: Post; index: number }) => (
       <FeedPostCard post={item} t={t} isDark={isDark} featured={index === 0} />
     ),
     [t, isDark]

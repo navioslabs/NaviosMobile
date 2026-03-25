@@ -1,10 +1,8 @@
 import { SectionList, View, Text, RefreshControl } from "react-native";
 import { useMemo } from "react";
-import { NEARBY_POSTS } from "@/data/mockData";
 import { useNearbyPosts } from "@/hooks/usePosts";
 import { useLocation } from "@/hooks/useLocation";
-import { postToNearbyPost } from "@/lib/adapters";
-import type { NearbyPost } from "@/types";
+import type { Post } from "@/types";
 import { useAppStyles } from "@/hooks/useAppStyles";
 import { SPACE } from "@/lib/styles";
 import ScanHeader from "@/components/features/nearby/ScanHeader";
@@ -15,7 +13,7 @@ import StateView from "@/components/ui/StateView";
 interface NearbySection {
   title: string;
   color: string;
-  data: NearbyPost[];
+  data: Post[];
 }
 
 /** NearBy画面 */
@@ -26,15 +24,13 @@ export default function NearByScreen() {
 
   const isLoading = locationLoading || queryLoading;
 
-  const nearbyPosts = serverPosts && serverPosts.length > 0
-    ? serverPosts.map(postToNearbyPost)
-    : NEARBY_POSTS;
+  const nearbyPosts: Post[] = serverPosts ?? [];
 
   const sections: NearbySection[] = useMemo(() => {
-    const sorted = [...nearbyPosts].sort((a, b) => a.distance - b.distance);
-    const close = sorted.filter((p) => p.distance <= 200);
-    const mid = sorted.filter((p) => p.distance > 200 && p.distance <= 500);
-    const far = sorted.filter((p) => p.distance > 500);
+    const sorted = [...nearbyPosts].sort((a, b) => (a.distance_m ?? 0) - (b.distance_m ?? 0));
+    const close = sorted.filter((p) => (p.distance_m ?? 0) <= 200);
+    const mid = sorted.filter((p) => (p.distance_m ?? 0) > 200 && (p.distance_m ?? 0) <= 500);
+    const far = sorted.filter((p) => (p.distance_m ?? 0) > 500);
 
     const result: NearbySection[] = [];
     result.push({ title: "すぐ近く（200m以内）", color: "#00D4A1", data: close });

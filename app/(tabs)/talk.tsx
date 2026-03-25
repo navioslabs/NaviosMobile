@@ -1,29 +1,24 @@
-import { FlatList, View, Text, TextInput, Pressable, RefreshControl } from "react-native";
-import { useCallback, useState } from "react";
+import { FlatList, View, Text, Pressable, RefreshControl } from "react-native";
+import { useCallback } from "react";
 import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
-import { MapPin, Send, User } from "@/lib/icons";
-import { CHAT_ROOMS } from "@/data/mockData";
+import { MapPin, User } from "@/lib/icons";
 import { useTalks } from "@/hooks/useTalks";
-import { talkToChatRoom } from "@/lib/adapters";
-import type { ChatRoom } from "@/types";
+import type { Talk } from "@/types";
 import { useAppStyles } from "@/hooks/useAppStyles";
-import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
+import { SPACE, RADIUS } from "@/lib/styles";
 import TalkItem from "@/components/features/talk/TalkItem";
 import StateView from "@/components/ui/StateView";
 
 /** ひとこと画面 */
 export default function TalkScreen() {
   const { s, t, fs } = useAppStyles();
-  const [quickMsg, setQuickMsg] = useState("");
 
   const { data: serverTalks, isLoading: queryLoading, refetch } = useTalks();
-  const talks = serverTalks && serverTalks.length > 0
-    ? serverTalks.map(talkToChatRoom)
-    : CHAT_ROOMS;
+  const talks: Talk[] = (serverTalks ?? []).filter((t) => t?.id);
 
   const renderItem = useCallback(
-    ({ item }: { item: ChatRoom }) => <TalkItem chat={item} t={t} />,
+    ({ item }: { item: Talk }) => <TalkItem talk={item} t={t} />,
     [t]
   );
 
@@ -88,7 +83,7 @@ export default function TalkScreen() {
         <FlatList
           data={talks}
           renderItem={renderItem}
-          keyExtractor={(item) => item.id.toString()}
+          keyExtractor={(item, index) => item.id ?? `talk-${index}`}
           showsVerticalScrollIndicator={false}
           ListHeaderComponent={ListHeader}
           contentContainerStyle={{ paddingBottom: 100 }}

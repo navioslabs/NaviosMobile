@@ -2,8 +2,9 @@ import { View, Text } from "react-native";
 import { Image } from "expo-image";
 import { Navigation, Flame } from "@/lib/icons";
 import type { ThemeTokens } from "@/constants/theme";
-import type { FeedPost } from "@/types";
+import type { Post } from "@/types";
 import { distLabel } from "@/lib/utils";
+import { calcMatchScore, calcTimeLeft, crowdLabel } from "@/lib/adapters";
 import { WEIGHT, SPACE, getScaledFontSize } from "@/lib/styles";
 import { useFontSizeStore } from "@/stores/fontSizeStore";
 import CatPill from "@/components/ui/CatPill";
@@ -14,7 +15,7 @@ import GoButton from "@/components/ui/GoButton";
 import HotStrip from "@/components/ui/HotStrip";
 
 interface PulseEventCardProps {
-  event: FeedPost;
+  event: Post;
   t: ThemeTokens;
 }
 
@@ -22,7 +23,8 @@ interface PulseEventCardProps {
 export default function PulseEventCard({ event, t }: PulseEventCardProps) {
   const { scale } = useFontSizeStore();
   const fs = getScaledFontSize(scale);
-  const isHot = event.matchScore >= 85;
+  const matchScore = calcMatchScore(event.distance_m ?? 0);
+  const isHot = matchScore >= 85;
 
   return (
     <View
@@ -30,7 +32,7 @@ export default function PulseEventCard({ event, t }: PulseEventCardProps) {
     >
       {isHot && <HotStrip />}
       <View style={{ flexDirection: "row", gap: 12, padding: 14 }}>
-        <Image source={{ uri: event.image }} style={{ width: 64, height: 64, borderRadius: 14 }} contentFit="cover" />
+        <Image source={{ uri: event.image_url ?? "" }} style={{ width: 64, height: 64, borderRadius: 14 }} contentFit="cover" />
         <View style={{ flex: 1 }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 4 }}>
             {isHot && (
@@ -42,19 +44,19 @@ export default function PulseEventCard({ event, t }: PulseEventCardProps) {
             <CatPill cat={event.category} small />
           </View>
           <Text style={{ fontSize: fs.base, fontWeight: WEIGHT.bold, lineHeight: 20, marginBottom: 5, color: t.text }} numberOfLines={1}>
-            {event.user.name}
+            {event.author?.display_name ?? "ユーザー"}
           </Text>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
               <Navigation size={11} color={t.accent} />
-              <Text style={{ fontSize: fs.xs, fontWeight: WEIGHT.semibold, color: t.accent }}>{distLabel(event.distance)}</Text>
+              <Text style={{ fontSize: fs.xs, fontWeight: WEIGHT.semibold, color: t.accent }}>{distLabel(event.distance_m ?? 0)}</Text>
             </View>
-            <UrgencyBar timeLeft={event.timeLeft} subColor={t.sub} />
-            {event.crowd ? <CrowdTag crowd={event.crowd} /> : null}
+            <UrgencyBar timeLeft={calcTimeLeft(event.deadline)} subColor={t.sub} />
+            {event.crowd ? <CrowdTag crowd={crowdLabel(event.crowd)} /> : null}
           </View>
         </View>
         <View style={{ alignItems: "flex-end", justifyContent: "space-between" }}>
-          <MatchBadge score={event.matchScore} />
+          <MatchBadge score={matchScore} />
           <GoButton small />
         </View>
       </View>

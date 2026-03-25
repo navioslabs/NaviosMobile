@@ -7,8 +7,10 @@ import {
   TextInput,
   ScrollView,
   StyleSheet,
+  Alert,
 } from "react-native";
 import { Flag, AlertCircle, Check } from "@/lib/icons";
+import { createReport } from "@/lib/reports";
 import { REPORT_REASONS } from "@/constants/report";
 import type { ReportReasonId } from "@/types/post";
 import type { ThemeTokens } from "@/constants/theme";
@@ -20,7 +22,7 @@ interface ReportModalProps {
   onClose: () => void;
   t: ThemeTokens;
   targetType: "feed" | "talk" | "nearby";
-  targetId: number;
+  targetId: string | number;
 }
 
 /** 通報モーダル */
@@ -37,12 +39,24 @@ export default function ReportModal({
   const [selected, setSelected] = useState<ReportReasonId | null>(null);
   const [detail, setDetail] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = () => {
-    if (!selected) return;
-    // TODO: Supabase に送信
-    console.log("Report:", { targetType, targetId, reason: selected, detail });
-    setSubmitted(true);
+  const handleSubmit = async () => {
+    if (!selected || submitting) return;
+    setSubmitting(true);
+    try {
+      await createReport({
+        target_type: targetType,
+        target_id: String(targetId),
+        reason: selected,
+        detail: detail.trim() || undefined,
+      });
+      setSubmitted(true);
+    } catch (e: any) {
+      Alert.alert("エラー", e.message ?? "通報に失敗しました");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleClose = () => {
@@ -286,12 +300,12 @@ export default function ReportModal({
                 </Pressable>
                 <Pressable
                   onPress={handleSubmit}
-                  disabled={!selected}
+                  disabled={!selected || submitting}
                   style={({ pressed }) => [
                     styles.submitButton,
                     {
                       backgroundColor: selected ? t.red : t.surface2,
-                      opacity: !selected ? 0.5 : pressed ? 0.8 : 1,
+                      opacity: !selected || submitting ? 0.5 : pressed ? 0.8 : 1,
                     },
                   ]}
                 >
@@ -302,7 +316,7 @@ export default function ReportModal({
                       color: selected ? "#fff" : t.muted,
                     }}
                   >
-                    送信する
+                    {submitting ? "送信中…" : "送信する"}
                   </Text>
                 </Pressable>
               </View>

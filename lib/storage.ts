@@ -1,4 +1,6 @@
 import { readAsStringAsync, EncodingType } from "expo-file-system/legacy";
+import "react-native-get-random-values";
+import { v4 as uuidv4 } from "uuid";
 import { supabase } from "@/lib/supabase";
 
 /**
@@ -13,7 +15,7 @@ export async function uploadImage(
   if (!user) throw new Error("ログインが必要です");
 
   const ext = uri.split(".").pop()?.toLowerCase() ?? "jpg";
-  const fileName = `${user.id}/${crypto.randomUUID()}.${ext}`;
+  const fileName = `${user.id}/${uuidv4()}.${ext}`;
 
   // ファイルを読み込み
   const base64 = await readAsStringAsync(uri, {

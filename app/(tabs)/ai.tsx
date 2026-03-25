@@ -2,11 +2,9 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { View, Text, TextInput, Pressable, ScrollView, ActivityIndicator } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Sparkles, Search, Mic, Zap } from "@/lib/icons";
-import { FEED_POSTS } from "@/data/mockData";
 import { useAppStyles } from "@/hooks/useAppStyles";
 import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
-import { useSearchPosts } from "@/hooks/usePosts";
-import { postToFeedPost } from "@/lib/adapters";
+import { useSearchPosts, usePosts } from "@/hooks/usePosts";
 import PulseEventCard from "@/components/features/ai/PulseEventCard";
 import SuggestionChips from "@/components/features/ai/SuggestionChips";
 import StateView from "@/components/ui/StateView";
@@ -36,29 +34,28 @@ export default function AiScreen() {
   /** サーバー検索（React Query） */
   const { data: serverResults, isLoading: searchLoading } = useSearchPosts(debouncedQuery);
 
-  /** サーバーデータがあれば使用、なければモックにフォールバック */
+  /** サーバーデータを直接使用 */
   const searchResults = useMemo(() => {
     if (!query.trim()) return null;
-    if (serverResults && serverResults.length > 0) {
-      return serverResults.map(postToFeedPost);
-    }
-    // フォールバック: モックデータからローカル検索
-    const q = query.trim().toLowerCase();
-    return FEED_POSTS.filter(
-      (p) =>
-        p.caption.toLowerCase().includes(q) ||
-        p.user.name.toLowerCase().includes(q) ||
-        p.category.includes(q),
-    );
+    if (serverResults && serverResults.length > 0) return serverResults;
+    return [];
   }, [query, serverResults]);
 
   /** debounce中 or React Queryローディング中 */
   const isLoading = query.trim().length > 0 && (query.trim() !== debouncedQuery || searchLoading);
 
-  const pulseEvents = useMemo(
-    () => [...FEED_POSTS].sort((a, b) => a.timeLeft - b.timeLeft).slice(0, 4),
-    [],
-  );
+  /** おすすめフィード: deadline が近い順 */
+  const { data: feedPosts } = usePosts({ limit: 10 });
+  const pulseEvents = useMemo(() => {
+    const posts = feedPosts ?? [];
+    return [...posts]
+      .sort((a, b) => {
+        const aTime = a.deadline ? new Date(a.deadline).getTime() : Infinity;
+        const bTime = b.deadline ? new Date(b.deadline).getTime() : Infinity;
+        return aTime - bTime;
+      })
+      .slice(0, 4);
+  }, [feedPosts]);
 
   const isSearching = query.trim().length > 0;
 
@@ -123,7 +120,7 @@ export default function AiScreen() {
         </Text>
       )}
 
-      {/* ═══ 検索モード ═══ */}
+      {/* 検索モード */}
       {isSearching ? (
         <View style={{ marginTop: SPACE.sm }}>
           {isLoading ? (
@@ -157,7 +154,7 @@ export default function AiScreen() {
         </View>
       ) : (
         <>
-          {/* ═══ 通常モード ═══ */}
+          {/* 通常モード */}
           {/* サジェストチップ */}
           <SuggestionChips t={t} onSelect={(q) => handleQueryChange(q)} />
 

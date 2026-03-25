@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, ScrollView, Pressable, StyleSheet } from "react-native";
+import { View, Text, ScrollView, Pressable, StyleSheet, ActivityIndicator } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
@@ -17,7 +17,8 @@ import {
 import ReportModal from "@/components/ui/ReportModal";
 import { CAT_CONFIG } from "@/constants/categories";
 import { useThemeStore } from "@/stores/themeStore";
-import { FEED_POSTS } from "@/data/mockData";
+import { usePost } from "@/hooks/usePosts";
+import { timeAgo, calcTimeLeft } from "@/lib/adapters";
 import { distLabel } from "@/lib/utils";
 import { useAppStyles } from "@/hooks/useAppStyles";
 import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
@@ -47,9 +48,17 @@ export default function FeedDetailScreen() {
   const { isDark } = useThemeStore();
   const { s, t, fs } = useAppStyles();
 
-  const post = FEED_POSTS.find((p) => p.id === Number(id));
+  const { data: post, isLoading } = usePost(id!);
   const [isSaved, setIsSaved] = useState(false);
   const [showReport, setShowReport] = useState(false);
+
+  if (isLoading) {
+    return (
+      <View style={[s.screen, { alignItems: "center", justifyContent: "center" }]}>
+        <ActivityIndicator size="large" color={t.accent} />
+      </View>
+    );
+  }
 
   if (!post) {
     return (
@@ -64,14 +73,15 @@ export default function FeedDetailScreen() {
 
   const catConfig = CAT_CONFIG[post.category];
   const items = REQUIRED_ITEMS[post.category] || [];
-  const isUrgent = post.timeLeft <= 60;
+  const timeLeft = calcTimeLeft(post.deadline);
+  const isUrgent = timeLeft <= 60;
 
   return (
     <View style={s.screen}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* ═══ ヒーロー画像 ═══ */}
         <View style={{ position: "relative", height: 260 }}>
-          <Image source={{ uri: post.image }} style={StyleSheet.absoluteFill} contentFit="cover" />
+          <Image source={{ uri: post.image_url ?? undefined }} style={StyleSheet.absoluteFill} contentFit="cover" />
           <LinearGradient
             colors={["rgba(0,0,0,0.45)", "rgba(0,0,0,0.1)", "rgba(0,0,0,0.75)"]}
             locations={[0, 0.4, 1]}
@@ -169,17 +179,17 @@ export default function FeedDetailScreen() {
           {/* タイトル + 距離バッジ（横並び） */}
           <View style={{ flexDirection: "row", alignItems: "flex-start", gap: SPACE.md, marginBottom: SPACE.xl }}>
             <Text style={{ flex: 1, fontSize: fs.xxl, fontWeight: WEIGHT.extrabold, color: t.text, lineHeight: 30 }}>
-              {post.caption}
+              {post.title}
             </Text>
             <View style={{ alignItems: "center", backgroundColor: isDark ? t.surface2 : "#F0EFEB", borderRadius: RADIUS.lg, paddingHorizontal: SPACE.md, paddingVertical: SPACE.sm + 2, borderWidth: 1, borderColor: t.border, minWidth: 60 }}>
-              <Text style={{ fontSize: fs.xl, fontWeight: WEIGHT.extrabold, color: t.text }}>{distLabel(post.distance)}</Text>
-              <Text style={{ fontSize: fs.xxs, color: t.muted }}>{walkTime(post.distance)}</Text>
+              <Text style={{ fontSize: fs.xl, fontWeight: WEIGHT.extrabold, color: t.text }}>{distLabel(post.distance_m ?? 0)}</Text>
+              <Text style={{ fontSize: fs.xxs, color: t.muted }}>{walkTime(post.distance_m ?? 0)}</Text>
             </View>
           </View>
 
           {/* ═══ 発信者情報 ═══ */}
           <Pressable
-            onPress={() => router.push(`/profile/${post.id}` as any)}
+            onPress={() => router.push(`/profile/${post.author_id}` as any)}
             style={({ pressed }) => ({
               flexDirection: "row",
               alignItems: "center",
@@ -188,12 +198,12 @@ export default function FeedDetailScreen() {
               opacity: pressed ? 0.7 : 1,
             })}
           >
-            <Image source={{ uri: post.user.avatar }} style={{ width: 44, height: 44, borderRadius: 22, borderWidth: 1.5, borderColor: t.border }} contentFit="cover" />
+            <Image source={{ uri: post.author?.avatar_url ?? undefined }} style={{ width: 44, height: 44, borderRadius: 22, borderWidth: 1.5, borderColor: t.border }} contentFit="cover" />
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: fs.xs, color: t.muted, marginBottom: 2 }}>発信者</Text>
               <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.xs }}>
-                <Text style={{ fontSize: fs.base, fontWeight: WEIGHT.bold, color: t.text }}>{post.user.name}</Text>
-                {post.user.verified && (
+                <Text style={{ fontSize: fs.base, fontWeight: WEIGHT.bold, color: t.text }}>{post.author?.display_name ?? "匿名"}</Text>
+                {post.author?.is_verified && (
                   <View style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: t.blue, alignItems: "center", justifyContent: "center" }}>
                     <UserCheck size={9} color="#fff" />
                   </View>
@@ -202,14 +212,14 @@ export default function FeedDetailScreen() {
             </View>
             <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.xs }}>
               <Clock size={13} color={t.muted} />
-              <Text style={{ fontSize: fs.sm, color: t.muted }}>{post.time}</Text>
+              <Text style={{ fontSize: fs.sm, color: t.muted }}>{timeAgo(post.created_at)}</Text>
             </View>
           </Pressable>
 
           {/* ═══ 概要 ═══ */}
           <Text style={{ fontSize: fs.xs, fontWeight: WEIGHT.semibold, color: t.muted, marginBottom: SPACE.sm, letterSpacing: 0.5 }}>概要</Text>
           <Text style={{ fontSize: fs.base, color: t.text, lineHeight: 24, marginBottom: SPACE.xxl }}>
-            {post.caption}
+            {post.content ?? post.title}
           </Text>
 
           {/* ═══ 締め切りカード ═══ */}
@@ -225,7 +235,7 @@ export default function FeedDetailScreen() {
             <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.sm }}>
               <Clock size={20} color={t.amber} />
               <Text style={{ fontSize: fs.xl, fontWeight: WEIGHT.extrabold, color: t.text }}>
-                {deadlineLabel(post.timeLeft)}
+                {deadlineLabel(timeLeft)}
               </Text>
             </View>
           </View>

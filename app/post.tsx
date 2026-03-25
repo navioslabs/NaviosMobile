@@ -2,9 +2,13 @@ import { useState } from "react";
 import { View, Text, TextInput, Pressable, ScrollView, Alert } from "react-native";
 import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
+import { Image } from "expo-image";
 import { Camera, ImageIcon, MapPin, Locate } from "@/lib/icons";
 import { CAT_CONFIG, type CategoryId } from "@/constants/categories";
 import { useCreatePost } from "@/hooks/usePosts";
+import { useImagePicker } from "@/hooks/useImagePicker";
+import { useLocation } from "@/hooks/useLocation";
+import { uploadImage } from "@/lib/storage";
 import { useAppStyles } from "@/hooks/useAppStyles";
 import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 
@@ -20,6 +24,8 @@ const CAT_HINTS: Record<CategoryId, string> = {
 export default function PostScreen() {
   const { s, t, fs } = useAppStyles();
   const createPostMutation = useCreatePost();
+  const { imageUri, pickImage, takePhoto, clear } = useImagePicker();
+  const { lat, lng, granted } = useLocation();
 
   const [cat, setCat] = useState<CategoryId>("stock");
   const [title, setTitle] = useState("");
@@ -30,10 +36,17 @@ export default function PostScreen() {
   const handleSubmit = async () => {
     if (!canSubmit) return;
     try {
+      let image_url: string | undefined;
+      if (imageUri) {
+        image_url = await uploadImage("post-images", imageUri);
+      }
       await createPostMutation.mutateAsync({
         category: cat,
         title: title.trim(),
         content: content.trim() || undefined,
+        image_url,
+        lat: granted ? lat : undefined,
+        lng: granted ? lng : undefined,
       });
       Alert.alert("投稿完了", "投稿が作成されました", [
         { text: "OK", onPress: () => router.back() },
@@ -85,13 +98,23 @@ export default function PostScreen() {
           <Text style={{ fontSize: fs.xxs, color: t.muted }}>任意</Text>
         </View>
         <View style={{ flexDirection: "row", gap: SPACE.sm }}>
-          {[{ Icon: Camera, l: "撮影" }, { Icon: ImageIcon, l: "選択" }].map(({ Icon, l }) => (
-            <Pressable key={l} style={({ pressed }) => ({ width: 72, height: 72, borderRadius: RADIUS.lg, alignItems: "center" as const, justifyContent: "center" as const, gap: 5, borderWidth: 1.5, borderStyle: "dashed" as const, borderColor: t.border, backgroundColor: t.surface, opacity: pressed ? 0.7 : 1 })}>
-              <Icon size={22} color={t.sub} />
-              <Text style={{ fontSize: fs.xs, color: t.sub }}>{l}</Text>
-            </Pressable>
-          ))}
+          <Pressable onPress={takePhoto} style={({ pressed }) => ({ width: 72, height: 72, borderRadius: RADIUS.lg, alignItems: "center" as const, justifyContent: "center" as const, gap: 5, borderWidth: 1.5, borderStyle: "dashed" as const, borderColor: t.border, backgroundColor: t.surface, opacity: pressed ? 0.7 : 1 })}>
+            <Camera size={22} color={t.sub} />
+            <Text style={{ fontSize: fs.xs, color: t.sub }}>撮影</Text>
+          </Pressable>
+          <Pressable onPress={pickImage} style={({ pressed }) => ({ width: 72, height: 72, borderRadius: RADIUS.lg, alignItems: "center" as const, justifyContent: "center" as const, gap: 5, borderWidth: 1.5, borderStyle: "dashed" as const, borderColor: t.border, backgroundColor: t.surface, opacity: pressed ? 0.7 : 1 })}>
+            <ImageIcon size={22} color={t.sub} />
+            <Text style={{ fontSize: fs.xs, color: t.sub }}>選択</Text>
+          </Pressable>
         </View>
+        {imageUri && (
+          <View style={{ position: "relative" }}>
+            <Image source={{ uri: imageUri }} style={{ width: "100%", height: 200, borderRadius: RADIUS.lg }} />
+            <Pressable onPress={clear} style={{ position: "absolute", top: 8, right: 8, width: 28, height: 28, borderRadius: 14, backgroundColor: "rgba(0,0,0,0.6)", alignItems: "center", justifyContent: "center" }}>
+              <Text style={{ color: "#fff", fontSize: 14 }}>✕</Text>
+            </Pressable>
+          </View>
+        )}
       </View>
 
       {/* 場所 */}
@@ -100,11 +123,13 @@ export default function PostScreen() {
           <Text style={s.textSectionLabel}>場所</Text>
           <Text style={{ fontSize: fs.xxs, color: t.muted }}>任意</Text>
         </View>
-        <Pressable style={({ pressed }) => [s.card, { flexDirection: "row" as const, alignItems: "center" as const, gap: SPACE.sm + 2, opacity: pressed ? 0.7 : 1 }]}>
-          <MapPin size={18} color={t.sub} />
-          <Text style={{ flex: 1, fontSize: fs.base, color: t.sub }}>場所を設定</Text>
-          <Locate size={16} color={t.sub} />
-        </Pressable>
+        <View style={[s.card, { flexDirection: "row" as const, alignItems: "center" as const, gap: SPACE.sm + 2 }]}>
+          <MapPin size={18} color={granted ? t.accent : t.sub} />
+          <Text style={{ flex: 1, fontSize: fs.base, color: granted ? t.text : t.sub }}>
+            {granted ? `📍 現在地を取得済み` : "位置情報の許可が必要です"}
+          </Text>
+          <Locate size={16} color={granted ? t.accent : t.sub} />
+        </View>
       </View>
 
       {/* 投稿ボタン */}

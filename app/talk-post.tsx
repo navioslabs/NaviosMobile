@@ -2,8 +2,12 @@ import { useState } from "react";
 import { View, Text, TextInput, Pressable, ScrollView, Alert } from "react-native";
 import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
+import { Image } from "expo-image";
 import { User, MapPin, Camera, ImageIcon, Send } from "@/lib/icons";
 import { useCreateTalk } from "@/hooks/useTalks";
+import { useImagePicker } from "@/hooks/useImagePicker";
+import { useLocation } from "@/hooks/useLocation";
+import { uploadImage } from "@/lib/storage";
 import { useAppStyles } from "@/hooks/useAppStyles";
 import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 
@@ -11,12 +15,23 @@ import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 export default function TalkPostScreen() {
   const { s, t, fs } = useAppStyles();
   const createTalkMutation = useCreateTalk();
+  const { imageUri, pickImage, takePhoto, clear } = useImagePicker();
+  const { lat, lng, granted } = useLocation();
   const [msg, setMsg] = useState("");
 
   const handleSend = async () => {
     if (!msg.trim()) return;
     try {
-      await createTalkMutation.mutateAsync({ message: msg.trim() });
+      let image_url: string | undefined;
+      if (imageUri) {
+        image_url = await uploadImage("talk-images", imageUri);
+      }
+      await createTalkMutation.mutateAsync({
+        message: msg.trim(),
+        image_url,
+        lat: granted ? lat : undefined,
+        lng: granted ? lng : undefined,
+      });
       router.back();
     } catch (e: any) {
       Alert.alert("エラー", e.message ?? "投稿に失敗しました");
@@ -42,21 +57,35 @@ export default function TalkPostScreen() {
 
       <View style={[s.card, { gap: SPACE.xs }]}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.sm }}>
-          <MapPin size={16} color={t.accent} />
-          <Text style={{ fontSize: fs.md, fontWeight: WEIGHT.semibold, color: t.accent }}>📍 越谷市・現在地周辺</Text>
-          <Text style={{ marginLeft: "auto", fontSize: fs.xs, color: t.muted }}>自動検出</Text>
+          <MapPin size={16} color={granted ? t.accent : t.muted} />
+          <Text style={{ fontSize: fs.md, fontWeight: WEIGHT.semibold, color: granted ? t.accent : t.muted }}>
+            {granted ? "📍 現在地を取得済み" : "位置情報の許可が必要です"}
+          </Text>
+          <Text style={{ marginLeft: "auto", fontSize: fs.xs, color: t.muted }}>{granted ? "自動検出" : ""}</Text>
         </View>
-        <Text style={{ fontSize: fs.xxs, color: t.muted, paddingLeft: SPACE.xxl }}>位置情報つきで投稿されます</Text>
+        <Text style={{ fontSize: fs.xxs, color: t.muted, paddingLeft: SPACE.xxl }}>
+          {granted ? "位置情報つきで投稿されます" : "設定から位置情報を許可してください"}
+        </Text>
       </View>
 
       <View style={{ flexDirection: "row", gap: SPACE.sm }}>
-        {[{ Icon: Camera, l: "撮影" }, { Icon: ImageIcon, l: "選択" }].map(({ Icon, l }) => (
-          <Pressable key={l} style={{ width: 60, height: 60, borderRadius: RADIUS.lg, alignItems: "center", justifyContent: "center", gap: SPACE.xs, borderWidth: 1.5, borderStyle: "dashed", borderColor: t.border, backgroundColor: t.surface }}>
-            <Icon size={20} color={t.sub} />
-            <Text style={{ fontSize: fs.xxs, color: t.sub }}>{l}</Text>
-          </Pressable>
-        ))}
+        <Pressable onPress={takePhoto} style={{ width: 60, height: 60, borderRadius: RADIUS.lg, alignItems: "center", justifyContent: "center", gap: SPACE.xs, borderWidth: 1.5, borderStyle: "dashed", borderColor: t.border, backgroundColor: t.surface }}>
+          <Camera size={20} color={t.sub} />
+          <Text style={{ fontSize: fs.xxs, color: t.sub }}>撮影</Text>
+        </Pressable>
+        <Pressable onPress={pickImage} style={{ width: 60, height: 60, borderRadius: RADIUS.lg, alignItems: "center", justifyContent: "center", gap: SPACE.xs, borderWidth: 1.5, borderStyle: "dashed", borderColor: t.border, backgroundColor: t.surface }}>
+          <ImageIcon size={20} color={t.sub} />
+          <Text style={{ fontSize: fs.xxs, color: t.sub }}>選択</Text>
+        </Pressable>
       </View>
+      {imageUri && (
+        <View style={{ position: "relative" }}>
+          <Image source={{ uri: imageUri }} style={{ width: "100%", height: 160, borderRadius: RADIUS.lg }} />
+          <Pressable onPress={clear} style={{ position: "absolute", top: 8, right: 8, width: 28, height: 28, borderRadius: 14, backgroundColor: "rgba(0,0,0,0.6)", alignItems: "center", justifyContent: "center" }}>
+            <Text style={{ color: "#fff", fontSize: 14 }}>✕</Text>
+          </Pressable>
+        </View>
+      )}
 
       {/* 文字数超過警告 */}
       {msg.length > 140 && (

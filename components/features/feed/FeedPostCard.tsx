@@ -5,8 +5,9 @@ import { router } from "expo-router";
 import { Navigation, Flame } from "@/lib/icons";
 import { CAT_CONFIG } from "@/constants/categories";
 import type { ThemeTokens } from "@/constants/theme";
-import type { FeedPost } from "@/types";
+import type { Post } from "@/types";
 import { distLabel } from "@/lib/utils";
+import { timeAgo, crowdLabel, calcMatchScore, calcTimeLeft } from "@/lib/adapters";
 import { WEIGHT, SPACE, RADIUS, getScaledFontSize } from "@/lib/styles";
 import { useFontSizeStore } from "@/stores/fontSizeStore";
 import UrgencyBar from "@/components/ui/UrgencyBar";
@@ -24,7 +25,7 @@ const CAT_GRADIENTS: Record<string, [string, string, string]> = {
 };
 
 interface FeedPostCardProps {
-  post: FeedPost;
+  post: Post;
   t: ThemeTokens;
   isDark: boolean;
   featured?: boolean;
@@ -53,7 +54,7 @@ export default function FeedPostCard({ post, t, isDark, featured }: FeedPostCard
       })}
     >
       <View style={{ aspectRatio: 3 / 4 }}>
-        <Image source={{ uri: post.image }} style={StyleSheet.absoluteFill} contentFit="cover" />
+        <Image source={{ uri: post.image_url ?? "" }} style={StyleSheet.absoluteFill} contentFit="cover" />
         {/* カテゴリ別グラデーションオーバーレイ */}
         <LinearGradient
           colors={gradColors}
@@ -77,7 +78,7 @@ export default function FeedPostCard({ post, t, isDark, featured }: FeedPostCard
         {/* Distance badge */}
         <View style={{ position: "absolute", right: SPACE.lg, top: "50%", transform: [{ translateY: -14 }], flexDirection: "row", alignItems: "center", gap: SPACE.xs, backgroundColor: "rgba(0,0,0,0.5)", borderRadius: RADIUS.full, paddingHorizontal: SPACE.md, paddingVertical: 6 }}>
           <Navigation size={13} color={catColor} />
-          <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.bold, color: "#fff" }}>{distLabel(post.distance)}</Text>
+          <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.bold, color: "#fff" }}>{distLabel(post.distance_m ?? 0)}</Text>
         </View>
 
         {/* Bottom */}
@@ -85,16 +86,16 @@ export default function FeedPostCard({ post, t, isDark, featured }: FeedPostCard
           {featured && (
             <View style={{ alignSelf: "flex-start", flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "rgba(0,0,0,0.5)", borderRadius: RADIUS.full, paddingHorizontal: SPACE.sm + 2, paddingVertical: 3, marginBottom: SPACE.xs }}>
               <Text style={{ fontSize: fs.xxs, fontWeight: WEIGHT.bold, color: t.accent }}>
-                {post.matchScore >= 85 ? "近くで話題" : post.timeLeft <= 60 ? "締切が近い" : "おすすめ"}
+                {calcMatchScore(post.distance_m ?? 0) >= 85 ? "近くで話題" : calcTimeLeft(post.deadline) <= 60 ? "締切が近い" : "おすすめ"}
               </Text>
             </View>
           )}
-          <Text style={{ fontSize: fs.lg + 1, fontWeight: WEIGHT.bold, color: "#fff", lineHeight: 24 }}>{post.caption}</Text>
+          <Text style={{ fontSize: fs.lg + 1, fontWeight: WEIGHT.bold, color: "#fff", lineHeight: 24 }}>{post.title + (post.content ? "\n" + post.content : "")}</Text>
           <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.sm, marginTop: SPACE.sm }}>
-            <UrgencyBar timeLeft={post.timeLeft} subColor={t.sub} />
-            {post.crowd ? <CrowdTag crowd={post.crowd} /> : null}
+            <UrgencyBar timeLeft={calcTimeLeft(post.deadline)} subColor={t.sub} />
+            {post.crowd ? <CrowdTag crowd={crowdLabel(post.crowd)} /> : null}
           </View>
-          <CardActions likes={post.likes} t={t} />
+          <CardActions likes={post.likes_count} t={t} />
         </View>
 
         {/* カテゴリ別ボトムアクセントライン */}
