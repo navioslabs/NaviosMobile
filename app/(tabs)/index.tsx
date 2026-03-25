@@ -1,148 +1,88 @@
-import { useState, useCallback, useMemo } from "react";
-import { View, Text, FlatList, RefreshControl, Pressable } from "react-native";
-import { Inbox } from "@/lib/icons";
-import { router } from "expo-router";
-import { LinearGradient } from "expo-linear-gradient";
+import { SectionList, View, Text, RefreshControl } from "react-native";
+import { useMemo } from "react";
+import { useNearbyPosts } from "@/hooks/usePosts";
+import { useLocation } from "@/hooks/useLocation";
 import type { Post } from "@/types";
 import { useAppStyles } from "@/hooks/useAppStyles";
-import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
-import { usePosts } from "@/hooks/usePosts";
-import DatePicker from "@/components/features/feed/DatePicker";
-import FeedSummary from "@/components/features/feed/FeedSummary";
-import CategoryChips from "@/components/features/feed/CategoryChips";
-import FeedPostCard from "@/components/features/feed/FeedPostCard";
+import { SPACE } from "@/lib/styles";
+import ScanHeader from "@/components/features/nearby/ScanHeader";
+import NearbyPostItem from "@/components/features/nearby/NearbyPostItem";
+import DistanceSectionHeader from "@/components/features/nearby/DistanceSectionHeader";
+import StateView from "@/components/ui/StateView";
 
-type FilterType = "top" | "nearby" | "urgent" | null;
+interface NearbySection {
+  title: string;
+  color: string;
+  data: Post[];
+}
 
-/** created_at から現在までの経過時間（時間）を算出 */
-const hoursAgo = (createdAt: string): number =>
-  (Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60);
-
-const getDateLabel = (offset: number): string => {
-  if (offset === 0) return "📍 今日 • 越谷市";
-  if (offset === 1) return "📅 明日";
-  const d = new Date();
-  d.setDate(d.getDate() + offset);
-  return `📅 ${d.getMonth() + 1}/${d.getDate()}`;
-};
-
-/** Feed画面 */
-export default function FeedScreen() {
+/** NearBy画面 */
+export default function NearByScreen() {
   const { s, t, fs, isDark } = useAppStyles();
+  const { lat, lng, isLoading: locationLoading, error: locationError } = useLocation();
+  const { data: serverPosts, isLoading: queryLoading, refetch } = useNearbyPosts(lat, lng);
 
-  const [selDate, setSelDate] = useState(0);
-  const [selCat, setSelCat] = useState("all");
-  const [summaryFilter, setSummaryFilter] = useState<FilterType>(null);
+  const isLoading = locationLoading || queryLoading;
 
-  const { data: serverPosts, isLoading: queryLoading, refetch } = usePosts({
-    category: selCat === "all" ? undefined : selCat,
-  });
+  const nearbyPosts: Post[] = serverPosts ?? [];
 
-  const allPosts: Post[] = serverPosts ?? [];
+  const sections: NearbySection[] = useMemo(() => {
+    const sorted = [...nearbyPosts].sort((a, b) => (a.distance_m ?? 0) - (b.distance_m ?? 0));
+    const close = sorted.filter((p) => (p.distance_m ?? 0) <= 200);
+    const mid = sorted.filter((p) => (p.distance_m ?? 0) > 200 && (p.distance_m ?? 0) <= 500);
+    const far = sorted.filter((p) => (p.distance_m ?? 0) > 500);
 
-  /** 日付オフセットに応じて投稿をフィルタ */
-  const getPostsForDate = (offset: number, posts: Post[]): Post[] => {
-    if (offset === 0) return posts.filter((p) => hoursAgo(p.created_at) <= 24);
-    if (offset === 1) return posts.filter((p) => hoursAgo(p.created_at) > 24 && hoursAgo(p.created_at) <= 48);
-    if (offset <= 3) return posts.filter((p) => hoursAgo(p.created_at) > 48 && hoursAgo(p.created_at) <= 96);
-    return posts.filter((_, i) => i % (offset + 1) === 0);
-  };
+    const result: NearbySection[] = [];
+    result.push({ title: "すぐ近く（200m以内）", color: "#00D4A1", data: close });
+    if (mid.length > 0) result.push({ title: "徒歩圏内（500m以内）", color: "#F5A623", data: mid });
+    if (far.length > 0) result.push({ title: "その他", color: "#8887A0", data: far });
+    return result;
+  }, [nearbyPosts]);
 
-  const datePosts = getPostsForDate(selDate, allPosts);
-
-  const filtered = useMemo(() => {
-    let posts = selCat === "all" ? datePosts : datePosts.filter((p) => p.category === selCat);
-
-    if (summaryFilter === "top") {
-      posts = [...posts].sort((a, b) => b.likes_count - a.likes_count);
-    } else if (summaryFilter === "nearby") {
-      posts = posts.filter((p) => (p.distance_m ?? Infinity) <= 200);
-    } else if (summaryFilter === "urgent") {
-      posts = [...posts].sort((a, b) => {
-        const aTime = a.deadline ? new Date(a.deadline).getTime() : Infinity;
-        const bTime = b.deadline ? new Date(b.deadline).getTime() : Infinity;
-        return aTime - bTime;
-      });
-    }
-
-    return posts;
-  }, [datePosts, selCat, summaryFilter]);
-
-  const getPostCount = useCallback((offset: number) => getPostsForDate(offset, allPosts).length, [allPosts]);
-  const renderItem = useCallback(
-    ({ item, index }: { item: Post; index: number }) => (
-      <FeedPostCard post={item} t={t} isDark={isDark} featured={index === 0} />
-    ),
-    [t, isDark]
-  );
-
-  const ListHeader = (
-    <>
-      <FeedSummary
-        t={t}
-        posts={datePosts}
-        dateLabel={getDateLabel(selDate)}
-        totalCount={filtered.length}
-        activeFilter={summaryFilter}
-        onFilterChange={setSummaryFilter}
-      />
-      <CategoryChips t={t} selected={selCat} onSelect={setSelCat} />
-    </>
-  );
+  if (isLoading) {
+    return (
+      <View style={s.screen}>
+        <ScanHeader t={t} isDark={isDark} postCount={0} />
+        <StateView t={t} type="loading" />
+      </View>
+    );
+  }
 
   return (
     <View style={s.screen}>
-      <DatePicker t={t} selectedDate={selDate} onSelectDate={setSelDate} getPostCount={getPostCount} />
-
-      {filtered.length === 0 ? (
-        <View style={{ flex: 1 }}>
-          {ListHeader}
-          <View style={{ paddingVertical: 60, paddingHorizontal: SPACE.xl, alignItems: "center" }}>
-            <Inbox size={40} color={t.muted} />
-            <Text style={[s.textSubheading, { marginTop: SPACE.md, color: t.text }]}>この日の投稿はまだありません</Text>
-            <Text style={[s.textLabel, { marginTop: SPACE.xs, color: t.sub }]}>他の日付を選ぶか、投稿してみましょう</Text>
-            <View style={{ flexDirection: "row", gap: SPACE.md, marginTop: SPACE.xl }}>
-              <Pressable
-                onPress={() => setSelDate(0)}
-                style={({ pressed }) => ({ paddingHorizontal: SPACE.xl, paddingVertical: SPACE.md, borderRadius: RADIUS.full, backgroundColor: t.surface2, borderWidth: 1, borderColor: t.border, opacity: pressed ? 0.7 : 1 })}
-              >
-                <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.bold, color: t.text }}>今日を見る</Text>
-              </Pressable>
-              <Pressable
-                onPress={() => router.push("/post")}
-                style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}
-              >
-                <LinearGradient
-                  colors={[t.accent, t.blue]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={{ paddingHorizontal: SPACE.xl, paddingVertical: SPACE.md, borderRadius: RADIUS.full }}
-                >
-                  <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.bold, color: "#000" }}>投稿する</Text>
-                </LinearGradient>
-              </Pressable>
+      <ScanHeader t={t} isDark={isDark} postCount={nearbyPosts.length} />
+      <SectionList
+        sections={sections}
+        keyExtractor={(item, index) => `${item.title}-${index}`}
+        renderItem={({ item, index, section }) => {
+          const isFeatured = section === sections[0] && index === 0;
+          return <NearbyPostItem post={item} t={t} featured={isFeatured} isDark={isDark} />;
+        }}
+        renderSectionHeader={({ section }) => (
+          <DistanceSectionHeader title={section.title} count={section.data.length} color={section.color} t={t} />
+        )}
+        renderSectionFooter={({ section }) =>
+          section.data.length === 0 ? (
+            <View style={{ paddingVertical: SPACE.xl, paddingHorizontal: SPACE.xl, alignItems: "center" }}>
+              <Text style={{ fontSize: fs.base, color: t.sub, textAlign: "center" }}>
+                200m以内にイベントはありません{"\n"}少し足を伸ばしてみましょう
+              </Text>
             </View>
-          </View>
-        </View>
-      ) : (
-        <FlatList
-          data={filtered}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id.toString()}
-          showsVerticalScrollIndicator={false}
-          ListHeaderComponent={ListHeader}
-          contentContainerStyle={{ paddingBottom: 90 }}
-          refreshControl={
-            <RefreshControl
-              refreshing={queryLoading}
-              onRefresh={() => refetch()}
-              tintColor={t.accent}
-              colors={[t.accent]}
-              progressBackgroundColor={t.surface}
-            />
-          }
-        />
-      )}
+          ) : null
+        }
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 100 }}
+        stickySectionHeadersEnabled={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={queryLoading}
+            onRefresh={() => refetch()}
+            tintColor={t.accent}
+            colors={[t.accent]}
+            progressBackgroundColor={t.surface}
+          />
+        }
+      />
     </View>
   );
 }

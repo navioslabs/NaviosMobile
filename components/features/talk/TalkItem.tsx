@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, memo } from "react";
 import { View, Text, Pressable } from "react-native";
 import { Image } from "expo-image";
 import { router } from "expo-router";
@@ -15,7 +15,7 @@ interface TalkItemProps {
 }
 
 /** Talk タイムラインアイテム（吹き出し風） */
-export default function TalkItem({ talk, t }: TalkItemProps) {
+function TalkItem({ talk, t }: TalkItemProps) {
   const { scale } = useFontSizeStore();
   const fs = getScaledFontSize(scale);
   const [isLiked, setIsLiked] = useState(false);
@@ -95,3 +95,5 @@ export default function TalkItem({ talk, t }: TalkItemProps) {
     </Pressable>
   );
 }
+
+export default memo(TalkItem);

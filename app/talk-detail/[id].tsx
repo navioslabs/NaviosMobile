@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, ScrollView, Pressable, TextInput, ActivityIndicator, Alert } from "react-native";
+import { View, Text, ScrollView, Pressable, TextInput, ActivityIndicator, Alert, RefreshControl } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { Image } from "expo-image";
 import {
@@ -23,7 +23,7 @@ export default function TalkDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { s, t, fs } = useAppStyles();
 
-  const { data, isLoading } = useTalk(id!);
+  const { data, isLoading, isFetching, refetch } = useTalk(id!);
   const createReplyMutation = useCreateReply(id!);
   const [isLiked, setIsLiked] = useState(false);
   const [replyText, setReplyText] = useState("");
@@ -70,7 +70,19 @@ export default function TalkDetailScreen() {
         </Pressable>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 100 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={isFetching}
+            onRefresh={() => refetch()}
+            tintColor={t.accent}
+            colors={[t.accent]}
+            progressBackgroundColor={t.surface}
+          />
+        }
+      >
         {/* 元投稿 */}
         <View style={{ padding: SPACE.xl, borderBottomWidth: 1, borderBottomColor: t.border }}>
           <View style={{ flexDirection: "row", gap: SPACE.md }}>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, ScrollView, Pressable, StyleSheet, ActivityIndicator } from "react-native";
+import { View, Text, ScrollView, Pressable, StyleSheet, ActivityIndicator, RefreshControl } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
@@ -48,7 +48,7 @@ export default function FeedDetailScreen() {
   const { isDark } = useThemeStore();
   const { s, t, fs } = useAppStyles();
 
-  const { data: post, isLoading } = usePost(id!);
+  const { data: post, isLoading, isFetching, refetch } = usePost(id!);
   const [isSaved, setIsSaved] = useState(false);
   const [showReport, setShowReport] = useState(false);
 
@@ -78,7 +78,18 @@ export default function FeedDetailScreen() {
 
   return (
     <View style={s.screen}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isFetching}
+            onRefresh={() => refetch()}
+            tintColor={t.accent}
+            colors={[t.accent]}
+            progressBackgroundColor={t.surface}
+          />
+        }
+      >
         {/* ═══ ヒーロー画像 ═══ */}
         <View style={{ position: "relative", height: 260 }}>
           <Image source={{ uri: post.image_url ?? undefined }} style={StyleSheet.absoluteFill} contentFit="cover" />

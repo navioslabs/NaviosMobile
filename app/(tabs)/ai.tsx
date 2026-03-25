@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from "react";
-import { View, Text, TextInput, Pressable, ScrollView, ActivityIndicator } from "react-native";
+import { View, Text, TextInput, Pressable, ScrollView, ActivityIndicator, RefreshControl } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Sparkles, Search, Mic, Zap } from "@/lib/icons";
 import { useAppStyles } from "@/hooks/useAppStyles";
@@ -45,7 +45,7 @@ export default function AiScreen() {
   const isLoading = query.trim().length > 0 && (query.trim() !== debouncedQuery || searchLoading);
 
   /** おすすめフィード: deadline が近い順 */
-  const { data: feedPosts } = usePosts({ limit: 10 });
+  const { data: feedPosts, isFetching: feedFetching, refetch: refetchFeed } = usePosts({ limit: 10 });
   const pulseEvents = useMemo(() => {
     const posts = feedPosts ?? [];
     return [...posts]
@@ -60,7 +60,20 @@ export default function AiScreen() {
   const isSearching = query.trim().length > 0;
 
   return (
-    <ScrollView style={s.screen} contentContainerStyle={{ padding: SPACE.xl, paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      style={s.screen}
+      contentContainerStyle={{ padding: SPACE.xl, paddingBottom: 100 }}
+      showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl
+          refreshing={feedFetching}
+          onRefresh={() => refetchFeed()}
+          tintColor={t.accent}
+          colors={[t.accent]}
+          progressBackgroundColor={t.surface}
+        />
+      }
+    >
       {/* Logo — 縮小版 */}
       <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.md, marginBottom: SPACE.lg }}>
         <LinearGradient

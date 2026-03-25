@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, Pressable, ActivityIndicator } from "react-native";
+import { View, Text, ScrollView, Pressable, ActivityIndicator, RefreshControl } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
@@ -22,7 +22,7 @@ export default function ProfileScreen() {
   const { s, t, fs } = useAppStyles();
 
   const userId = id ?? "";
-  const { data: remoteProfile, isLoading: profileLoading } = useProfile(userId);
+  const { data: remoteProfile, isLoading: profileLoading, isFetching: profileFetching, refetch: refetchProfile } = useProfile(userId);
   const { data: userPosts } = useUserPosts(userId);
   const { data: userTalks } = useUserTalks(userId);
 
@@ -69,7 +69,19 @@ export default function ProfileScreen() {
       )}
 
       {profile && (
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 100 }}
+          refreshControl={
+            <RefreshControl
+              refreshing={profileFetching}
+              onRefresh={() => refetchProfile()}
+              tintColor={t.accent}
+              colors={[t.accent]}
+              progressBackgroundColor={t.surface}
+            />
+          }
+        >
           {/* プロフィールヘッダー */}
           <View style={{ alignItems: "center", paddingVertical: SPACE.xxl, paddingHorizontal: SPACE.xl }}>
             <View style={{ position: "relative", marginBottom: SPACE.lg }}>

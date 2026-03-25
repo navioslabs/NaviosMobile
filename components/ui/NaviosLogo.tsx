@@ -1,66 +1,41 @@
 import { View, Text } from "react-native";
-import Svg, { Path, Circle } from "react-native-svg";
+import Svg, { Rect, Ellipse, Circle } from "react-native-svg";
 import { WEIGHT } from "@/lib/styles";
 
 interface NaviosLogoProps {
   size?: number;
-  color?: string;
   textColor?: string;
   showText?: boolean;
 }
 
-/**
- * Navios ロゴ
- * 「N」の右上にドット（発信点）、Nの右脚がウェーブに変化するデザイン
- * シンプル・ミニマル・シャープ
- */
+/** NaviOs ロゴ（地球モチーフ） */
 export default function NaviosLogo({
   size = 28,
-  color = "#00D4A1",
-  textColor,
+  textColor = "#00D4A1",
   showText = true,
 }: NaviosLogoProps) {
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 7 }}>
-      <View style={{ width: size, height: size }}>
-        <Svg width={size} height={size} viewBox="0 0 32 32">
-          {/* N の左脚 */}
-          <Path
-            d="M6 26 L6 6"
-            stroke={color}
-            strokeWidth={4.2}
-            strokeLinecap="round"
-          />
-          {/* N の斜線 */}
-          <Path
-            d="M6 6 L22 26"
-            stroke={color}
-            strokeWidth={4.2}
-            strokeLinecap="round"
-          />
-          {/* N の右脚 */}
-          <Path
-            d="M22 26 L22 6"
-            stroke={color}
-            strokeWidth={4.2}
-            strokeLinecap="round"
-          />
-          {/* 発信ドット（ピン/電波の原点） */}
-          <Circle
-            cx="27"
-            cy="5.5"
-            r="2.8"
-            fill={color}
-          />
-        </Svg>
-      </View>
+      <Svg width={size} height={size} viewBox="0 0 144 144">
+        <Rect width="144" height="144" rx="31.68" fill="#FFFFFF" />
+        <Ellipse cx="72" cy="72" rx="50.976" ry="22.786" fill="none" stroke="#00B88A" strokeWidth="0.36" opacity="0.22" rotation={-30} origin="72, 72" />
+        <Ellipse cx="72" cy="72" rx="50.976" ry="22.786" fill="none" stroke="#00B88A" strokeWidth="0.36" opacity="0.22" rotation={30} origin="72, 72" />
+        <Ellipse cx="72" cy="72" rx="50.976" ry="22.786" fill="none" stroke="#00B88A" strokeWidth="0.36" opacity="0.22" rotation={90} origin="72, 72" />
+        <Circle cx="72" cy="72" r="14.4" fill="#00D4A1" />
+        <Circle cx="46" cy="46" r="4.752" fill="#F0425C" />
+        <Circle cx="98" cy="46" r="4.752" fill="#F5A623" />
+        <Circle cx="98" cy="98" r="4.752" fill="#8B6FC0" />
+        <Circle cx="46" cy="98" r="4.752" fill="#4A9EFF" />
+        <Circle cx="72" cy="28.7" r="2.448" fill="#00B88A" opacity="0.3" />
+        <Circle cx="72" cy="115.3" r="2.448" fill="#00B88A" opacity="0.3" />
+      </Svg>
       {showText && (
         <Text
           style={{
             fontSize: size * 0.72,
             fontWeight: WEIGHT.extrabold,
             letterSpacing: -0.5,
-            color: textColor || color,
+            color: textColor,
           }}
         >
           navios

@@ -49,6 +49,7 @@ export declare const Timer: LucideIcon;
 export declare const User: LucideIcon;
 export declare const UserCheck: LucideIcon;
 export declare const Users: LucideIcon;
+export declare const WifiOff: LucideIcon;
 export declare const Zap: LucideIcon;
 
 export type { LucideIcon } from "lucide-react-native";

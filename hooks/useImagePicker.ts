@@ -28,7 +28,7 @@ export function useImagePicker(): ImagePickerState {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ["images"],
         allowsEditing: true,
-        quality: 0.8,
+        quality: 0.7,
       });
 
       if (!result.canceled && result.assets[0]) {
@@ -47,7 +47,7 @@ export function useImagePicker(): ImagePickerState {
 
       const result = await ImagePicker.launchCameraAsync({
         allowsEditing: true,
-        quality: 0.8,
+        quality: 0.7,
       });
 
       if (!result.canceled && result.assets[0]) {

@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
@@ -32,7 +33,7 @@ interface FeedPostCardProps {
 }
 
 /** フィード投稿カード（カテゴリ別デザイン） */
-export default function FeedPostCard({ post, t, isDark, featured }: FeedPostCardProps) {
+function FeedPostCard({ post, t, isDark, featured }: FeedPostCardProps) {
   const { scale } = useFontSizeStore();
   const fs = getScaledFontSize(scale);
   const catColor = CAT_CONFIG[post.category]?.color || t.accent;
@@ -120,3 +121,5 @@ export default function FeedPostCard({ post, t, isDark, featured }: FeedPostCard
     </View>
   );
 }
+
+export default memo(FeedPostCard);

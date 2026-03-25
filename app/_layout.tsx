@@ -6,11 +6,13 @@ import "react-native-reanimated";
 import { makeTokens } from "@/constants/theme";
 import { useThemeStore } from "@/stores/themeStore";
 import AuthProvider from "@/components/providers/AuthProvider";
+import OfflineBanner from "@/components/ui/OfflineBanner";
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60 * 5, // 5分
+      gcTime: 1000 * 60 * 30,   // 30分でGC
       retry: 2,
       refetchOnWindowFocus: false,
     },
@@ -30,6 +32,7 @@ export default function RootLayout() {
     <QueryClientProvider client={queryClient}>
     <AuthProvider>
     <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
+      <OfflineBanner />
       <Stack
         screenOptions={{
           headerStyle: { backgroundColor: t.surface },

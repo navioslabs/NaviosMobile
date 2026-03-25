@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { View, Text } from "react-native";
 import { Image } from "expo-image";
 import { Navigation, Flame } from "@/lib/icons";
@@ -20,7 +21,7 @@ interface PulseEventCardProps {
 }
 
 /** AIパルスイベントカード */
-export default function PulseEventCard({ event, t }: PulseEventCardProps) {
+function PulseEventCard({ event, t }: PulseEventCardProps) {
   const { scale } = useFontSizeStore();
   const fs = getScaledFontSize(scale);
   const matchScore = calcMatchScore(event.distance_m ?? 0);
@@ -63,3 +64,5 @@ export default function PulseEventCard({ event, t }: PulseEventCardProps) {
     </View>
   );
 }
+
+export default memo(PulseEventCard);

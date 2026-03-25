@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { View, Text, Pressable } from "react-native";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
@@ -27,7 +28,7 @@ interface NearbyPostItemProps {
 }
 
 /** 近隣投稿リストアイテム */
-export default function NearbyPostItem({ post, t, featured, isDark = true }: NearbyPostItemProps) {
+function NearbyPostItem({ post, t, featured, isDark = true }: NearbyPostItemProps) {
   const { scale } = useFontSizeStore();
   const fs = getScaledFontSize(scale);
   const distance = post.distance_m ?? 0;
@@ -144,3 +145,5 @@ export default function NearbyPostItem({ post, t, featured, isDark = true }: Nea
     </Pressable>
   );
 }
+
+export default memo(NearbyPostItem);
