@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchComments, createComment, deleteComment } from "@/lib/comments";
+import { getUserMessage } from "@/lib/appError";
+import { useToastStore } from "@/stores/toastStore";
 
 /** コメント一覧 */
 export function useComments(postId: string) {
@@ -19,6 +21,9 @@ export function useCreateComment(postId: string) {
       qc.invalidateQueries({ queryKey: ["comments", postId] });
       qc.invalidateQueries({ queryKey: ["posts", "detail", postId] });
     },
+    onError: (error) => {
+      useToastStore.getState().show(getUserMessage(error), "error");
+    },
   });
 }
 
@@ -30,6 +35,9 @@ export function useDeleteComment(postId: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["comments", postId] });
       qc.invalidateQueries({ queryKey: ["posts", "detail", postId] });
+    },
+    onError: (error) => {
+      useToastStore.getState().show(getUserMessage(error), "error");
     },
   });
 }

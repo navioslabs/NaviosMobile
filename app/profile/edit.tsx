@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, ScrollView, Pressable, TextInput, Alert } from "react-native";
+import { View, Text, ScrollView, Pressable, TextInput, Alert, Platform, KeyboardAvoidingView } from "react-native";
 import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { useForm, Controller } from "react-hook-form";
@@ -70,7 +70,7 @@ export default function ProfileEditScreen() {
   };
 
   return (
-    <View style={s.screen}>
+    <KeyboardAvoidingView style={[s.screen, { flex: 1 }]} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       {/* ヘッダー */}
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: SPACE.lg, paddingTop: 52, paddingBottom: SPACE.md, backgroundColor: t.surface, borderBottomWidth: 1, borderBottomColor: t.border }}>
         <Pressable
@@ -97,7 +97,7 @@ export default function ProfileEditScreen() {
         </Pressable>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 60 }}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 60 }} keyboardShouldPersistTaps="handled">
         {/* アバター編集 */}
         <View style={{ alignItems: "center", paddingVertical: SPACE.xxl }}>
           <Pressable onPress={pickAvatar} style={{ position: "relative" }}>
@@ -235,7 +235,7 @@ export default function ProfileEditScreen() {
           </View>
         </View>
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 

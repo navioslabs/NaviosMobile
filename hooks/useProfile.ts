@@ -5,6 +5,8 @@ import {
   fetchUserPosts,
   fetchUserTalks,
 } from "@/lib/profiles";
+import { getUserMessage } from "@/lib/appError";
+import { useToastStore } from "@/stores/toastStore";
 
 /** プロフィール取得 */
 export function useProfile(userId: string) {
@@ -22,6 +24,9 @@ export function useUpdateProfile() {
     mutationFn: updateProfile,
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ["profile", data.id] });
+    },
+    onError: (error) => {
+      useToastStore.getState().show(getUserMessage(error), "error");
     },
   });
 }

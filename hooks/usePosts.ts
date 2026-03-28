@@ -8,6 +8,8 @@ import {
   deletePost,
 } from "@/lib/posts";
 import { refreshBadges } from "@/lib/badges";
+import { getUserMessage } from "@/lib/appError";
+import { useToastStore } from "@/stores/toastStore";
 
 /** フィード一覧（ページネーション対応） */
 export function usePosts(filters?: { category?: string; limit?: number; createdAfter?: string; createdBefore?: string }) {
@@ -67,6 +69,9 @@ export function useCreatePost() {
       qc.invalidateQueries({ queryKey: ["posts", "list"] });
       refreshBadges().then(() => qc.invalidateQueries({ queryKey: ["badges"] }));
     },
+    onError: (error) => {
+      useToastStore.getState().show(getUserMessage(error), "error");
+    },
   });
 }
 
@@ -78,6 +83,9 @@ export function useDeletePost() {
     onSuccess: (_data, id) => {
       qc.invalidateQueries({ queryKey: ["posts", "list"] });
       qc.invalidateQueries({ queryKey: ["posts", "detail", id] });
+    },
+    onError: (error) => {
+      useToastStore.getState().show(getUserMessage(error), "error");
     },
   });
 }

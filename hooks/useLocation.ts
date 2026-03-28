@@ -57,19 +57,25 @@ export function useLocation(options?: LocationOptions): LocationState {
     }
   };
 
+  /** パーミッション要求を共通化 — 許可されたら true を返す */
+  const requestPermission = async (): Promise<boolean> => {
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== "granted") {
+      setGranted(false);
+      setError("位置情報の許可が必要です");
+      setIsLoading(false);
+      return false;
+    }
+    setGranted(true);
+    return true;
+  };
+
   /** 1回取得 */
   const fetchLocation = async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        setGranted(false);
-        setError("位置情報の許可が必要です");
-        setIsLoading(false);
-        return;
-      }
-      setGranted(true);
+      if (!(await requestPermission())) return;
       const loc = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Balanced,
       });
@@ -86,14 +92,7 @@ export function useLocation(options?: LocationOptions): LocationState {
   /** 継続監視の開始 */
   const startWatching = async () => {
     try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        setGranted(false);
-        setError("位置情報の許可が必要です");
-        setIsLoading(false);
-        return;
-      }
-      setGranted(true);
+      if (!(await requestPermission())) return;
 
       // まず1回取得して初期位置を確定
       const loc = await Location.getCurrentPositionAsync({

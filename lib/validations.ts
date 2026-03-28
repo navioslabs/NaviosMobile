@@ -7,7 +7,7 @@ export const loginSchema = z.object({
     .string()
     .min(1, "入力してください")
     .email("有効なメールアドレスを入力してください"),
-  password: z.string().min(1, "入力してください"),
+  password: z.string().min(8, "8文字以上で入力してください"),
 });
 export type LoginForm = z.infer<typeof loginSchema>;
 

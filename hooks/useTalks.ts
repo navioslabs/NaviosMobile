@@ -8,6 +8,8 @@ import {
   createTalkReply,
 } from "@/lib/talks";
 import { refreshBadges } from "@/lib/badges";
+import { getUserMessage } from "@/lib/appError";
+import { useToastStore } from "@/stores/toastStore";
 
 /** ひとこと一覧 */
 export function useTalks() {
@@ -44,6 +46,9 @@ export function useCreateTalk() {
       qc.invalidateQueries({ queryKey: ["talks", "list"] });
       refreshBadges().then(() => qc.invalidateQueries({ queryKey: ["badges"] }));
     },
+    onError: (error) => {
+      useToastStore.getState().show(getUserMessage(error), "error");
+    },
   });
 }
 
@@ -55,6 +60,9 @@ export function useDeleteTalk() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["talks", "list"] });
     },
+    onError: (error) => {
+      useToastStore.getState().show(getUserMessage(error), "error");
+    },
   });
 }
 
@@ -65,6 +73,9 @@ export function useCreateReply(talkId: string) {
     mutationFn: (body: string) => createTalkReply(talkId, body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["talks", "detail", talkId] });
+    },
+    onError: (error) => {
+      useToastStore.getState().show(getUserMessage(error), "error");
     },
   });
 }

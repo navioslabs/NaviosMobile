@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toggleLike, checkIsLiked } from "@/lib/likes";
+import { getUserMessage } from "@/lib/appError";
+import { useToastStore } from "@/stores/toastStore";
 
 /** いいね済み確認 */
 export function useIsLiked(
@@ -28,13 +30,16 @@ export function useToggleLike() {
       // いいね状態のキャッシュを更新
       qc.invalidateQueries({ queryKey: ["likes", targetType, targetId] });
       if (targetType === "post") {
-        qc.invalidateQueries({ queryKey: ["posts", "detail"] });
+        qc.invalidateQueries({ queryKey: ["posts", "detail", targetId] });
         qc.invalidateQueries({ queryKey: ["posts", "list"] });
         qc.invalidateQueries({ queryKey: ["posts", "nearby"] });
       } else if (targetType === "talk") {
-        qc.invalidateQueries({ queryKey: ["talks", "detail"] });
+        qc.invalidateQueries({ queryKey: ["talks", "detail", targetId] });
         qc.invalidateQueries({ queryKey: ["talks", "list"] });
       }
+    },
+    onError: (error) => {
+      useToastStore.getState().show(getUserMessage(error), "error");
     },
   });
 }

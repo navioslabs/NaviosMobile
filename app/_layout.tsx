@@ -10,6 +10,7 @@ import OfflineBanner from "@/components/ui/OfflineBanner";
 import OnboardingTour from "@/components/ui/OnboardingTour";
 import GuestLoginSheet from "@/components/ui/GuestLoginSheet";
 import Toast from "@/components/ui/Toast";
+import ErrorBoundary from "@/components/ui/ErrorBoundary";
 import { useRealtimeTalks } from "@/hooks/useRealtimeTalks";
 import { useRealtimeNotifications } from "@/hooks/useNotifications";
 
@@ -87,10 +88,12 @@ function AppContent() {
 /** ルートレイアウト */
 export default function RootLayout() {
   return (
-    <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <AppContent />
+        </AuthProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }

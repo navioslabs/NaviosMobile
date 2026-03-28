@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, useCallback } from "rea
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import type { Profile } from "@/types";
+import { useToastStore } from "@/stores/toastStore";
 
 // ─── 型定義 ─────────────────────────────────────────
 
@@ -52,7 +53,8 @@ export function useAuthProvider(): AuthContextValue {
       .eq("id", userId)
       .single();
     if (error) {
-      console.error("プロフィール取得失敗:", error.message);
+      if (__DEV__) console.error("プロフィール取得失敗:", error.message);
+      useToastStore.getState().show("プロフィールの読み込みに失敗しました", "error");
       return;
     }
     setProfile(data as Profile);

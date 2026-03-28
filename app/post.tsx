@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, TextInput, Pressable, ScrollView, Alert, ActivityIndicator, Platform } from "react-native";
-import Animated, { useSharedValue, useAnimatedStyle, withSpring, withSequence, FadeIn } from "react-native-reanimated";
+import React, { useState } from "react";
+import { View, Text, TextInput, Pressable, ScrollView, Alert, Platform, KeyboardAvoidingView } from "react-native";
+import Animated, { FadeIn } from "react-native-reanimated";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { router } from "expo-router";
 import { usePreventRemove } from "@react-navigation/native";
-import { LinearGradient } from "expo-linear-gradient";
 import { Image } from "expo-image";
 import * as Haptics from "expo-haptics";
 import { useForm, Controller } from "react-hook-form";
@@ -21,6 +20,7 @@ import { useAppStyles } from "@/hooks/useAppStyles";
 import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 import PlacePickerModal from "@/components/ui/PlacePickerModal";
 import type { SelectedPlace } from "@/components/ui/PlacePickerModal";
+import AnimatedSubmitButton from "@/components/ui/AnimatedSubmitButton";
 
 /** カテゴリ別の説明文 */
 const CAT_HINTS: Record<CategoryId, string> = {
@@ -149,6 +149,7 @@ export default function PostScreen() {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setTimeout(() => router.back(), 800);
     } catch (e: unknown) {
+      if (__DEV__) console.error("投稿エラー詳細:", e);
       Alert.alert("エラー", getUserMessage(e));
     }
   };
@@ -215,7 +216,8 @@ export default function PostScreen() {
   };
 
   return (
-    <ScrollView style={s.screen} contentContainerStyle={{ padding: SPACE.xl, paddingBottom: 40, gap: SPACE.lg }} showsVerticalScrollIndicator={false}>
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined} keyboardVerticalOffset={Platform.OS === "ios" ? 88 : 0}>
+    <ScrollView style={s.screen} contentContainerStyle={{ padding: SPACE.xl, paddingBottom: 40, gap: SPACE.lg }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
       {/* イントロヘッダー */}
       <View style={{ marginBottom: SPACE.sm }}>
         <Text style={{ fontSize: fs.lg, fontWeight: WEIGHT.bold, color: t.text }}>近くの人に、今必要な情報を届ける</Text>
@@ -457,52 +459,6 @@ export default function PostScreen() {
       />
       {renderGuideText()}
     </ScrollView>
-  );
-}
-
-/** タップ感のあるアニメーション付き投稿ボタン */
-function AnimatedSubmitButton({ onPress, disabled, isPending, canSubmit, t, fs }: {
-  onPress: () => void;
-  disabled: boolean;
-  isPending: boolean;
-  canSubmit: boolean;
-  t: any;
-  fs: any;
-}) {
-  const btnScale = useSharedValue(1);
-
-  const animStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: btnScale.value }],
-  }));
-
-  const handlePressIn = () => {
-    if (!disabled) btnScale.value = withSpring(0.95, { damping: 15, stiffness: 300 });
-  };
-  const handlePressOut = () => {
-    btnScale.value = withSpring(1, { damping: 15, stiffness: 300 });
-  };
-
-  return (
-    <Animated.View style={animStyle}>
-      <Pressable
-        onPress={onPress}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-        disabled={disabled}
-      >
-        <LinearGradient
-          colors={canSubmit ? [t.accent, t.blue] : [t.surface2, t.surface2]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={{ borderRadius: RADIUS.lg, padding: SPACE.lg, alignItems: "center" }}
-        >
-          {isPending ? (
-            <ActivityIndicator color="#000" />
-          ) : (
-            <Text style={{ color: canSubmit ? "#000" : t.muted, fontWeight: WEIGHT.extrabold, fontSize: fs.lg + 1 }}>投稿する</Text>
-          )}
-        </LinearGradient>
-      </Pressable>
-    </Animated.View>
+    </KeyboardAvoidingView>
   );
 }

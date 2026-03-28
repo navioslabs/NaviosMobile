@@ -42,7 +42,7 @@ export async function searchPlaces(
   );
   const json = await res.json();
   if (json.status !== "OK" && json.status !== "ZERO_RESULTS") {
-    console.error("Places Autocomplete error:", json.status, json.error_message);
+    if (__DEV__) console.error("Places Autocomplete error:", json.status, json.error_message);
     return [];
   }
 

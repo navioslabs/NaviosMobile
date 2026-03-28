@@ -1,5 +1,5 @@
 import React, { useEffect, useCallback } from "react";
-import { View, Text, TextInput, Pressable, ScrollView, Alert, ActivityIndicator } from "react-native";
+import { View, Text, TextInput, Pressable, ScrollView, Alert, ActivityIndicator, Platform, KeyboardAvoidingView } from "react-native";
 import { router } from "expo-router";
 import { usePreventRemove } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -98,10 +98,11 @@ export default function TalkPostScreen() {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setTimeout(() => router.back(), 600);
     } catch (e: unknown) {
+      if (__DEV__) console.error("つぶやき投稿エラー詳細:", e);
       setSending(false);
       Alert.alert("エラー", getUserMessage(e));
     }
-  }, [sending, images, granted, lat, lng, createTalkMutation]);
+  }, [sending, images, granted, lat, lng, placeName, createTalkMutation]);
 
   /** 文字数カウントの色を決定 */
   const countColor = remaining < 0 ? t.red : remaining <= 20 ? t.amber : t.muted;
@@ -110,7 +111,8 @@ export default function TalkPostScreen() {
   const countText = remaining >= 0 ? `あと ${remaining}文字` : `${Math.abs(remaining)}文字オーバー`;
 
   return (
-    <ScrollView style={s.screen} contentContainerStyle={{ padding: SPACE.xl, paddingBottom: 40, gap: SPACE.lg }} showsVerticalScrollIndicator={false}>
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined} keyboardVerticalOffset={Platform.OS === "ios" ? 88 : 0}>
+    <ScrollView style={s.screen} contentContainerStyle={{ padding: SPACE.xl, paddingBottom: 40, gap: SPACE.lg }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
       {/* イントロテキスト */}
       <Text style={{ fontSize: fs.sm, color: t.sub }}>
         短くて大丈夫。今の様子をそのまま届けよう
@@ -231,5 +233,6 @@ export default function TalkPostScreen() {
         </Pressable>
       </View>
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
