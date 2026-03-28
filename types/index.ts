@@ -9,6 +9,9 @@ export type {
   Profile,
   Report,
   ReportReasonId,
+  BadgeType,
+  UserBadge,
+  StreetHistoryItem,
 } from "./post";
 
 export type { User } from "./user";

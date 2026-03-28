@@ -37,7 +37,7 @@ export default function FeedScreen() {
   const [summaryFilter, setSummaryFilter] = useState<FilterType>(null);
   const [previewPost, setPreviewPost] = useState<Post | null>(null);
 
-  const { data: serverPosts, isLoading: queryLoading, refetch } = usePosts({
+  const { data: serverPosts, isLoading: queryLoading, isFetching, refetch } = usePosts({
     category: selCat === "all" ? undefined : selCat,
   });
 
@@ -142,7 +142,7 @@ export default function FeedScreen() {
           contentContainerStyle={{ paddingBottom: 90 }}
           refreshControl={
             <RefreshControl
-              refreshing={queryLoading}
+              refreshing={isFetching && !queryLoading}
               onRefresh={() => refetch()}
               tintColor={t.accent}
               colors={[t.accent]}

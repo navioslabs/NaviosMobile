@@ -7,6 +7,7 @@ import {
   createPost,
   deletePost,
 } from "@/lib/posts";
+import { refreshBadges } from "@/lib/badges";
 
 /** フィード一覧 */
 export function usePosts(filters?: { category?: string; limit?: number }) {
@@ -55,6 +56,7 @@ export function useCreatePost() {
     mutationFn: createPost,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["posts", "list"] });
+      refreshBadges().then(() => qc.invalidateQueries({ queryKey: ["badges"] }));
     },
   });
 }

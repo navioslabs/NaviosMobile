@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, ScrollView, Pressable, TextInput, ActivityIndicator, Alert, RefreshControl } from "react-native";
+import { View, Text, ScrollView, Pressable, TextInput, ActivityIndicator, Alert, RefreshControl, Share as RNShare } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { Image } from "expo-image";
 import { getUserMessage } from "@/lib/appError";
@@ -21,7 +21,11 @@ import { useToggleLike, useIsLiked } from "@/hooks/useLikes";
 import { useAuth } from "@/hooks/useAuth";
 import { timeAgo } from "@/lib/adapters";
 import { useAppStyles } from "@/hooks/useAppStyles";
+import { useGuestGuard } from "@/hooks/useGuestGuard";
 import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
+import { HALL_OF_FAME_THRESHOLD } from "@/constants/ghost";
+import GhostCountdown from "@/components/features/talk/GhostCountdown";
+import HallOfFameBadge from "@/components/features/talk/HallOfFameBadge";
 
 /** Talk詳細画面（返信スレッド） */
 export default function TalkDetailScreen() {
@@ -38,13 +42,14 @@ export default function TalkDetailScreen() {
   const [showReport, setShowReport] = useState(false);
   const [profileTarget, setProfileTarget] = useState<any>(null);
 
+  const guard = useGuestGuard();
   const talk = data;
   const replies = data?.replies ?? [];
   const isOwner = !!user && !!talk && user.id === talk.author_id;
 
   const handleLike = () => {
     if (!id) return;
-    toggleLike.mutate({ targetType: "talk", targetId: id });
+    guard(() => toggleLike.mutate({ targetType: "talk", targetId: id }), "いいね");
   };
 
   const handleDelete = () => {
@@ -142,15 +147,29 @@ export default function TalkDetailScreen() {
                 <Text style={{ fontSize: fs.sm, color: t.muted }}>{timeAgo(talk.created_at)}</Text>
               </View>
 
-              {/* 位置情報バッジ */}
-              {talk.location_text && (
-                <View style={{ alignSelf: "flex-start", flexDirection: "row", alignItems: "center", gap: 3, borderRadius: RADIUS.full, paddingHorizontal: SPACE.sm, paddingVertical: 3, marginBottom: SPACE.sm, backgroundColor: t.accent + "12" }}>
-                  <MapPin size={11} color={t.accent} />
-                  <Text style={{ fontSize: fs.xs, fontWeight: WEIGHT.semibold, color: t.accent }}>{talk.location_text}</Text>
-                </View>
-              )}
+              {/* 位置情報バッジ + ゴースト/殿堂入り */}
+              <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.sm, flexWrap: "wrap" }}>
+                {talk.location_text && (
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 3, borderRadius: RADIUS.full, paddingHorizontal: SPACE.sm, paddingVertical: 3, backgroundColor: t.accent + "12" }}>
+                    <MapPin size={11} color={t.accent} />
+                    <Text style={{ fontSize: fs.xs, fontWeight: WEIGHT.semibold, color: t.accent }}>{talk.location_text}</Text>
+                  </View>
+                )}
+                {talk.is_hall_of_fame ? (
+                  <HallOfFameBadge t={t} />
+                ) : (
+                  <GhostCountdown createdAt={talk.created_at} t={t} />
+                )}
+              </View>
             </View>
           </View>
+
+          {/* 殿堂入りヒント */}
+          {!talk.is_hall_of_fame && talk.likes_count >= HALL_OF_FAME_THRESHOLD - 5 && talk.likes_count < HALL_OF_FAME_THRESHOLD && (
+            <Text style={{ fontSize: fs.xs, color: "#FFD700", fontWeight: WEIGHT.semibold, marginTop: SPACE.sm }}>
+              あと{HALL_OF_FAME_THRESHOLD - talk.likes_count}いいねで殿堂入り
+            </Text>
+          )}
 
           {/* メッセージ本文 */}
           <Text style={{ fontSize: fs.xl, color: t.text, lineHeight: 28, marginTop: SPACE.md }}>
@@ -179,7 +198,12 @@ export default function TalkDetailScreen() {
                 {talk.likes_count}
               </Text>
             </Pressable>
-            <Pressable style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
+            <Pressable
+              onPress={() => RNShare.share({ message: talk.message })}
+              accessibilityLabel="共有"
+              accessibilityRole="button"
+              style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+            >
               <Share size={20} color={t.sub} />
             </Pressable>
           </View>
@@ -229,14 +253,16 @@ export default function TalkDetailScreen() {
         />
         <Pressable
           style={({ pressed }) => ({ opacity: pressed && replyText.length > 0 ? 0.7 : 1 })}
-          onPress={async () => {
+          onPress={() => {
             if (replyText.length === 0) return;
-            try {
-              await createReplyMutation.mutateAsync(replyText.trim());
-              setReplyText("");
-            } catch (e: unknown) {
-              Alert.alert("エラー", getUserMessage(e));
-            }
+            guard(async () => {
+              try {
+                await createReplyMutation.mutateAsync(replyText.trim());
+                setReplyText("");
+              } catch (e: unknown) {
+                Alert.alert("エラー", getUserMessage(e));
+              }
+            }, "返信");
           }}
         >
           <LinearGradient

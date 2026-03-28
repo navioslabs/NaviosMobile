@@ -1,5 +1,6 @@
 import { View, Text, Pressable, ScrollView, Alert } from "react-native";
-import { Bell, Lock, Moon, Sun, Settings, MapPin, Eye, LogOut, User } from "@/lib/icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Bell, Lock, Moon, Sun, Settings, MapPin, Eye, LogOut, User, Info } from "@/lib/icons";
 import { useThemeStore } from "@/stores/themeStore";
 import { useFontSizeStore, FONT_SIZE_LABELS, FONT_SIZE_LEVELS } from "@/stores/fontSizeStore";
 import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
@@ -10,6 +11,8 @@ import ProfileSection from "@/components/features/settings/ProfileSection";
 import PremiumCard from "@/components/features/settings/PremiumCard";
 import SettingsSection from "@/components/features/settings/SettingsSection";
 import SettingsRow from "@/components/features/settings/SettingsRow";
+
+const ONBOARDING_KEY = "@navios_onboarding_done";
 
 /** 設定画面 */
 export default function SettingsScreen() {
@@ -96,6 +99,20 @@ export default function SettingsScreen() {
       <SettingsSection title="表示" t={t}>
         <SettingsRow icon={isDark ? Moon : Sun} label="テーマ" subtitle={isDark ? "ダーク" : "ライト"} t={t} right={ThemeToggle} />
         <SettingsRow icon={Eye} label="文字サイズ" subtitle={FONT_SIZE_LABELS[level]} t={t} right={FontSizeSelector} isLast />
+      </SettingsSection>
+
+      <SettingsSection title="サポート" t={t}>
+        <SettingsRow
+          icon={Info}
+          label="チュートリアル"
+          subtitle="使い方をもう一度見る"
+          onPress={async () => {
+            await AsyncStorage.removeItem(ONBOARDING_KEY);
+            Alert.alert("チュートリアル", "次回アプリ起動時にチュートリアルが表示されます");
+          }}
+          t={t}
+          isLast
+        />
       </SettingsSection>
 
       <SettingsSection title="通知" t={t}>

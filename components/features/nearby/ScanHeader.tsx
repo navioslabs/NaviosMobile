@@ -51,14 +51,16 @@ function usePulse(periodMs: number, intensity = 1.08) {
   const pulse = useSharedValue(1);
 
   useEffect(() => {
-    pulse.value = withRepeat(
-      withSequence(
-        withTiming(intensity, { duration: half, easing: Easing.inOut(Easing.ease) }),
-        withTiming(1.0, { duration: half, easing: Easing.inOut(Easing.ease) }),
-      ),
-      -1,
-      true,
-    );
+    requestAnimationFrame(() => {
+      pulse.value = withRepeat(
+        withSequence(
+          withTiming(intensity, { duration: half, easing: Easing.inOut(Easing.ease) }),
+          withTiming(1.0, { duration: half, easing: Easing.inOut(Easing.ease) }),
+        ),
+        -1,
+        true,
+      );
+    });
   }, [periodMs, intensity]);
 
   const style = useAnimatedStyle(() => ({

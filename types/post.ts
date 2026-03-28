@@ -73,6 +73,7 @@ export interface Talk {
   location_text: string | null;
   likes_count: number;
   replies_count: number;
+  is_hall_of_fame: boolean;
   created_at: string;
   /** JOIN で取得する投稿者プロフィール */
   author?: Profile;
@@ -103,6 +104,38 @@ export interface TalkReply {
   created_at: string;
   /** JOIN で取得する投稿者プロフィール */
   author?: Profile;
+}
+
+// ─── バッジ ─────────────────────────────────────────
+
+/** バッジ種別 */
+export type BadgeType = "resident" | "face" | "legend";
+
+/** user_badges テーブルの行 */
+export interface UserBadge {
+  id: string;
+  user_id: string;
+  badge_type: BadgeType;
+  area_name: string;
+  earned_at: string;
+}
+
+// ─── 街の記憶 ───────────────────────────────────────
+
+/** get_street_history RPC の返り値 */
+export interface StreetHistoryItem {
+  id: string;
+  item_type: "talk" | "post";
+  author_id: string;
+  title: string | null;
+  message: string | null;
+  image_url: string | null;
+  location_text: string | null;
+  likes_count: number;
+  created_at: string;
+  author_display_name: string;
+  author_avatar_url: string | null;
+  author_is_verified: boolean;
 }
 
 // ─── いいね ─────────────────────────────────────────

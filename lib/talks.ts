@@ -1,11 +1,14 @@
 import { supabase } from "@/lib/supabase";
 import type { Talk, TalkReply } from "@/types";
+import { GHOST_DURATION_MS } from "@/constants/ghost";
 
-/** ひとこと一覧取得 */
+/** ひとこと一覧取得（24h以内 or 殿堂入り） */
 export async function fetchTalks(): Promise<Talk[]> {
+  const cutoff = new Date(Date.now() - GHOST_DURATION_MS).toISOString();
   const { data, error } = await supabase
     .from("talks")
     .select("*, author:profiles(*)")
+    .or(`is_hall_of_fame.eq.true,created_at.gte.${cutoff}`)
     .order("created_at", { ascending: false });
   if (error) throw error;
   return data as Talk[];

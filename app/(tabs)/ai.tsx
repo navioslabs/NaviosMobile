@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { View, Text, TextInput, Pressable, ScrollView, ActivityIndicator, RefreshControl } from "react-native";
 import Animated, { FadeIn, FadeOut, FadeInUp } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
-import { Sparkles, Search, Send, Zap } from "@/lib/icons";
+import { Sparkles, Search, Zap } from "@/lib/icons";
 import { useAppStyles } from "@/hooks/useAppStyles";
 import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 import { useSearchPosts, usePosts } from "@/hooks/usePosts";
@@ -110,10 +110,12 @@ export default function AiScreen() {
           accessibilityLabel="検索キーワードを入力"
           style={{ flex: 1, fontSize: fs.lg, color: t.text }}
         />
-        {isSearching ? (
+        {isSearching && (
           <Animated.View entering={FadeIn.duration(200)} exiting={FadeOut.duration(150)} key="clear-btn">
             <Pressable
               onPress={() => { setQuery(""); setDebouncedQuery(""); }}
+              accessibilityLabel="検索をクリア"
+              accessibilityRole="button"
               style={({ pressed }) => ({
                 width: 40,
                 height: 40,
@@ -125,19 +127,6 @@ export default function AiScreen() {
               })}
             >
               <Text style={{ fontSize: fs.lg, color: t.sub }}>✕</Text>
-            </Pressable>
-          </Animated.View>
-        ) : (
-          <Animated.View entering={FadeIn.duration(200)} exiting={FadeOut.duration(150)} key="mic-btn">
-            <Pressable style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
-              <LinearGradient
-                colors={[t.accent, t.blue]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={{ width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" }}
-              >
-                <Send size={16} color="#fff" />
-              </LinearGradient>
             </Pressable>
           </Animated.View>
         )}

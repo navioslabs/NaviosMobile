@@ -8,6 +8,7 @@ import { useThemeStore } from "@/stores/themeStore";
 import AuthProvider from "@/components/providers/AuthProvider";
 import OfflineBanner from "@/components/ui/OfflineBanner";
 import OnboardingTour from "@/components/ui/OnboardingTour";
+import GuestLoginSheet from "@/components/ui/GuestLoginSheet";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -70,6 +71,7 @@ export default function RootLayout() {
       </Stack>
       <StatusBar style={isDark ? "light" : "dark"} />
       <OnboardingTour t={t} />
+      <GuestLoginSheet />
     </ThemeProvider>
     </AuthProvider>
     </QueryClientProvider>

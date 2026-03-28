@@ -6,6 +6,7 @@ import {
   deleteTalk,
   createTalkReply,
 } from "@/lib/talks";
+import { refreshBadges } from "@/lib/badges";
 
 /** ひとこと一覧 */
 export function useTalks() {
@@ -31,6 +32,7 @@ export function useCreateTalk() {
     mutationFn: createTalk,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["talks", "list"] });
+      refreshBadges().then(() => qc.invalidateQueries({ queryKey: ["badges"] }));
     },
   });
 }

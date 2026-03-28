@@ -1,14 +1,17 @@
 import { supabase } from "@/lib/supabase";
 import type { Post } from "@/types";
 
-/** フィード一覧取得 */
+/** フィード一覧取得（24h超の期限切れ投稿を除外） */
 export async function fetchPosts(filters?: {
   category?: string;
   limit?: number;
 }): Promise<Post[]> {
+  const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
   let query = supabase
     .from("posts")
     .select("*, author:profiles(*)")
+    .or(`deadline.is.null,deadline.gt.${cutoff}`)
     .order("created_at", { ascending: false });
 
   if (filters?.category && filters.category !== "all") {

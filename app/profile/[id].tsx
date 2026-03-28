@@ -1,7 +1,6 @@
 import { View, Text, ScrollView, Pressable, ActivityIndicator, RefreshControl } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { Image } from "expo-image";
-import { LinearGradient } from "expo-linear-gradient";
 import {
   ChevronLeft,
   MapPin,
@@ -12,9 +11,11 @@ import {
   Heart,
 } from "@/lib/icons";
 import { useProfile, useUserPosts, useUserTalks } from "@/hooks/useProfile";
+import { useUserBadges } from "@/hooks/useBadges";
 import { useAppStyles } from "@/hooks/useAppStyles";
 import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 import CatPill from "@/components/ui/CatPill";
+import BadgeSection from "@/components/features/badges/BadgeSection";
 
 /** ユーザープロフィール画面 */
 export default function ProfileScreen() {
@@ -25,6 +26,7 @@ export default function ProfileScreen() {
   const { data: remoteProfile, isLoading: profileLoading, isFetching: profileFetching, refetch: refetchProfile } = useProfile(userId);
   const { data: userPosts } = useUserPosts(userId);
   const { data: userTalks } = useUserTalks(userId);
+  const { data: badges } = useUserBadges(userId);
 
   const posts = userPosts ?? [];
   const talks = userTalks ?? [];
@@ -74,7 +76,7 @@ export default function ProfileScreen() {
           contentContainerStyle={{ paddingBottom: 100 }}
           refreshControl={
             <RefreshControl
-              refreshing={profileFetching}
+              refreshing={profileFetching && !profileLoading}
               onRefresh={() => refetchProfile()}
               tintColor={t.accent}
               colors={[t.accent]}
@@ -114,17 +116,7 @@ export default function ProfileScreen() {
               </View>
             </View>
 
-            {/* フォローボタン */}
-            <Pressable style={({ pressed }) => ({ marginTop: SPACE.lg, opacity: pressed ? 0.8 : 1 })}>
-              <LinearGradient
-                colors={[t.accent, t.blue]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={{ borderRadius: RADIUS.full, paddingHorizontal: SPACE.xxxl, paddingVertical: SPACE.md }}
-              >
-                <Text style={{ fontSize: fs.base, fontWeight: WEIGHT.bold, color: "#000" }}>フォローする</Text>
-              </LinearGradient>
-            </Pressable>
+            {/* フォローボタン — follows テーブル実装後に復活 */}
           </View>
 
           {/* 統計 */}
@@ -138,6 +130,11 @@ export default function ProfileScreen() {
               <Text style={{ fontSize: fs.xs, color: t.muted }}>ひとこと</Text>
             </View>
           </View>
+
+          {/* バッジ */}
+          {badges && badges.length > 0 && (
+            <BadgeSection badges={badges} t={t} />
+          )}
 
           {/* 最近の投稿 */}
           {posts.length > 0 && (

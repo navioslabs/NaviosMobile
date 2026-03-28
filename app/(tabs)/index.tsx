@@ -4,7 +4,8 @@ import PostPreviewSheet from "@/components/ui/PostPreviewSheet";
 import Animated, { FadeInDown, FadeOutUp, useSharedValue, useAnimatedStyle, withSequence, withTiming } from "react-native-reanimated";
 import { useIsFocused } from "@react-navigation/native";
 import { useQueryClient } from "@tanstack/react-query";
-import { MapPin, ArrowLeft } from "@/lib/icons";
+import { MapPin, ArrowLeft, Clock } from "@/lib/icons";
+import { router } from "expo-router";
 import { useNearbyPosts } from "@/hooks/usePosts";
 import { useLocation } from "@/hooks/useLocation";
 import { haversineDistance } from "@/lib/utils";
@@ -81,11 +82,13 @@ export default function NearByScreen() {
       // 新データがある → バナーを表示、まだ反映しない
       setPendingPosts(serverPosts);
       setShowNewBanner(true);
-      // スコアバーをパルス（D）
-      scoreBarPulse.value = withSequence(
-        withTiming(1.15, { duration: 200 }),
-        withTiming(1.0, { duration: 300 }),
-      );
+      // スコアバーをパルス（D）— レンダー外で実行
+      requestAnimationFrame(() => {
+        scoreBarPulse.value = withSequence(
+          withTiming(1.15, { duration: 200 }),
+          withTiming(1.0, { duration: 300 }),
+        );
+      });
     } else {
       // 距離の更新のみ（新規投稿なし）→ 静かに反映
       setDisplayPosts(serverPosts);
@@ -188,6 +191,28 @@ export default function NearByScreen() {
         isWatching={isWatching}
         scoreBarAnimStyle={scoreBarStyle}
       />
+
+      {/* 街の記憶ボタン */}
+      <Pressable
+        onPress={() => router.push("/street-history")}
+        style={({ pressed }) => ({
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: SPACE.sm,
+          marginHorizontal: SPACE.xl,
+          marginTop: SPACE.sm,
+          paddingVertical: SPACE.sm,
+          borderRadius: RADIUS.lg,
+          backgroundColor: t.surface,
+          borderWidth: 1,
+          borderColor: t.border,
+          opacity: pressed ? 0.7 : 1,
+        })}
+      >
+        <Clock size={14} color={t.accent} />
+        <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.semibold, color: t.accent }}>この場所の記憶を見る</Text>
+      </Pressable>
 
       {/* 新着バナー（E） */}
       {showNewBanner && (

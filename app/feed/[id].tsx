@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, ScrollView, Pressable, StyleSheet, ActivityIndicator, RefreshControl, Alert } from "react-native";
+import { View, Text, ScrollView, Pressable, StyleSheet, ActivityIndicator, RefreshControl, Alert, Share as RNShare } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
@@ -27,8 +27,10 @@ import { timeAgo, calcTimeLeft } from "@/lib/adapters";
 import { distLabel } from "@/lib/utils";
 import { getUserMessage } from "@/lib/appError";
 import { useAppStyles } from "@/hooks/useAppStyles";
+import { useGuestGuard } from "@/hooks/useGuestGuard";
 import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 import CatPill from "@/components/ui/CatPill";
+import ImageGallery from "@/components/ui/ImageGallery";
 
 /** 徒歩時間の概算（80m/分） */
 const walkTime = (d: number) => `徒歩${Math.max(1, Math.round(d / 80))}分`;
@@ -69,11 +71,12 @@ export default function FeedDetailScreen() {
   const [showReport, setShowReport] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
 
+  const guard = useGuestGuard();
   const isOwner = !!user && !!post && user.id === post.author_id;
 
   const handleLike = () => {
     if (!id) return;
-    toggleLike.mutate({ targetType: "post", targetId: id });
+    guard(() => toggleLike.mutate({ targetType: "post", targetId: id }), "いいね");
   };
 
   const handleDelete = () => {
@@ -134,7 +137,11 @@ export default function FeedDetailScreen() {
       >
         {/* ═══ ヒーロー画像 ═══ */}
         <View style={{ position: "relative", height: 260 }}>
-          <Image source={{ uri: post.image_url ?? undefined }} style={StyleSheet.absoluteFill} contentFit="cover" />
+          {post.image_urls && post.image_urls.length > 0 ? (
+            <ImageGallery urls={post.image_urls} height={260} t={t} />
+          ) : (
+            <Image source={{ uri: post.image_url ?? undefined }} style={StyleSheet.absoluteFill} contentFit="cover" />
+          )}
           <LinearGradient
             colors={HERO_GRADIENTS[post.category] ?? HERO_GRADIENTS.lifeline}
             locations={[0, 0.4, 1]}
@@ -179,6 +186,11 @@ export default function FeedDetailScreen() {
           {/* 共有 + 保存 + メニューボタン（右上） */}
           <View style={{ position: "absolute", top: 52, right: SPACE.lg, flexDirection: "row", gap: SPACE.sm }}>
             <Pressable
+              onPress={() => {
+                RNShare.share({
+                  message: `${post.title}${post.content ? "\n" + post.content : ""}\n\n📍 ${post.location_text ?? ""}${post.deadline ? "\n⏰ 締切: " + new Date(post.deadline).toLocaleString("ja-JP") : ""}`,
+                });
+              }}
               accessibilityLabel="共有"
               accessibilityRole="button"
               style={({ pressed }) => ({
@@ -214,7 +226,7 @@ export default function FeedDetailScreen() {
               <Bookmark size={17} fill={isSaved ? t.text : "none"} color={t.sub} />
             </Pressable>
             <Pressable
-              onPress={() => setShowReport(true)}
+              onPress={() => guard(() => setShowReport(true), "通報")}
               accessibilityLabel="通報・その他"
               accessibilityRole="button"
               style={({ pressed }) => ({

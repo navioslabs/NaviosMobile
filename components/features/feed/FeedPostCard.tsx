@@ -161,7 +161,14 @@ function FeedPostCard({ post, t, isDark, featured, expired, onLongPress }: FeedP
     >
       <View style={{ aspectRatio: hasImage ? 3 / 4 : 16 / 9 }}>
         {hasImage ? (
-          <Image source={{ uri: post.image_url! }} style={StyleSheet.absoluteFill} contentFit="cover" />
+          <>
+            <Image source={{ uri: post.image_url! }} style={StyleSheet.absoluteFill} contentFit="cover" />
+            {post.image_urls && post.image_urls.length > 1 && (
+              <View style={{ position: "absolute", top: SPACE.sm, left: SPACE.sm, backgroundColor: "rgba(0,0,0,0.6)", borderRadius: RADIUS.sm, paddingHorizontal: 6, paddingVertical: 2 }}>
+                <Text style={{ fontSize: fs.xxs, fontWeight: WEIGHT.bold, color: "#fff" }}>+{post.image_urls.length - 1}</Text>
+              </View>
+            )}
+          </>
         ) : (
           <View style={[StyleSheet.absoluteFill, { backgroundColor: catColor + "15" }]} />
         )}

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useCallback } from "react";
 import { View, Text, TextInput, Pressable, ScrollView, Alert, ActivityIndicator } from "react-native";
 import { router } from "expo-router";
-import { useNavigation } from "@react-navigation/native";
+import { usePreventRemove } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Image } from "expo-image";
 import * as Haptics from "expo-haptics";
@@ -34,7 +34,6 @@ export default function TalkPostScreen() {
   const createTalkMutation = useCreateTalk();
   const { images, isFull, pickImage, takePhoto, removeImage } = useImagePicker();
   const { lat, lng, granted } = useLocation();
-  const navigation = useNavigation();
   const submittedRef = useRef(false);
   const [placeholderIndex, setPlaceholderIndex] = React.useState(0);
 
@@ -60,24 +59,16 @@ export default function TalkPostScreen() {
   }, []);
 
   // 破棄確認
-  useEffect(() => {
-    if (!hasContent) return;
-
-    const unsubscribe = navigation.addListener("beforeRemove", (e: any) => {
-      if (submittedRef.current) return;
-      e.preventDefault();
-      Alert.alert(
-        "投稿を破棄しますか？",
-        "入力した内容は保存されません",
-        [
-          { text: "編集を続ける", style: "cancel" },
-          { text: "破棄する", style: "destructive", onPress: () => navigation.dispatch(e.data.action) },
-        ]
-      );
-    });
-
-    return unsubscribe;
-  }, [hasContent, navigation]);
+  usePreventRemove(hasContent && !submittedRef.current, ({ data }) => {
+    Alert.alert(
+      "投稿を破棄しますか？",
+      "入力した内容は保存されません",
+      [
+        { text: "編集を続ける", style: "cancel" },
+        { text: "破棄する", style: "destructive", onPress: () => router.back() },
+      ]
+    );
+  });
 
   const onSubmit = useCallback(async (data: CreateTalkForm) => {
     if (isPending) return;

@@ -2,6 +2,8 @@
  * 表示用ヘルパー関数
  */
 
+import { GHOST_DURATION_MS } from "@/constants/ghost";
+
 /** 経過時間テキスト */
 export function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -53,4 +55,16 @@ export function calcMatchScore(distanceM: number, deadline?: string | null): num
   const dist = calcDistScore(distanceM);
   const urgency = deadline !== undefined ? calcUrgencyScore(deadline) : 20;
   return Math.round(dist * 0.7 + urgency * 0.3);
+}
+
+/** ゴースト投稿の残り時間（ミリ秒）。殿堂入りは Infinity */
+export function ghostTimeLeft(talk: { created_at: string; is_hall_of_fame: boolean }): number {
+  if (talk.is_hall_of_fame) return Infinity;
+  const elapsed = Date.now() - new Date(talk.created_at).getTime();
+  return Math.max(0, GHOST_DURATION_MS - elapsed);
+}
+
+/** ゴースト投稿がまだ表示可能か */
+export function isGhostVisible(talk: { created_at: string; is_hall_of_fame: boolean }): boolean {
+  return talk.is_hall_of_fame || ghostTimeLeft(talk) > 0;
 }

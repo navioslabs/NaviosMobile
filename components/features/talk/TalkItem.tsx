@@ -10,6 +10,11 @@ import { timeAgo } from "@/lib/adapters";
 import { WEIGHT, SPACE, RADIUS, getScaledFontSize } from "@/lib/styles";
 import { useFontSizeStore } from "@/stores/fontSizeStore";
 import { useToggleLike, useIsLiked } from "@/hooks/useLikes";
+import { useUserTopBadge } from "@/hooks/useBadges";
+import { HALL_OF_FAME_THRESHOLD } from "@/constants/ghost";
+import GhostCountdown from "./GhostCountdown";
+import HallOfFameBadge from "./HallOfFameBadge";
+import BadgePill from "@/components/features/badges/BadgePill";
 
 interface TalkItemProps {
   talk: Talk;
@@ -22,12 +27,16 @@ function TalkItem({ talk, t }: TalkItemProps) {
   const fs = getScaledFontSize(scale);
   const { data: isLiked = false } = useIsLiked("talk", talk.id);
   const toggleLike = useToggleLike();
+  const { data: topBadge } = useUserTopBadge(talk.author_id);
 
   if (!talk?.id) return null;
 
   const handleLike = () => {
     toggleLike.mutate({ targetType: "talk", targetId: talk.id });
   };
+
+  const likesRemaining = HALL_OF_FAME_THRESHOLD - talk.likes_count;
+  const showHint = !talk.is_hall_of_fame && likesRemaining > 0 && likesRemaining <= 5;
 
   return (
     <Animated.View entering={FadeInUp.duration(300).springify()}>
@@ -39,6 +48,10 @@ function TalkItem({ talk, t }: TalkItemProps) {
           opacity: pressed ? 0.9 : 1,
           borderBottomWidth: 1,
           borderBottomColor: t.border,
+          ...(talk.is_hall_of_fame ? {
+            borderLeftWidth: 3,
+            borderLeftColor: "#FFD700" + "60",
+          } : {}),
         })}
       >
         {/* ヘッダー: アバター + 名前 + 時刻 + 位置 */}
@@ -51,7 +64,7 @@ function TalkItem({ talk, t }: TalkItemProps) {
             />
           </Pressable>
           <View style={{ flex: 1 }}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
               <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.bold, color: t.text }}>
                 {talk.author?.display_name ?? "ユーザー"}
               </Text>
@@ -60,14 +73,25 @@ function TalkItem({ talk, t }: TalkItemProps) {
                   <Text style={{ fontSize: 8, color: "#fff", fontWeight: WEIGHT.bold }}>✓</Text>
                 </View>
               )}
+              {topBadge && (
+                <BadgePill badgeType={topBadge.badge_type as any} areaName={topBadge.area_name} t={t} compact />
+              )}
               <Text style={{ fontSize: fs.xxs, color: t.muted }}>{timeAgo(talk.created_at)}</Text>
             </View>
-            {talk.location_text ? (
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 3, marginTop: 1 }}>
-                <MapPin size={10} color={t.accent} />
-                <Text style={{ fontSize: fs.xxs, color: t.accent }}>{talk.location_text}</Text>
-              </View>
-            ) : null}
+            <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.sm, marginTop: 2 }}>
+              {talk.location_text ? (
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
+                  <MapPin size={10} color={t.accent} />
+                  <Text style={{ fontSize: fs.xxs, color: t.accent }}>{talk.location_text}</Text>
+                </View>
+              ) : null}
+              {/* ゴースト/殿堂入り表示 */}
+              {talk.is_hall_of_fame ? (
+                <HallOfFameBadge t={t} compact />
+              ) : (
+                <GhostCountdown createdAt={talk.created_at} t={t} />
+              )}
+            </View>
           </View>
         </View>
 
@@ -75,6 +99,13 @@ function TalkItem({ talk, t }: TalkItemProps) {
         <Text style={{ fontSize: fs.base, lineHeight: 22, color: t.text, marginTop: SPACE.sm, marginLeft: 40 + SPACE.sm }}>
           {talk.message}
         </Text>
+
+        {/* 殿堂入りヒント */}
+        {showHint && (
+          <Text style={{ fontSize: fs.xxs, color: "#FFD700", marginTop: SPACE.xs, marginLeft: 40 + SPACE.sm, fontWeight: WEIGHT.semibold }}>
+            あと{likesRemaining}いいねで殿堂入り
+          </Text>
+        )}
 
         {/* 画像 */}
         {talk.image_url && (
