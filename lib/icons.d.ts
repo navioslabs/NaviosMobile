@@ -46,6 +46,7 @@ export declare const Shield: LucideIcon;
 export declare const Sparkles: LucideIcon;
 export declare const Sun: LucideIcon;
 export declare const Timer: LucideIcon;
+export declare const Trash2: LucideIcon;
 export declare const User: LucideIcon;
 export declare const UserCheck: LucideIcon;
 export declare const Users: LucideIcon;

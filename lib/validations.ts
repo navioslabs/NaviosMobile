@@ -33,7 +33,7 @@ export type SignupForm = z.infer<typeof signupSchema>;
 // ─── 投稿作成 ───────────────────────────────────────
 
 export const createPostSchema = z.object({
-  category: z.enum(["stock", "event", "help", "admin"], {
+  category: z.enum(["lifeline", "event", "help"], {
     error: "カテゴリを選択してください",
   }),
   title: z
@@ -45,8 +45,7 @@ export const createPostSchema = z.object({
     .max(2000, "2000文字以内で入力してください")
     .optional()
     .or(z.literal("")),
-  imageUri: z.string().optional(),
-  locationText: z.string().optional(),
+  deadline: z.date({ error: "期限を選択してください" }),
 });
 export type CreatePostForm = z.infer<typeof createPostSchema>;
 

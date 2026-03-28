@@ -48,7 +48,7 @@ export default function RootLayout() {
         />
         <Stack.Screen
           name="talk-post"
-          options={{ presentation: "modal", title: "トークする" }}
+          options={{ presentation: "modal", title: "つぶやく" }}
         />
         <Stack.Screen
           name="feed/[id]"

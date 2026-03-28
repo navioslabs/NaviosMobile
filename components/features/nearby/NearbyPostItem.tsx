@@ -7,7 +7,7 @@ import Animated, { FadeInUp } from "react-native-reanimated";
 import { Clock, Navigation, Flame } from "@/lib/icons";
 import type { ThemeTokens } from "@/constants/theme";
 import type { Post } from "@/types";
-import { timeAgo } from "@/lib/adapters";
+import { timeAgo, calcMatchScore } from "@/lib/adapters";
 import { distLabel } from "@/lib/utils";
 import { WEIGHT, SPACE, RADIUS, getScaledFontSize } from "@/lib/styles";
 import { useFontSizeStore } from "@/stores/fontSizeStore";
@@ -17,9 +17,6 @@ import FeaturedGlow from "@/components/ui/FeaturedGlow";
 
 /** 徒歩時間の概算（80m/分） */
 const walkTime = (d: number) => `徒歩${Math.max(1, Math.round(d / 80))}分`;
-
-/** マッチスコア算出（距離が近いほど高い） */
-const calcMatchScore = (distanceM: number) => Math.max(0, 100 - Math.floor(distanceM / 50));
 
 interface NearbyPostItemProps {
   post: Post;
@@ -37,7 +34,7 @@ function NearbyPostItem({ post, t, featured, isDark = true, index = 0 }: NearbyP
   const { scale } = useFontSizeStore();
   const fs = getScaledFontSize(scale);
   const distance = post.distance_m ?? 0;
-  const matchScore = calcMatchScore(distance);
+  const matchScore = calcMatchScore(distance, post.deadline);
   const isClose = distance <= 200;
 
   if (featured) {

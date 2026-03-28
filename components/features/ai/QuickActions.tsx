@@ -1,5 +1,5 @@
 import { View, Text, Pressable } from "react-native";
-import { Package, Calendar, Users, Building2 } from "@/lib/icons";
+import { Shield, Calendar, Users } from "@/lib/icons";
 import type { ThemeTokens } from "@/constants/theme";
 import { WEIGHT, SPACE, RADIUS, getScaledFontSize } from "@/lib/styles";
 import { useFontSizeStore } from "@/stores/fontSizeStore";
@@ -15,10 +15,9 @@ export default function QuickActions({ t, isDark }: QuickActionsProps) {
   const fs = getScaledFontSize(scale);
 
   const actions = [
-    { icon: Package, label: "今すぐ買える", dc: t.accent, bg: isDark ? "#0D2B1E" : "#F5FAF8" },
+    { icon: Shield, label: "ライフライン情報", dc: t.accent, bg: isDark ? "#0D2B1E" : "#F5FAF8" },
     { icon: Calendar, label: "今日のイベント", dc: "#F5A623", bg: isDark ? "#2D1F0A" : "#FEFAF3" },
     { icon: Users, label: "助けを求めてる人", dc: t.red, bg: isDark ? "#2D0A12" : "#FEF5F6" },
-    { icon: Building2, label: "締切が近い手続き", dc: t.purple, bg: isDark ? "#1A0F2D" : "#F8F5FC" },
   ];
 
   return (

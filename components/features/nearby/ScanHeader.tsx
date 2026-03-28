@@ -20,6 +20,7 @@ interface ScanHeaderProps {
   postCount: number;
   closeCount?: number;
   recentCount?: number;
+  urgentCount?: number;
   dataUpdatedAt?: number;
   isWatching?: boolean;
   /** スコアバーのアニメーションスタイル（新着パルス用） */
@@ -70,12 +71,14 @@ function usePulse(periodMs: number, intensity = 1.08) {
 
 // ─── Pulse スコア算出 ───────────────────────────────
 
-function calcPulseScore(postCount: number, closeCount: number, recentCount: number): number {
+function calcPulseScore(postCount: number, closeCount: number, recentCount: number, urgentCount: number = 0): number {
   if (postCount === 0) return 0;
+  const n = Math.max(postCount, 1);
   return Math.min(100, Math.round(
-    (Math.min(postCount, 20) / 20) * 40 +
-    (closeCount / Math.max(postCount, 1)) * 30 +
-    (recentCount / Math.max(postCount, 1)) * 30
+    (Math.min(postCount, 20) / 20) * 30 +
+    (closeCount / n) * 25 +
+    (recentCount / n) * 25 +
+    (urgentCount / n) * 20
   ));
 }
 
@@ -99,6 +102,7 @@ export default function ScanHeader({
   postCount,
   closeCount = 0,
   recentCount = 0,
+  urgentCount = 0,
   dataUpdatedAt,
   isWatching = false,
   scoreBarAnimStyle,
@@ -106,7 +110,7 @@ export default function ScanHeader({
   const { scale } = useFontSizeStore();
   const fs = getScaledFontSize(scale);
 
-  const pulseScore = calcPulseScore(postCount, closeCount, recentCount);
+  const pulseScore = calcPulseScore(postCount, closeCount, recentCount, urgentCount);
   const tier = getScoreTier(pulseScore);
   const TierIcon = tier.icon;
 

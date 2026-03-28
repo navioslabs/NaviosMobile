@@ -1,4 +1,4 @@
-import { useState, memo } from "react";
+import { memo } from "react";
 import { View, Text, Pressable } from "react-native";
 import Animated, { FadeInUp } from "react-native-reanimated";
 import { Image } from "expo-image";
@@ -9,6 +9,7 @@ import type { Talk } from "@/types";
 import { timeAgo } from "@/lib/adapters";
 import { WEIGHT, SPACE, RADIUS, getScaledFontSize } from "@/lib/styles";
 import { useFontSizeStore } from "@/stores/fontSizeStore";
+import { useToggleLike, useIsLiked } from "@/hooks/useLikes";
 
 interface TalkItemProps {
   talk: Talk;
@@ -19,9 +20,14 @@ interface TalkItemProps {
 function TalkItem({ talk, t }: TalkItemProps) {
   const { scale } = useFontSizeStore();
   const fs = getScaledFontSize(scale);
-  const [isLiked, setIsLiked] = useState(false);
+  const { data: isLiked = false } = useIsLiked("talk", talk.id);
+  const toggleLike = useToggleLike();
 
   if (!talk?.id) return null;
+
+  const handleLike = () => {
+    toggleLike.mutate({ targetType: "talk", targetId: talk.id });
+  };
 
   return (
     <Animated.View entering={FadeInUp.duration(300).springify()}>
@@ -88,12 +94,12 @@ function TalkItem({ talk, t }: TalkItemProps) {
           </Pressable>
 
           <Pressable
-            onPress={() => setIsLiked(!isLiked)}
+            onPress={handleLike}
             style={({ pressed }) => ({ flexDirection: "row" as const, alignItems: "center" as const, gap: 5, opacity: pressed ? 0.6 : 1 })}
           >
             <Heart size={16} fill={isLiked ? t.red : "none"} color={isLiked ? t.red : t.muted} />
             <Text style={{ fontSize: fs.xs, color: isLiked ? t.red : t.muted }}>
-              {(talk.likes_count + (isLiked ? 1 : 0)) || ""}
+              {talk.likes_count || ""}
             </Text>
           </Pressable>
 

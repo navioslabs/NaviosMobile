@@ -38,12 +38,12 @@
 
 | 項目 | 状態 | 備考 |
 |------|------|------|
-| React Hook Form + Zod | **未移行** | `(auth)/login.tsx`, `(auth)/signup.tsx` では使用中だが、`post.tsx`, `talk-post.tsx`, `profile/edit.tsx` は useState 直書きのまま |
-| RLS ポリシー | **要確認** | マイグレーション内に定義はあるが、実運用テスト未実施 |
+| React Hook Form + Zod | **完了** | 全フォーム（login, signup, post, talk-post, profile/edit）で React Hook Form + Zod 使用中 |
+| RLS ポリシー | **レビュー完了** | 全テーブル・Storageの RLS を確認済み。問題なし（詳細は `docs/2026-03-26_改修レポート.md`） |
 | 通知 | **未実装** | プッシュ通知・アプリ内通知ともに未着手 |
 | Realtime 統合テスト | **要確認** | `useRealtimeTalks` は実装済みだが、Supabase側の Realtime 有効化が正しく動くか実機テスト未実施 |
 | テスト | **未実装** | ユニットテスト・E2Eテスト一切なし |
-| エラーハンドリング統一 | **一部** | `appError.ts` はあるが、全画面で統一的に使われているわけではない |
+| エラーハンドリング統一 | **完了** | 全画面で `getUserMessage()` を使用。`catch (e: unknown)` に統一済み |
 | パフォーマンス最適化 | **一部** | FlatList `memo` は一部適用済み、画像最適化は未着手 |
 | アクセシビリティ | **未対応** | `accessibilityLabel` 等の付与なし |
 | 環境変数整理 | **要確認** | `.env` の管理状況、`.env.example` の更新が必要 |
@@ -254,20 +254,20 @@ MVPリリース前チェックリストを作成してください。
 
 ## 5. これからのタスク
 
-### フェーズ1: フォーム強化（次にやるべき）
+### ~~フェーズ1: フォーム強化~~ → 完了（2026-03-26）
 
-- [ ] `app/post.tsx` を React Hook Form + Zod に移行
-- [ ] `app/talk-post.tsx` を React Hook Form + Zod に移行
-- [ ] `app/profile/edit.tsx` を React Hook Form + Zod に移行
-- [ ] バリデーションエラーの日本語メッセージ統一
-- [ ] `lib/validations.ts` にスキーマ追加
+- [x] `app/post.tsx` を React Hook Form + Zod に移行
+- [x] `app/talk-post.tsx` を React Hook Form + Zod に移行
+- [x] `app/profile/edit.tsx` を React Hook Form + Zod に移行
+- [x] バリデーションエラーの日本語メッセージ統一
+- [x] `lib/validations.ts` にスキーマ追加（deadline フィールド追加）
 
-### フェーズ2: RLS・セキュリティ確認
+### ~~フェーズ2: RLS・セキュリティ確認~~ → 完了（2026-03-26）
 
-- [ ] RLS ポリシーの実運用テスト（認証ユーザー / 未認証ユーザー / 他人のデータ）
-- [ ] Storage のアクセス制御確認
+- [x] RLS ポリシーの実運用テスト（認証ユーザー / 未認証ユーザー / 他人のデータ）
+- [x] Storage のアクセス制御確認
 - [ ] `.env.example` の更新
-- [ ] Supabase クエリ関数のセキュリティレビュー
+- [x] Supabase クエリ関数のセキュリティレビュー
 
 ### フェーズ3: Realtime 統合テスト
 
@@ -286,7 +286,7 @@ MVPリリース前チェックリストを作成してください。
 
 ### フェーズ5: 品質強化
 
-- [ ] エラーハンドリングの全画面統一（`appError.ts` の活用）
+- [x] エラーハンドリングの全画面統一（`appError.ts` の活用）→ 完了（2026-03-26）
 - [ ] ローディング / 空状態 / エラー状態の最終確認
 - [ ] アクセシビリティ改善（`accessibilityLabel` 等）
 - [ ] パフォーマンス改善（画像最適化、FlatList チューニング）
@@ -363,10 +363,12 @@ MVPリリース前チェックリストを作成してください。
 
 ## 7. 直近でやるべきこと
 
-1. **投稿フォームの React Hook Form + Zod 移行**（フェーズ1）
-2. **RLS の実運用テスト**（フェーズ2）
-3. **Realtime の実機テスト**（フェーズ3）
-4. **通知設計書の作成**（フェーズ4 の準備）
-5. **エラーハンドリングの統一**（フェーズ5）
+1. ~~**投稿フォームの React Hook Form + Zod 移行**（フェーズ1）~~ → 完了
+2. ~~**RLS の実運用テスト**（フェーズ2）~~ → 完了
+3. ~~**エラーハンドリングの統一**（フェーズ5）~~ → 完了
+4. **カテゴリ変更のDBマイグレーション適用**（Supabase SQL Editorで実行）
+5. **Realtime の実機テスト**（フェーズ3）
+6. **通知設計書の作成**（フェーズ4 の準備）
+7. **iOS bundleIdentifier 追加 + プライバシーポリシー準備**（リリース準備）
 
-UIは完成しているので、**フォームのバリデーション強化 → セキュリティ確認 → 通知機能**の順で進めるのが最短ルート。
+詳細は `docs/2026-03-26_改修レポート.md` を参照。

@@ -7,13 +7,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Overview
 
 - **Name**: NaviOs — 地域情報共有モバイルアプリ
-- **Stack**: Expo ~55 + React Native 0.83 + TypeScript 5.9
+- **Stack**: Expo ~54 + React Native 0.81 + TypeScript 5.9
 - **Backend**: Supabase (Auth, Postgres, PostGIS, Storage)
 - **UI**: StyleSheet（style prop統一）+ React Native Reanimated (アニメーション) + React Native Gesture Handler (ジェスチャー) + React Hook Form + Zod
 - **データ取得 / キャッシュ**: React Query（`@tanstack/react-query`）を採用
-- **テーマ**: Dark / Light 切替（`ThemeProvider` + `useTheme()`）
+- **テーマ**: Dark / Light 切替（`useThemeStore()` + `useAppStyles()`）
 - **対応言語**: 日本語のみ
-- **エントリポイント**: `index.ts` → `App.tsx`
+- **エントリポイント**: `expo-router/entry`（Expo Router によるファイルベースルーティング）
 - **Path alias**: `@/*` → プロジェクトルート（`tsconfig.json` の `paths` で設定）
 
 ## Commands

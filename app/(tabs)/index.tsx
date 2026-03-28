@@ -7,6 +7,7 @@ import { MapPin, ArrowLeft } from "@/lib/icons";
 import { useNearbyPosts } from "@/hooks/usePosts";
 import { useLocation } from "@/hooks/useLocation";
 import { haversineDistance } from "@/lib/utils";
+import { isExpired, calcMatchScore } from "@/lib/adapters";
 import type { Post } from "@/types";
 import { useAppStyles } from "@/hooks/useAppStyles";
 import { SPACE, WEIGHT, RADIUS } from "@/lib/styles";
@@ -117,23 +118,32 @@ export default function NearByScreen() {
     }
   }, [lat, lng, qc]);
 
-  // ── セクション分け ──
+  // ── 期限切れ除外 + セクション分け ──
+  const activePosts = useMemo(() => nearbyPosts.filter((p) => !isExpired(p.deadline)), [nearbyPosts]);
+
   const sections: NearbySection[] = useMemo(() => {
-    const sorted = [...nearbyPosts].sort((a, b) => (a.distance_m ?? 0) - (b.distance_m ?? 0));
-    const close = sorted.filter((p) => (p.distance_m ?? 0) <= 200);
-    const mid = sorted.filter((p) => (p.distance_m ?? 0) > 200 && (p.distance_m ?? 0) <= 500);
-    const far = sorted.filter((p) => (p.distance_m ?? 0) > 500);
+    const byScore = (a: Post, b: Post) =>
+      calcMatchScore(b.distance_m ?? 0, b.deadline) - calcMatchScore(a.distance_m ?? 0, a.deadline);
+
+    const close = activePosts.filter((p) => (p.distance_m ?? 0) <= 200).sort(byScore);
+    const mid = activePosts.filter((p) => (p.distance_m ?? 0) > 200 && (p.distance_m ?? 0) <= 500).sort(byScore);
+    const far = activePosts.filter((p) => (p.distance_m ?? 0) > 500).sort(byScore);
 
     const result: NearbySection[] = [];
     result.push({ title: "すぐ近く（200m以内）", color: "#00D4A1", data: close });
     if (mid.length > 0) result.push({ title: "徒歩圏内（500m以内）", color: "#F5A623", data: mid });
     if (far.length > 0) result.push({ title: "その他", color: "#8887A0", data: far });
     return result;
-  }, [nearbyPosts]);
+  }, [activePosts]);
 
   const closeCount = sections[0]?.data.length ?? 0;
   const oneHourAgo = Date.now() - 3600000;
-  const recentCount = nearbyPosts.filter((p) => new Date(p.created_at).getTime() > oneHourAgo).length;
+  const recentCount = activePosts.filter((p) => new Date(p.created_at).getTime() > oneHourAgo).length;
+  const urgentCount = activePosts.filter((p) => {
+    if (!p.deadline) return false;
+    const left = (new Date(p.deadline).getTime() - Date.now()) / 60000;
+    return left > 0 && left <= 60;
+  }).length;
 
   // ── 位置情報未許可時 ──
   if (!locationLoading && !granted) {
@@ -168,9 +178,10 @@ export default function NearByScreen() {
       <ScanHeader
         t={t}
         isDark={isDark}
-        postCount={nearbyPosts.length}
+        postCount={activePosts.length}
         closeCount={closeCount}
         recentCount={recentCount}
+        urgentCount={urgentCount}
         dataUpdatedAt={dataUpdatedAt}
         isWatching={isWatching}
         scoreBarAnimStyle={scoreBarStyle}

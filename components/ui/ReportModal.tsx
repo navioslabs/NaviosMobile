@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { getUserMessage } from "@/lib/appError";
 import {
   View,
   Text,
@@ -52,8 +53,8 @@ export default function ReportModal({
         detail: detail.trim() || undefined,
       });
       setSubmitted(true);
-    } catch (e: any) {
-      Alert.alert("エラー", e.message ?? "通報に失敗しました");
+    } catch (e: unknown) {
+      Alert.alert("エラー", getUserMessage(e));
     } finally {
       setSubmitting(false);
     }

@@ -41,6 +41,7 @@ export async function fetchTalkById(
 export async function createTalk(input: {
   message: string;
   image_url?: string;
+  image_urls?: string[];
   location_text?: string;
   lat?: number;
   lng?: number;
@@ -50,6 +51,9 @@ export async function createTalk(input: {
 
   const { lat, lng, ...rest } = input;
   const insertData: Record<string, any> = { ...rest, author_id: user.id };
+  if (!insertData.image_url && insertData.image_urls?.length > 0) {
+    insertData.image_url = insertData.image_urls[0];
+  }
   if (lat != null && lng != null) {
     insertData.location = `POINT(${lng} ${lat})`;
   }

@@ -46,6 +46,7 @@ export interface Post {
   title: string;
   content: string | null;
   image_url: string | null;
+  image_urls: string[];
   location_text: string | null;
   deadline: string | null;
   crowd: "crowded" | "moderate" | "empty" | null;
@@ -68,6 +69,7 @@ export interface Talk {
   author_id: string;
   message: string;
   image_url: string | null;
+  image_urls: string[];
   location_text: string | null;
   likes_count: number;
   replies_count: number;

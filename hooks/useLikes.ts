@@ -1,5 +1,17 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { toggleLike } from "@/lib/likes";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toggleLike, checkIsLiked } from "@/lib/likes";
+
+/** いいね済み確認 */
+export function useIsLiked(
+  targetType: "post" | "talk" | "comment" | "reply",
+  targetId: string | undefined
+) {
+  return useQuery({
+    queryKey: ["likes", targetType, targetId],
+    queryFn: () => checkIsLiked(targetType, targetId!),
+    enabled: !!targetId,
+  });
+}
 
 /** いいねトグル */
 export function useToggleLike() {
@@ -13,10 +25,12 @@ export function useToggleLike() {
       targetId: string;
     }) => toggleLike(targetType, targetId),
     onSuccess: (_data, { targetType, targetId }) => {
-      // 詳細画面のキャッシュを更新
+      // いいね状態のキャッシュを更新
+      qc.invalidateQueries({ queryKey: ["likes", targetType, targetId] });
       if (targetType === "post") {
         qc.invalidateQueries({ queryKey: ["posts", "detail"] });
         qc.invalidateQueries({ queryKey: ["posts", "list"] });
+        qc.invalidateQueries({ queryKey: ["posts", "nearby"] });
       } else if (targetType === "talk") {
         qc.invalidateQueries({ queryKey: ["talks", "detail"] });
         qc.invalidateQueries({ queryKey: ["talks", "list"] });

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { getUserMessage } from "@/lib/appError";
 import {
   View,
   Text,
@@ -40,12 +41,8 @@ export default function LoginScreen() {
     try {
       await signIn(data.email, data.password);
       router.replace("/(tabs)");
-    } catch (e: any) {
-      setServerError(
-        e.message === "Invalid login credentials"
-          ? "メールアドレスまたはパスワードが正しくありません"
-          : "ログインに失敗しました。もう一度お試しください"
-      );
+    } catch (e: unknown) {
+      setServerError(getUserMessage(e));
     } finally {
       setLoading(false);
     }

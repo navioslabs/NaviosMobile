@@ -39,15 +39,15 @@
 /*
 INSERT INTO public.posts (author_id, category, title, content, location_text, crowd, location)
 VALUES
-  ('YOUR_USER_UUID', 'stock', '朝採れ野菜入荷しました！', 'トマト、きゅうり、なす。本日限り特別価格です', '越谷市駅前', 'crowded',
+  ('YOUR_USER_UUID', 'lifeline', '朝採れ野菜入荷しました！', 'トマト、きゅうり、なす。本日限り特別価格です', '越谷市駅前', 'crowded',
     ST_SetSRID(ST_MakePoint(139.7906, 35.8838), 4326)::geography),
   ('YOUR_USER_UUID', 'event', '毎朝7時から中央公園でヨガ会開催中', '初心者歓迎！参加費無料です', '中央公園', 'empty',
     ST_SetSRID(ST_MakePoint(139.7920, 35.8850), 4326)::geography),
-  ('YOUR_USER_UUID', 'stock', '本日の焼きたてパン', 'クロワッサン、食パン、あんぱん揃ってます', '商店街エリア', 'moderate',
+  ('YOUR_USER_UUID', 'lifeline', '本日の焼きたてパン', 'クロワッサン、食パン、あんぱん揃ってます', '商店街エリア', 'moderate',
     ST_SetSRID(ST_MakePoint(139.7880, 35.8820), 4326)::geography),
   ('YOUR_USER_UUID', 'help', '庭の草刈りを手伝ってくれる方募集中', 'お礼に野菜をお渡しします', '住宅街エリア', NULL,
     ST_SetSRID(ST_MakePoint(139.7850, 35.8800), 4326)::geography),
-  ('YOUR_USER_UUID', 'admin', '【重要】給付金申請の締め切りは今月末です', 'お早めにお手続きください', '市役所', NULL,
+  ('YOUR_USER_UUID', 'lifeline', '【重要】給付金申請の締め切りは今月末です', 'お早めにお手続きください', '市役所', NULL,
     ST_SetSRID(ST_MakePoint(139.7950, 35.8870), 4326)::geography);
 
 INSERT INTO public.talks (author_id, message, location_text, location)

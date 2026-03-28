@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, ScrollView, Pressable, StyleSheet, ActivityIndicator, RefreshControl } from "react-native";
+import { View, Text, ScrollView, Pressable, StyleSheet, ActivityIndicator, RefreshControl, Alert } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
@@ -13,13 +13,18 @@ import {
   Check,
   Timer,
   Ellipsis,
+  Heart,
+  Trash2,
 } from "@/lib/icons";
 import ReportModal from "@/components/ui/ReportModal";
 import { CAT_CONFIG } from "@/constants/categories";
 import { useThemeStore } from "@/stores/themeStore";
-import { usePost } from "@/hooks/usePosts";
+import { usePost, useDeletePost } from "@/hooks/usePosts";
+import { useToggleLike, useIsLiked } from "@/hooks/useLikes";
+import { useAuth } from "@/hooks/useAuth";
 import { timeAgo, calcTimeLeft } from "@/lib/adapters";
 import { distLabel } from "@/lib/utils";
+import { getUserMessage } from "@/lib/appError";
 import { useAppStyles } from "@/hooks/useAppStyles";
 import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 import CatPill from "@/components/ui/CatPill";
@@ -36,8 +41,7 @@ const deadlineLabel = (timeLeft: number) => {
 
 /** モック持ち物データ（カテゴリ別） */
 const REQUIRED_ITEMS: Record<string, string[]> = {
-  admin: ["身分証明書", "振込口座情報の控え", "印鑑"],
-  stock: [],
+  lifeline: [],
   event: ["動きやすい服装", "飲み物"],
   help: ["軍手", "作業しやすい服装"],
 };
@@ -47,10 +51,39 @@ export default function FeedDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { isDark } = useThemeStore();
   const { s, t, fs } = useAppStyles();
+  const { user } = useAuth();
 
   const { data: post, isLoading, isFetching, refetch } = usePost(id!);
+  const { data: isLiked = false } = useIsLiked("post", id);
+  const toggleLike = useToggleLike();
+  const deletePostMutation = useDeletePost();
   const [isSaved, setIsSaved] = useState(false);
   const [showReport, setShowReport] = useState(false);
+
+  const isOwner = !!user && !!post && user.id === post.author_id;
+
+  const handleLike = () => {
+    if (!id) return;
+    toggleLike.mutate({ targetType: "post", targetId: id });
+  };
+
+  const handleDelete = () => {
+    Alert.alert("投稿を削除", "この投稿を削除しますか？この操作は取り消せません。", [
+      { text: "キャンセル", style: "cancel" },
+      {
+        text: "削除",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await deletePostMutation.mutateAsync(id!);
+            router.back();
+          } catch (e: unknown) {
+            Alert.alert("エラー", getUserMessage(e));
+          }
+        },
+      },
+    ]);
+  };
 
   if (isLoading) {
     return (
@@ -132,7 +165,7 @@ export default function FeedDetailScreen() {
             )}
           </View>
 
-          {/* 共有 + 保存ボタン（右上） */}
+          {/* 共有 + 保存 + メニューボタン（右上） */}
           <View style={{ position: "absolute", top: 52, right: SPACE.lg, flexDirection: "row", gap: SPACE.sm }}>
             <Pressable
               style={({ pressed }) => ({
@@ -273,6 +306,29 @@ export default function FeedDetailScreen() {
               ))}
             </View>
           )}
+
+          {/* ═══ いいね + 削除 アクションバー ═══ */}
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: SPACE.md, paddingTop: SPACE.lg, borderTopWidth: 1, borderTopColor: t.border }}>
+            <Pressable
+              onPress={handleLike}
+              style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: SPACE.sm, opacity: pressed ? 0.7 : 1 })}
+            >
+              <Heart size={22} fill={isLiked ? t.red : "none"} color={isLiked ? t.red : t.sub} />
+              <Text style={{ fontSize: fs.base, fontWeight: WEIGHT.semibold, color: isLiked ? t.red : t.sub }}>
+                {post.likes_count}
+              </Text>
+            </Pressable>
+
+            {isOwner && (
+              <Pressable
+                onPress={handleDelete}
+                style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: SPACE.xs, opacity: pressed ? 0.7 : 1 })}
+              >
+                <Trash2 size={18} color={t.red} />
+                <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.semibold, color: t.red }}>削除</Text>
+              </Pressable>
+            )}
+          </View>
         </View>
 
         <View style={{ height: 40 }} />

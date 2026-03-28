@@ -2,6 +2,7 @@ import { useState } from "react";
 import { View, Text, ScrollView, Pressable, TextInput, ActivityIndicator, Alert, RefreshControl } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { Image } from "expo-image";
+import { getUserMessage } from "@/lib/appError";
 import {
   ChevronLeft,
   Heart,
@@ -10,10 +11,13 @@ import {
   MapPin,
   Send,
   Ellipsis,
+  Trash2,
 } from "@/lib/icons";
 import ReportModal from "@/components/ui/ReportModal";
 import { LinearGradient } from "expo-linear-gradient";
-import { useTalk, useCreateReply } from "@/hooks/useTalks";
+import { useTalk, useCreateReply, useDeleteTalk } from "@/hooks/useTalks";
+import { useToggleLike, useIsLiked } from "@/hooks/useLikes";
+import { useAuth } from "@/hooks/useAuth";
 import { timeAgo } from "@/lib/adapters";
 import { useAppStyles } from "@/hooks/useAppStyles";
 import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
@@ -22,15 +26,42 @@ import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 export default function TalkDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { s, t, fs } = useAppStyles();
+  const { user } = useAuth();
 
   const { data, isLoading, isFetching, refetch } = useTalk(id!);
   const createReplyMutation = useCreateReply(id!);
-  const [isLiked, setIsLiked] = useState(false);
+  const deleteTalkMutation = useDeleteTalk();
+  const { data: isLiked = false } = useIsLiked("talk", id);
+  const toggleLike = useToggleLike();
   const [replyText, setReplyText] = useState("");
   const [showReport, setShowReport] = useState(false);
 
   const talk = data;
   const replies = data?.replies ?? [];
+  const isOwner = !!user && !!talk && user.id === talk.author_id;
+
+  const handleLike = () => {
+    if (!id) return;
+    toggleLike.mutate({ targetType: "talk", targetId: id });
+  };
+
+  const handleDelete = () => {
+    Alert.alert("投稿を削除", "このひとことを削除しますか？この操作は取り消せません。", [
+      { text: "キャンセル", style: "cancel" },
+      {
+        text: "削除",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await deleteTalkMutation.mutateAsync(id!);
+            router.back();
+          } catch (e: unknown) {
+            Alert.alert("エラー", getUserMessage(e));
+          }
+        },
+      },
+    ]);
+  };
 
   if (isLoading) {
     return (
@@ -62,6 +93,14 @@ export default function TalkDetailScreen() {
           <ChevronLeft size={24} color={t.text} />
         </Pressable>
         <Text style={[s.textHeading, { flex: 1 }]}>スレッド</Text>
+        {isOwner && (
+          <Pressable
+            onPress={handleDelete}
+            style={({ pressed }) => ({ width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", opacity: pressed ? 0.7 : 1 })}
+          >
+            <Trash2 size={20} color={t.red} />
+          </Pressable>
+        )}
         <Pressable
           onPress={() => setShowReport(true)}
           style={({ pressed }) => ({ width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", opacity: pressed ? 0.7 : 1 })}
@@ -124,12 +163,12 @@ export default function TalkDetailScreen() {
               <Text style={{ fontSize: fs.base, fontWeight: WEIGHT.semibold, color: t.sub }}>{replies.length}</Text>
             </View>
             <Pressable
-              onPress={() => setIsLiked(!isLiked)}
+              onPress={handleLike}
               style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: SPACE.sm, opacity: pressed ? 0.7 : 1 })}
             >
               <Heart size={20} fill={isLiked ? t.red : "none"} color={isLiked ? t.red : t.sub} />
               <Text style={{ fontSize: fs.base, fontWeight: WEIGHT.semibold, color: isLiked ? t.red : t.sub }}>
-                {talk.likes_count + (isLiked ? 1 : 0)}
+                {talk.likes_count}
               </Text>
             </Pressable>
             <Pressable style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
@@ -181,8 +220,8 @@ export default function TalkDetailScreen() {
             try {
               await createReplyMutation.mutateAsync(replyText.trim());
               setReplyText("");
-            } catch (e: any) {
-              Alert.alert("エラー", e.message ?? "返信に失敗しました");
+            } catch (e: unknown) {
+              Alert.alert("エラー", getUserMessage(e));
             }
           }}
         >

@@ -10,7 +10,7 @@ import Animated, {
   interpolate,
   runOnJS,
 } from "react-native-reanimated";
-import { Plus, Package, Mic } from "@/lib/icons";
+import { Plus, PenLine, Mic } from "@/lib/icons";
 import type { ThemeTokens } from "@/constants/theme";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -115,11 +115,11 @@ export default function Fab({ t, isDark }: FabProps) {
             })}
           >
             <View style={{ width: 44, height: 44, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: t.accent + "20" }}>
-              <Package size={22} color={t.accent} />
+              <PenLine size={22} color={t.accent} />
             </View>
             <View>
               <Text style={{ fontSize: 15, fontWeight: "700", color: t.text }}>投稿する</Text>
-              <Text style={{ fontSize: 13, color: t.sub }}>イベント・物資・お知らせ</Text>
+              <Text style={{ fontSize: 13, color: t.sub }}>ライフライン・イベント・近助</Text>
             </View>
           </Pressable>
         </Animated.View>

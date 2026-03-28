@@ -1,15 +1,19 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import React, { useEffect, useRef, useCallback } from "react";
 import { View, Text, TextInput, Pressable, ScrollView, Alert, ActivityIndicator } from "react-native";
 import { router } from "expo-router";
 import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Image } from "expo-image";
 import * as Haptics from "expo-haptics";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { User, MapPin, Camera, ImageIcon, Send } from "@/lib/icons";
+import { createTalkSchema, type CreateTalkForm } from "@/lib/validations";
 import { useCreateTalk } from "@/hooks/useTalks";
 import { useImagePicker } from "@/hooks/useImagePicker";
 import { useLocation } from "@/hooks/useLocation";
 import { uploadImage } from "@/lib/storage";
+import { getUserMessage } from "@/lib/appError";
 import { useAppStyles } from "@/hooks/useAppStyles";
 import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 
@@ -28,17 +32,24 @@ const PLACEHOLDER_EXAMPLES = [
 export default function TalkPostScreen() {
   const { s, t, fs } = useAppStyles();
   const createTalkMutation = useCreateTalk();
-  const { imageUri, pickImage, takePhoto, clear } = useImagePicker();
+  const { images, isFull, pickImage, takePhoto, removeImage } = useImagePicker();
   const { lat, lng, granted } = useLocation();
   const navigation = useNavigation();
   const submittedRef = useRef(false);
-  const [msg, setMsg] = useState("");
-  const [placeholderIndex, setPlaceholderIndex] = useState(0);
+  const [placeholderIndex, setPlaceholderIndex] = React.useState(0);
 
-  const hasContent = msg.trim().length > 0 || imageUri !== null;
-  const remaining = MAX_LENGTH - msg.length;
-  const isValid = msg.trim().length > 0 && remaining >= 0;
+  const { control, handleSubmit, watch, formState: { errors } } = useForm<CreateTalkForm>({
+    resolver: zodResolver(createTalkSchema),
+    defaultValues: { message: "" },
+    mode: "onChange",
+  });
+
+  const msg = watch("message");
+  const remaining = MAX_LENGTH - (msg?.length ?? 0);
+  const isValid = (msg?.trim().length ?? 0) > 0 && remaining >= 0;
   const isPending = createTalkMutation.isPending;
+
+  const hasContent = (msg?.trim().length ?? 0) > 0 || images.length > 0;
 
   // プレースホルダーのローテーション
   useEffect(() => {
@@ -68,26 +79,29 @@ export default function TalkPostScreen() {
     return unsubscribe;
   }, [hasContent, navigation]);
 
-  const handleSend = useCallback(async () => {
-    if (!msg.trim() || isPending) return;
+  const onSubmit = useCallback(async (data: CreateTalkForm) => {
+    if (isPending) return;
     try {
       let image_url: string | undefined;
-      if (imageUri) {
-        image_url = await uploadImage("talk-images", imageUri);
+      let image_urls: string[] | undefined;
+      if (images.length > 0) {
+        image_urls = await Promise.all(images.map(uri => uploadImage("talk-images", uri)));
+        image_url = image_urls[0];
       }
       await createTalkMutation.mutateAsync({
-        message: msg.trim(),
+        message: data.message.trim(),
         image_url,
+        image_urls,
         lat: granted ? lat : undefined,
         lng: granted ? lng : undefined,
       });
       submittedRef.current = true;
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       router.back();
-    } catch (e: any) {
-      Alert.alert("エラー", e.message ?? "投稿に失敗しました");
+    } catch (e: unknown) {
+      Alert.alert("エラー", getUserMessage(e));
     }
-  }, [msg, isPending, imageUri, granted, lat, lng, createTalkMutation]);
+  }, [isPending, images, granted, lat, lng, createTalkMutation]);
 
   /** 文字数カウントの色を決定 */
   const countColor = remaining < 0 ? t.red : remaining <= 20 ? t.amber : t.muted;
@@ -107,16 +121,24 @@ export default function TalkPostScreen() {
         <LinearGradient colors={[t.accent, t.blue]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center" }}>
           <User size={22} color="#fff" />
         </LinearGradient>
-        <TextInput
-          value={msg}
-          onChangeText={setMsg}
-          placeholder={PLACEHOLDER_EXAMPLES[placeholderIndex]}
-          placeholderTextColor={t.sub}
-          multiline
-          autoFocus
-          style={{ flex: 1, fontSize: fs.xl, minHeight: 120, lineHeight: 26, color: t.text, textAlignVertical: "top" }}
+        <Controller
+          control={control}
+          name="message"
+          render={({ field: { onChange, onBlur, value } }) => (
+            <TextInput
+              value={value}
+              onChangeText={onChange}
+              onBlur={onBlur}
+              placeholder={PLACEHOLDER_EXAMPLES[placeholderIndex]}
+              placeholderTextColor={t.sub}
+              multiline
+              autoFocus
+              style={{ flex: 1, fontSize: fs.xl, minHeight: 120, lineHeight: 26, color: t.text, textAlignVertical: "top" }}
+            />
+          )}
         />
       </View>
+      {errors.message && <Text style={{ fontSize: fs.xxs, color: t.red }}>{errors.message.message}</Text>}
 
       {/* コンパクト位置情報（インライン1行） */}
       <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.xs }}>
@@ -128,27 +150,34 @@ export default function TalkPostScreen() {
 
       {/* 写真セクション */}
       <View style={{ gap: SPACE.xs }}>
-        <Text style={{ fontSize: fs.xs, color: t.sub }}>
-          様子が伝わりやすくなります
-        </Text>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.xs }}>
+          <Text style={{ fontSize: fs.xs, color: t.sub }}>
+            様子が伝わりやすくなります
+          </Text>
+          <Text style={{ fontSize: fs.xxs, color: t.muted }}>{images.length}/3</Text>
+        </View>
         <View style={{ flexDirection: "row", gap: SPACE.sm }}>
-          <Pressable onPress={takePhoto} style={{ width: 60, height: 60, borderRadius: RADIUS.lg, alignItems: "center", justifyContent: "center", gap: SPACE.xs, borderWidth: 1.5, borderStyle: "dashed", borderColor: t.border, backgroundColor: t.surface }}>
+          <Pressable onPress={takePhoto} style={{ width: 60, height: 60, borderRadius: RADIUS.lg, alignItems: "center", justifyContent: "center", gap: SPACE.xs, borderWidth: 1.5, borderStyle: "dashed", borderColor: t.border, backgroundColor: t.surface, opacity: isFull ? 0.3 : 1 }}>
             <Camera size={20} color={t.sub} />
             <Text style={{ fontSize: fs.xxs, color: t.sub }}>撮影</Text>
           </Pressable>
-          <Pressable onPress={pickImage} style={{ width: 60, height: 60, borderRadius: RADIUS.lg, alignItems: "center", justifyContent: "center", gap: SPACE.xs, borderWidth: 1.5, borderStyle: "dashed", borderColor: t.border, backgroundColor: t.surface }}>
+          <Pressable onPress={pickImage} style={{ width: 60, height: 60, borderRadius: RADIUS.lg, alignItems: "center", justifyContent: "center", gap: SPACE.xs, borderWidth: 1.5, borderStyle: "dashed", borderColor: t.border, backgroundColor: t.surface, opacity: isFull ? 0.3 : 1 }}>
             <ImageIcon size={20} color={t.sub} />
             <Text style={{ fontSize: fs.xxs, color: t.sub }}>選択</Text>
           </Pressable>
         </View>
       </View>
-      {imageUri && (
-        <View style={{ position: "relative" }}>
-          <Image source={{ uri: imageUri }} style={{ width: "100%", height: 160, borderRadius: RADIUS.lg }} />
-          <Pressable onPress={clear} style={{ position: "absolute", top: 8, right: 8, width: 28, height: 28, borderRadius: 14, backgroundColor: "rgba(0,0,0,0.6)", alignItems: "center", justifyContent: "center" }}>
-            <Text style={{ color: "#fff", fontSize: 14 }}>✕</Text>
-          </Pressable>
-        </View>
+      {images.length > 0 && (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: SPACE.sm }}>
+          {images.map((uri, i) => (
+            <View key={uri} style={{ position: "relative" }}>
+              <Image source={{ uri }} style={{ width: 100, height: 100, borderRadius: RADIUS.md }} />
+              <Pressable onPress={() => removeImage(i)} style={{ position: "absolute", top: 4, right: 4, width: 24, height: 24, borderRadius: 12, backgroundColor: "rgba(0,0,0,0.6)", alignItems: "center", justifyContent: "center" }}>
+                <Text style={{ color: "#fff", fontSize: 12 }}>✕</Text>
+              </Pressable>
+            </View>
+          ))}
+        </ScrollView>
       )}
 
       {/* 文字数超過警告バナー */}
@@ -166,7 +195,7 @@ export default function TalkPostScreen() {
           {countText}
         </Text>
         <Pressable
-          onPress={handleSend}
+          onPress={handleSubmit(onSubmit)}
           disabled={!isValid || isPending}
         >
           <LinearGradient

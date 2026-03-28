@@ -3,6 +3,7 @@ import { View, Text, FlatList, RefreshControl, Pressable } from "react-native";
 import { Inbox } from "@/lib/icons";
 import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
+import { isExpired } from "@/lib/adapters";
 import type { Post } from "@/types";
 import { useAppStyles } from "@/hooks/useAppStyles";
 import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
@@ -58,20 +59,25 @@ export default function FeedScreen() {
     } else if (summaryFilter === "nearby") {
       posts = posts.filter((p) => (p.distance_m ?? Infinity) <= 200);
     } else if (summaryFilter === "urgent") {
-      posts = [...posts].sort((a, b) => {
-        const aTime = a.deadline ? new Date(a.deadline).getTime() : Infinity;
-        const bTime = b.deadline ? new Date(b.deadline).getTime() : Infinity;
-        return aTime - bTime;
-      });
+      posts = [...posts]
+        .filter((p) => !isExpired(p.deadline))
+        .sort((a, b) => {
+          const aTime = a.deadline ? new Date(a.deadline).getTime() : Infinity;
+          const bTime = b.deadline ? new Date(b.deadline).getTime() : Infinity;
+          return aTime - bTime;
+        });
     }
 
-    return posts;
+    // 期限切れ投稿をリスト末尾に回す
+    const active = posts.filter((p) => !isExpired(p.deadline));
+    const expired = posts.filter((p) => isExpired(p.deadline));
+    return [...active, ...expired];
   }, [datePosts, selCat, summaryFilter]);
 
   const getPostCount = useCallback((offset: number) => getPostsForDate(offset, allPosts).length, [allPosts]);
   const renderItem = useCallback(
     ({ item, index }: { item: Post; index: number }) => (
-      <FeedPostCard post={item} t={t} isDark={isDark} featured={index === 0} />
+      <FeedPostCard post={item} t={t} isDark={isDark} featured={index === 0 && !isExpired(item.deadline)} expired={isExpired(item.deadline)} />
     ),
     [t, isDark]
   );

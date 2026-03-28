@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { getUserMessage } from "@/lib/appError";
 import {
   View,
   Text,
@@ -40,12 +41,8 @@ export default function SignupScreen() {
     try {
       await signUp(data.email, data.password, data.displayName);
       router.replace("/(tabs)");
-    } catch (e: any) {
-      setServerError(
-        e.message?.includes("already registered")
-          ? "このメールアドレスは既に登録されています"
-          : "アカウント作成に失敗しました。もう一度お試しください"
-      );
+    } catch (e: unknown) {
+      setServerError(getUserMessage(e));
     } finally {
       setLoading(false);
     }

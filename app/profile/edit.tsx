@@ -2,6 +2,8 @@ import { useState } from "react";
 import { View, Text, ScrollView, Pressable, TextInput, Alert } from "react-native";
 import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ChevronLeft,
   Camera,
@@ -10,11 +12,13 @@ import {
   Check,
 } from "@/lib/icons";
 import type { ThemeTokens } from "@/constants/theme";
+import { updateProfileSchema, type UpdateProfileForm } from "@/lib/validations";
 import { useAuth } from "@/hooks/useAuth";
 import { useUpdateProfile } from "@/hooks/useProfile";
 import { useAppStyles } from "@/hooks/useAppStyles";
 import { useImagePicker } from "@/hooks/useImagePicker";
 import { uploadImage } from "@/lib/storage";
+import { getUserMessage } from "@/lib/appError";
 import { Image } from "expo-image";
 import { useFontSizeStore } from "@/stores/fontSizeStore";
 import { getScaledFontSize, WEIGHT, SPACE, RADIUS } from "@/lib/styles";
@@ -26,33 +30,42 @@ export default function ProfileEditScreen() {
   const updateMutation = useUpdateProfile();
   const { imageUri: avatarUri, pickImage: pickAvatar } = useImagePicker();
 
-  const [name, setName] = useState(profile?.display_name ?? "ゲストユーザー");
-  const [bio, setBio] = useState(profile?.bio ?? "");
-  const [location, setLocation] = useState(profile?.location_text ?? "越谷市");
+  const { control, handleSubmit, watch, formState: { errors, isValid } } = useForm<UpdateProfileForm>({
+    resolver: zodResolver(updateProfileSchema),
+    defaultValues: {
+      displayName: profile?.display_name ?? "ゲストユーザー",
+      bio: profile?.bio ?? "",
+      locationText: profile?.location_text ?? "越谷市",
+      isPublic: profile?.is_public ?? true,
+      showLocation: profile?.show_location ?? true,
+      showCheckins: profile?.show_checkins ?? false,
+    },
+    mode: "onChange",
+  });
 
-  const isValid = name.trim().length > 0;
+  const name = watch("displayName");
+  const bio = watch("bio") ?? "";
   const isSaving = updateMutation.isPending;
 
   /** プロフィール保存 */
-  const handleSave = async () => {
-    if (!isValid) return;
+  const onSubmit = async (data: UpdateProfileForm) => {
     try {
       let avatar_url: string | undefined;
       if (avatarUri) {
         avatar_url = await uploadImage("avatars", avatarUri);
       }
       await updateMutation.mutateAsync({
-        display_name: name.trim(),
-        bio: bio.trim() || undefined,
-        location_text: location.trim() || undefined,
+        display_name: data.displayName.trim(),
+        bio: data.bio?.trim() || undefined,
+        location_text: data.locationText?.trim() || undefined,
         avatar_url,
-        is_public: true,
-        show_location: true,
-        show_checkins: false,
+        is_public: data.isPublic,
+        show_location: data.showLocation,
+        show_checkins: data.showCheckins,
       });
       router.back();
-    } catch (e: any) {
-      Alert.alert("エラー", e.message ?? "保存に失敗しました");
+    } catch (e: unknown) {
+      Alert.alert("エラー", getUserMessage(e));
     }
   };
 
@@ -68,7 +81,7 @@ export default function ProfileEditScreen() {
         </Pressable>
         <Text style={s.textHeading}>プロフィール編集</Text>
         <Pressable
-          onPress={handleSave}
+          onPress={handleSubmit(onSubmit)}
           disabled={!isValid || isSaving}
           style={({ pressed }) => ({
             paddingHorizontal: SPACE.lg,
@@ -126,14 +139,22 @@ export default function ProfileEditScreen() {
           {/* 表示名 */}
           <View>
             <Text style={[s.textSectionLabel, { marginBottom: SPACE.sm }]}>表示名</Text>
-            <TextInput
-              value={name}
-              onChangeText={setName}
-              placeholder="表示名を入力"
-              placeholderTextColor={t.muted}
-              style={[s.input, { fontSize: fs.lg }]}
-              maxLength={20}
+            <Controller
+              control={control}
+              name="displayName"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <TextInput
+                  value={value}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  placeholder="表示名を入力"
+                  placeholderTextColor={t.muted}
+                  style={[s.input, { fontSize: fs.lg }]}
+                  maxLength={20}
+                />
+              )}
             />
+            {errors.displayName && <Text style={{ fontSize: fs.xxs, color: t.red, marginTop: SPACE.xs }}>{errors.displayName.message}</Text>}
             <Text style={{ fontSize: fs.xs, color: t.muted, marginTop: SPACE.xs, textAlign: "right" }}>
               {name.length}/20
             </Text>
@@ -142,15 +163,23 @@ export default function ProfileEditScreen() {
           {/* 自己紹介 */}
           <View>
             <Text style={[s.textSectionLabel, { marginBottom: SPACE.sm }]}>自己紹介</Text>
-            <TextInput
-              value={bio}
-              onChangeText={setBio}
-              placeholder="自己紹介を入力（任意）"
-              placeholderTextColor={t.muted}
-              style={[s.input, { height: 100, textAlignVertical: "top" }]}
-              multiline
-              maxLength={150}
+            <Controller
+              control={control}
+              name="bio"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <TextInput
+                  value={value ?? ""}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  placeholder="自己紹介を入力（任意）"
+                  placeholderTextColor={t.muted}
+                  style={[s.input, { height: 100, textAlignVertical: "top" }]}
+                  multiline
+                  maxLength={150}
+                />
+              )}
             />
+            {errors.bio && <Text style={{ fontSize: fs.xxs, color: t.red, marginTop: SPACE.xs }}>{errors.bio.message}</Text>}
             <Text style={{ fontSize: fs.xs, color: bio.length > 140 ? t.red : t.muted, marginTop: SPACE.xs, textAlign: "right" }}>
               {bio.length}/150
             </Text>
@@ -161,12 +190,19 @@ export default function ProfileEditScreen() {
             <Text style={[s.textSectionLabel, { marginBottom: SPACE.sm }]}>地域</Text>
             <View style={[s.card, { flexDirection: "row", alignItems: "center", gap: SPACE.sm + 2 }]}>
               <MapPin size={18} color={t.accent} />
-              <TextInput
-                value={location}
-                onChangeText={setLocation}
-                placeholder="地域を入力"
-                placeholderTextColor={t.muted}
-                style={{ flex: 1, fontSize: fs.lg, color: t.text }}
+              <Controller
+                control={control}
+                name="locationText"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    value={value ?? ""}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    placeholder="地域を入力"
+                    placeholderTextColor={t.muted}
+                    style={{ flex: 1, fontSize: fs.lg, color: t.text }}
+                  />
+                )}
               />
             </View>
           </View>
@@ -175,12 +211,25 @@ export default function ProfileEditScreen() {
           <View>
             <Text style={[s.textSectionLabel, { marginBottom: SPACE.sm }]}>公開設定</Text>
             <View style={{ gap: SPACE.sm }}>
-              {[
-                { label: "プロフィールを公開", desc: "他のユーザーからプロフィールが見えます", enabled: true },
-                { label: "位置情報を表示", desc: "投稿に位置情報を表示します", enabled: true },
-                { label: "チェックイン履歴を公開", desc: "訪問履歴を他のユーザーに公開します", enabled: false },
-              ].map((item) => (
-                <PrivacyToggle key={item.label} item={item} t={t} />
+              {([
+                { name: "isPublic" as const, label: "プロフィールを公開", desc: "他のユーザーからプロフィールが見えます" },
+                { name: "showLocation" as const, label: "位置情報を表示", desc: "投稿に位置情報を表示します" },
+                { name: "showCheckins" as const, label: "チェックイン履歴を公開", desc: "訪問履歴を他のユーザーに公開します" },
+              ] as const).map((item) => (
+                <Controller
+                  key={item.name}
+                  control={control}
+                  name={item.name}
+                  render={({ field: { onChange, value } }) => (
+                    <PrivacyToggle
+                      label={item.label}
+                      desc={item.desc}
+                      enabled={value}
+                      onToggle={() => onChange(!value)}
+                      t={t}
+                    />
+                  )}
+                />
               ))}
             </View>
           </View>
@@ -191,14 +240,19 @@ export default function ProfileEditScreen() {
 }
 
 /** プライバシー設定トグル行 */
-function PrivacyToggle({ item, t }: { item: { label: string; desc: string; enabled: boolean }; t: ThemeTokens }) {
+function PrivacyToggle({ label, desc, enabled, onToggle, t }: {
+  label: string;
+  desc: string;
+  enabled: boolean;
+  onToggle: () => void;
+  t: ThemeTokens;
+}) {
   const { scale } = useFontSizeStore();
   const fs = getScaledFontSize(scale);
-  const [enabled, setEnabled] = useState(item.enabled);
 
   return (
     <Pressable
-      onPress={() => setEnabled(!enabled)}
+      onPress={onToggle}
       style={({ pressed }) => ({
         flexDirection: "row",
         alignItems: "center",
@@ -212,8 +266,8 @@ function PrivacyToggle({ item, t }: { item: { label: string; desc: string; enabl
       })}
     >
       <View style={{ flex: 1 }}>
-        <Text style={{ fontSize: fs.base, fontWeight: WEIGHT.semibold, color: t.text }}>{item.label}</Text>
-        <Text style={{ fontSize: fs.xs, color: t.muted, marginTop: 2 }}>{item.desc}</Text>
+        <Text style={{ fontSize: fs.base, fontWeight: WEIGHT.semibold, color: t.text }}>{label}</Text>
+        <Text style={{ fontSize: fs.xs, color: t.muted, marginTop: 2 }}>{desc}</Text>
       </View>
       <View style={{ width: 48, height: 28, borderRadius: 14, justifyContent: "center", backgroundColor: enabled ? t.accent : t.surface3 }}>
         <View style={{ position: "absolute", top: 2, width: 24, height: 24, borderRadius: 12, backgroundColor: enabled ? "#000" : "#fff", transform: [{ translateX: enabled ? 22 : 2 }], alignItems: "center", justifyContent: "center" }}>

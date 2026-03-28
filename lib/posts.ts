@@ -98,7 +98,9 @@ export async function createPost(input: {
   title: string;
   content?: string;
   image_url?: string;
+  image_urls?: string[];
   location_text?: string;
+  deadline?: string;
   lat?: number;
   lng?: number;
 }): Promise<Post> {
@@ -107,6 +109,10 @@ export async function createPost(input: {
 
   const { lat, lng, ...rest } = input;
   const insertData: Record<string, any> = { ...rest, author_id: user.id };
+  // image_url には1枚目を入れる（後方互換）
+  if (!insertData.image_url && insertData.image_urls?.length > 0) {
+    insertData.image_url = insertData.image_urls[0];
+  }
   if (lat != null && lng != null) {
     insertData.location = `POINT(${lng} ${lat})`;
   }

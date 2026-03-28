@@ -1,25 +1,38 @@
 import { useState } from "react";
 import * as ImagePicker from "expo-image-picker";
 
+const DEFAULT_MAX = 3;
+
 interface ImagePickerState {
-  /** 選択された画像のローカルURI */
-  imageUri: string | null;
+  /** 選択された画像のローカルURI一覧 */
+  images: string[];
   /** 画像選択中かどうか */
   isPicking: boolean;
+  /** 上限に達しているか */
+  isFull: boolean;
   /** ライブラリから画像を選択 */
   pickImage: () => Promise<void>;
   /** カメラで撮影 */
   takePhoto: () => Promise<void>;
-  /** 選択をクリア */
+  /** 特定の画像を削除 */
+  removeImage: (index: number) => void;
+  /** 全てクリア */
+  clearAll: () => void;
+  /** 後方互換: 最初の画像URI（null可） */
+  imageUri: string | null;
+  /** 後方互換: 全クリア */
   clear: () => void;
 }
 
-/** 画像選択フック */
-export function useImagePicker(): ImagePickerState {
-  const [imageUri, setImageUri] = useState<string | null>(null);
+/** 複数画像選択フック */
+export function useImagePicker(max = DEFAULT_MAX): ImagePickerState {
+  const [images, setImages] = useState<string[]>([]);
   const [isPicking, setIsPicking] = useState(false);
 
+  const isFull = images.length >= max;
+
   const pickImage = async () => {
+    if (isFull) return;
     setIsPicking(true);
     try {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -32,7 +45,7 @@ export function useImagePicker(): ImagePickerState {
       });
 
       if (!result.canceled && result.assets[0]) {
-        setImageUri(result.assets[0].uri);
+        setImages((prev) => [...prev, result.assets[0].uri].slice(0, max));
       }
     } finally {
       setIsPicking(false);
@@ -40,6 +53,7 @@ export function useImagePicker(): ImagePickerState {
   };
 
   const takePhoto = async () => {
+    if (isFull) return;
     setIsPicking(true);
     try {
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -51,14 +65,29 @@ export function useImagePicker(): ImagePickerState {
       });
 
       if (!result.canceled && result.assets[0]) {
-        setImageUri(result.assets[0].uri);
+        setImages((prev) => [...prev, result.assets[0].uri].slice(0, max));
       }
     } finally {
       setIsPicking(false);
     }
   };
 
-  const clear = () => setImageUri(null);
+  const removeImage = (index: number) => {
+    setImages((prev) => prev.filter((_, i) => i !== index));
+  };
 
-  return { imageUri, isPicking, pickImage, takePhoto, clear };
+  const clearAll = () => setImages([]);
+
+  return {
+    images,
+    isPicking,
+    isFull,
+    pickImage,
+    takePhoto,
+    removeImage,
+    clearAll,
+    // 後方互換
+    imageUri: images[0] ?? null,
+    clear: clearAll,
+  };
 }

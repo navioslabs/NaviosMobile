@@ -20,10 +20,9 @@ import CardActions from "./CardActions";
 
 /** カテゴリ別のグラデーション色 */
 const CAT_GRADIENTS: Record<string, [string, string, string]> = {
-  stock: ["rgba(0,212,161,0.15)", "rgba(0,0,0,0.12)", "rgba(0,0,0,0.88)"],
+  lifeline: ["rgba(0,212,161,0.15)", "rgba(0,0,0,0.12)", "rgba(0,0,0,0.88)"],
   event: ["rgba(245,166,35,0.18)", "rgba(0,0,0,0.12)", "rgba(0,0,0,0.88)"],
   help: ["rgba(240,66,92,0.18)", "rgba(0,0,0,0.12)", "rgba(0,0,0,0.88)"],
-  admin: ["rgba(139,111,192,0.18)", "rgba(0,0,0,0.12)", "rgba(0,0,0,0.88)"],
 };
 
 interface FeedPostCardProps {
@@ -31,16 +30,17 @@ interface FeedPostCardProps {
   t: ThemeTokens;
   isDark: boolean;
   featured?: boolean;
+  expired?: boolean;
 }
 
 /** 画像なし投稿用コンパクトカード */
-function CompactCard({ post, t, isDark }: { post: Post; t: ThemeTokens; isDark: boolean }) {
+function CompactCard({ post, t, isDark, expired }: { post: Post; t: ThemeTokens; isDark: boolean; expired?: boolean }) {
   const { scale } = useFontSizeStore();
   const fs = getScaledFontSize(scale);
   const catColor = CAT_CONFIG[post.category]?.color || t.accent;
 
   return (
-    <View style={{ marginHorizontal: SPACE.lg, marginBottom: SPACE.sm }}>
+    <View style={{ marginHorizontal: SPACE.lg, marginBottom: SPACE.sm, opacity: expired ? 0.5 : 1 }}>
       <Pressable
         onPress={() => router.push(`/feed/${post.id}` as any)}
         style={({ pressed }) => ({
@@ -72,10 +72,16 @@ function CompactCard({ post, t, isDark }: { post: Post; t: ThemeTokens; isDark: 
                 {distLabel(post.distance_m ?? 0)}
               </Text>
             </View>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 3, marginLeft: "auto" }}>
-              <Clock size={10} color={t.muted} />
-              <Text style={{ fontSize: fs.xxs, color: t.muted }}>{timeAgo(post.created_at)}</Text>
-            </View>
+            {expired ? (
+              <View style={{ marginLeft: "auto", backgroundColor: "#8887A020", borderRadius: RADIUS.full, paddingHorizontal: 6, paddingVertical: 2 }}>
+                <Text style={{ fontSize: fs.xxs, fontWeight: WEIGHT.bold, color: "#8887A0" }}>終了</Text>
+              </View>
+            ) : (
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 3, marginLeft: "auto" }}>
+                <Clock size={10} color={t.muted} />
+                <Text style={{ fontSize: fs.xxs, color: t.muted }}>{timeAgo(post.created_at)}</Text>
+              </View>
+            )}
           </View>
 
           {/* タイトル */}
@@ -116,18 +122,18 @@ function CompactCard({ post, t, isDark }: { post: Post; t: ThemeTokens; isDark: 
 }
 
 /** フィード投稿カード（カテゴリ別デザイン） */
-function FeedPostCard({ post, t, isDark, featured }: FeedPostCardProps) {
+function FeedPostCard({ post, t, isDark, featured, expired }: FeedPostCardProps) {
   const hasImage = !!post.image_url;
 
   // 画像なし & Featured でない → コンパクトカード
   if (!hasImage && !featured) {
-    return <CompactCard post={post} t={t} isDark={isDark} />;
+    return <CompactCard post={post} t={t} isDark={isDark} expired={expired} />;
   }
 
   const { scale } = useFontSizeStore();
   const fs = getScaledFontSize(scale);
   const catColor = CAT_CONFIG[post.category]?.color || t.accent;
-  const gradColors = CAT_GRADIENTS[post.category] || CAT_GRADIENTS.stock;
+  const gradColors = CAT_GRADIENTS[post.category] || CAT_GRADIENTS.lifeline;
 
   const card = (
     <Pressable
@@ -190,7 +196,7 @@ function FeedPostCard({ post, t, isDark, featured }: FeedPostCardProps) {
             <UrgencyBar timeLeft={calcTimeLeft(post.deadline)} subColor={t.sub} />
             {post.crowd ? <CrowdTag crowd={crowdLabel(post.crowd)} /> : null}
           </View>
-          <CardActions likes={post.likes_count} t={t} />
+          <CardActions likes={post.likes_count} t={t} targetType="post" targetId={post.id} />
         </View>
 
         {/* カテゴリ別ボトムアクセントライン */}
@@ -210,7 +216,7 @@ function FeedPostCard({ post, t, isDark, featured }: FeedPostCardProps) {
   }
 
   return (
-    <View style={{ marginHorizontal: SPACE.lg, marginBottom: SPACE.lg }}>
+    <View style={{ marginHorizontal: SPACE.lg, marginBottom: SPACE.lg, opacity: expired ? 0.5 : 1 }}>
       {card}
     </View>
   );
