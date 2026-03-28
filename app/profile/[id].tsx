@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { View, Text, ScrollView, Pressable, ActivityIndicator, RefreshControl } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { Image } from "expo-image";
@@ -9,18 +10,23 @@ import {
   Award,
   MessageCircle,
   Heart,
+  PenLine,
 } from "@/lib/icons";
 import { useProfile, useUserPosts, useUserTalks } from "@/hooks/useProfile";
 import { useUserBadges } from "@/hooks/useBadges";
+import { timeAgo } from "@/lib/adapters";
 import { useAppStyles } from "@/hooks/useAppStyles";
 import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 import CatPill from "@/components/ui/CatPill";
 import BadgeSection from "@/components/features/badges/BadgeSection";
 
 /** ユーザープロフィール画面 */
+type ProfileTab = "posts" | "talks";
+
 export default function ProfileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { s, t, fs } = useAppStyles();
+  const [activeTab, setActiveTab] = useState<ProfileTab>("posts");
 
   const userId = id ?? "";
   const { data: remoteProfile, isLoading: profileLoading, isFetching: profileFetching, refetch: refetchProfile } = useProfile(userId);
@@ -136,11 +142,42 @@ export default function ProfileScreen() {
             <BadgeSection badges={badges} t={t} />
           )}
 
-          {/* 最近の投稿 */}
-          {posts.length > 0 && (
-            <View style={{ paddingHorizontal: SPACE.xl, paddingTop: SPACE.xxl }}>
-              <Text style={[s.textSubheading, { marginBottom: SPACE.md }]}>最近の投稿</Text>
-              {posts.map((post) => (
+          {/* タブ切替 */}
+          <View style={{ flexDirection: "row", borderBottomWidth: 1, borderBottomColor: t.border }}>
+            {([
+              { id: "posts" as ProfileTab, label: "投稿", icon: PenLine, count: posts.length },
+              { id: "talks" as ProfileTab, label: "トーク", icon: MessageCircle, count: talks.length },
+            ]).map((tab) => {
+              const active = activeTab === tab.id;
+              const Icon = tab.icon;
+              return (
+                <Pressable
+                  key={tab.id}
+                  onPress={() => setActiveTab(tab.id)}
+                  style={{
+                    flex: 1,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: SPACE.xs,
+                    paddingVertical: SPACE.md,
+                    borderBottomWidth: 2,
+                    borderBottomColor: active ? t.accent : "transparent",
+                  }}
+                >
+                  <Icon size={16} color={active ? t.accent : t.muted} />
+                  <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.bold, color: active ? t.accent : t.muted }}>
+                    {tab.label} {tab.count}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          {/* 投稿タブ */}
+          {activeTab === "posts" && (
+            <View style={{ paddingHorizontal: SPACE.xl, paddingTop: SPACE.lg }}>
+              {posts.length > 0 ? posts.map((post) => (
                 <Pressable
                   key={post.id}
                   onPress={() => router.push(`/feed/${post.id}` as any)}
@@ -179,14 +216,51 @@ export default function ProfileScreen() {
                     </View>
                   </View>
                 </Pressable>
-              ))}
+              )) : (
+                <View style={{ alignItems: "center", paddingVertical: SPACE.xxxl }}>
+                  <Text style={{ fontSize: fs.sm, color: t.muted }}>まだ投稿がありません</Text>
+                </View>
+              )}
             </View>
           )}
 
-          {/* 投稿がない場合 */}
-          {posts.length === 0 && talks.length === 0 && (
-            <View style={{ alignItems: "center", paddingVertical: SPACE.xxxl, paddingHorizontal: SPACE.xl }}>
-              <Text style={{ fontSize: fs.lg, fontWeight: WEIGHT.semibold, color: t.sub }}>まだ投稿がありません</Text>
+          {/* トークタブ */}
+          {activeTab === "talks" && (
+            <View style={{ paddingHorizontal: SPACE.xl, paddingTop: SPACE.lg }}>
+              {talks.length > 0 ? talks.map((talk) => (
+                <Pressable
+                  key={talk.id}
+                  onPress={() => router.push(`/talk-detail/${talk.id}` as any)}
+                  style={({ pressed }) => ({
+                    padding: SPACE.md,
+                    marginBottom: SPACE.sm,
+                    borderRadius: RADIUS.md,
+                    backgroundColor: t.surface,
+                    borderWidth: 1,
+                    borderColor: t.border,
+                    opacity: pressed ? 0.7 : 1,
+                  })}
+                >
+                  <Text style={{ fontSize: fs.base, color: t.text, lineHeight: 20 }} numberOfLines={3}>
+                    {talk.message}
+                  </Text>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.lg, marginTop: SPACE.sm }}>
+                    <Text style={{ fontSize: fs.xxs, color: t.muted }}>{timeAgo(talk.created_at)}</Text>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.xs }}>
+                      <Heart size={12} color={t.muted} />
+                      <Text style={{ fontSize: fs.xxs, color: t.muted }}>{talk.likes_count}</Text>
+                    </View>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.xs }}>
+                      <MessageCircle size={12} color={t.muted} />
+                      <Text style={{ fontSize: fs.xxs, color: t.muted }}>{talk.replies_count}</Text>
+                    </View>
+                  </View>
+                </Pressable>
+              )) : (
+                <View style={{ alignItems: "center", paddingVertical: SPACE.xxxl }}>
+                  <Text style={{ fontSize: fs.sm, color: t.muted }}>まだトークがありません</Text>
+                </View>
+              )}
             </View>
           )}
         </ScrollView>

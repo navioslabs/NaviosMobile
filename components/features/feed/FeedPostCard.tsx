@@ -16,6 +16,7 @@ import UrgencyBar from "@/components/ui/UrgencyBar";
 import CrowdTag from "@/components/ui/CrowdTag";
 import FeaturedGlow from "@/components/ui/FeaturedGlow";
 import CatPill from "@/components/ui/CatPill";
+import CatPlaceholder from "@/components/ui/CatPlaceholder";
 import CardHeader from "./CardHeader";
 import CardActions from "./CardActions";
 
@@ -35,7 +36,7 @@ interface FeedPostCardProps {
   onLongPress?: () => void;
 }
 
-/** 画像なし投稿用コンパクトカード */
+/** 画像なし投稿用カード（カテゴリアイコン+グラデーション背景） */
 function CompactCard({ post, t, isDark, expired, onLongPress }: { post: Post; t: ThemeTokens; isDark: boolean; expired?: boolean; onLongPress?: () => void }) {
   const { scale } = useFontSizeStore();
   const fs = getScaledFontSize(scale);
@@ -63,7 +64,6 @@ function CompactCard({ post, t, isDark, expired, onLongPress }: { post: Post; t:
         accessibilityLabel={`${post.title}、${CAT_CONFIG[post.category]?.label}、${distLabel(post.distance_m ?? 0)}`}
         accessibilityRole="button"
         style={({ pressed }) => ({
-          flexDirection: "row" as const,
           borderRadius: RADIUS.lg,
           overflow: "hidden" as const,
           backgroundColor: t.surface,
@@ -76,29 +76,31 @@ function CompactCard({ post, t, isDark, expired, onLongPress }: { post: Post; t:
           elevation: 2,
         })}
       >
-        {/* カテゴリカラーのアクセントライン */}
-        <View style={{ width: 4, backgroundColor: catColor }} />
+        {/* カテゴリプレースホルダー（アイコン+グラデーション） */}
+        <View style={{ height: 100, borderTopLeftRadius: RADIUS.lg, borderTopRightRadius: RADIUS.lg, overflow: "hidden" }}>
+          <CatPlaceholder category={post.category} size="md" />
+          {/* 距離バッジ */}
+          <View style={{ position: "absolute", right: SPACE.sm, top: SPACE.sm, flexDirection: "row", alignItems: "center", gap: 3, backgroundColor: "rgba(0,0,0,0.35)", borderRadius: RADIUS.full, paddingHorizontal: SPACE.sm, paddingVertical: 3 }}>
+            <Navigation size={10} color="#fff" />
+            <Text style={{ fontSize: fs.xxs, fontWeight: WEIGHT.bold, color: "#fff" }}>
+              {distLabel(post.distance_m ?? 0)}
+            </Text>
+          </View>
+          {expired && (
+            <View style={{ position: "absolute", left: SPACE.sm, top: SPACE.sm, backgroundColor: "#8887A0CC", borderRadius: RADIUS.full, paddingHorizontal: 6, paddingVertical: 2 }}>
+              <Text style={{ fontSize: fs.xxs, fontWeight: WEIGHT.bold, color: "#fff" }}>終了</Text>
+            </View>
+          )}
+        </View>
 
-        <View style={{ flex: 1, padding: SPACE.md, gap: SPACE.sm }}>
-          {/* 上段: カテゴリ + 距離 + 時刻 */}
+        <View style={{ padding: SPACE.md, gap: SPACE.sm }}>
+          {/* カテゴリ + 時刻 */}
           <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.sm }}>
             <CatPill cat={post.category} small />
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
-              <Navigation size={10} color={catColor} />
-              <Text style={{ fontSize: fs.xxs, fontWeight: WEIGHT.bold, color: catColor }}>
-                {distLabel(post.distance_m ?? 0)}
-              </Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 3, marginLeft: "auto" }}>
+              <Clock size={10} color={t.muted} />
+              <Text style={{ fontSize: fs.xxs, color: t.muted }}>{timeAgo(post.created_at)}</Text>
             </View>
-            {expired ? (
-              <View style={{ marginLeft: "auto", backgroundColor: "#8887A020", borderRadius: RADIUS.full, paddingHorizontal: 6, paddingVertical: 2 }}>
-                <Text style={{ fontSize: fs.xxs, fontWeight: WEIGHT.bold, color: "#8887A0" }}>終了</Text>
-              </View>
-            ) : (
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 3, marginLeft: "auto" }}>
-                <Clock size={10} color={t.muted} />
-                <Text style={{ fontSize: fs.xxs, color: t.muted }}>{timeAgo(post.created_at)}</Text>
-              </View>
-            )}
           </View>
 
           {/* タイトル */}
@@ -129,7 +131,10 @@ function CompactCard({ post, t, isDark, expired, onLongPress }: { post: Post; t:
                 <Heart size={14} color={t.muted} />
                 <Text style={{ fontSize: fs.xs, color: t.muted }}>{post.likes_count}</Text>
               </View>
-              <MessageSquare size={14} color={t.muted} />
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
+                <MessageSquare size={14} color={t.muted} />
+                <Text style={{ fontSize: fs.xs, color: t.muted }}>{post.comments_count || ""}</Text>
+              </View>
             </View>
           </View>
         </View>
@@ -194,7 +199,7 @@ function FeedPostCard({ post, t, isDark, featured, expired, onLongPress }: FeedP
             )}
           </>
         ) : (
-          <View style={[StyleSheet.absoluteFill, { backgroundColor: catColor + "15" }]} />
+          <CatPlaceholder category={post.category} size="lg" />
         )}
         {/* カテゴリ別グラデーションオーバーレイ */}
         <LinearGradient

@@ -80,7 +80,7 @@ const fmtDeadline = (d: Date): string => {
 
 /** 新規投稿画面 */
 export default function PostScreen() {
-  const { s, t, fs } = useAppStyles();
+  const { s, t, fs, isDark } = useAppStyles();
   const createPostMutation = useCreatePost();
   const { images, isFull, pickImage, takePhoto, removeImage } = useImagePicker();
   const { lat, lng, granted } = useLocation();
@@ -303,15 +303,28 @@ export default function PostScreen() {
         )}
         {errors.deadline && <Text style={{ fontSize: fs.xxs, color: t.red, marginTop: SPACE.xs }}>{errors.deadline.message}</Text>}
         {showPicker && (
-          <DateTimePicker
-            value={deadline ?? new Date()}
-            mode="datetime"
-            display={Platform.OS === "ios" ? "spinner" : "default"}
-            minimumDate={new Date()}
-            maximumDate={maxDeadline()}
-            onChange={handleDateChange}
-            locale="ja"
-          />
+          <View style={{
+            marginTop: SPACE.sm,
+            borderRadius: RADIUS.lg,
+            backgroundColor: t.surface,
+            borderWidth: 1,
+            borderColor: t.border,
+            overflow: "hidden",
+          }}>
+            <DateTimePicker
+              value={deadline ?? new Date()}
+              mode="datetime"
+              display={Platform.OS === "ios" ? "spinner" : "default"}
+              minimumDate={new Date()}
+              maximumDate={maxDeadline()}
+              onChange={handleDateChange}
+              locale="ja"
+              themeVariant={isDark ? "dark" : "light"}
+              textColor={t.text}
+              accentColor={t.accent}
+              style={{ backgroundColor: t.surface }}
+            />
+          </View>
         )}
       </View>
 

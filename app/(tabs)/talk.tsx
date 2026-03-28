@@ -1,8 +1,8 @@
-import { FlatList, View, Text, RefreshControl } from "react-native";
+import { FlatList, View, Text, RefreshControl, Pressable } from "react-native";
 import { useCallback, useEffect } from "react";
 import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withSequence, withTiming, Easing } from "react-native-reanimated";
 import { useIsFocused } from "@react-navigation/native";
-import { Radio } from "@/lib/icons";
+import { Radio, MapPin, MessageCircle } from "@/lib/icons";
 import { useTalks } from "@/hooks/useTalks";
 import { useBadgeStore } from "@/stores/badgeStore";
 import type { Talk } from "@/types";
@@ -20,24 +20,57 @@ export default function TalkScreen() {
   const { data: serverTalks, isLoading: queryLoading, isFetching, refetch } = useTalks();
   const talks: Talk[] = (serverTalks ?? []).filter((t) => t?.id);
 
-  // タブフォーカス時に未読をクリア
   useEffect(() => {
     if (isFocused) clearTalkUnread();
   }, [isFocused, clearTalkUnread]);
 
   const renderItem = useCallback(
     ({ item }: { item: Talk }) => <TalkItem talk={item} t={t} />,
-    [t]
+    [t],
   );
 
+  // 統計
+  const hallOfFameCount = talks.filter((t) => t.is_hall_of_fame).length;
+
   const ListHeader = (
-    <View style={{ paddingHorizontal: SPACE.xl, paddingTop: SPACE.lg, paddingBottom: SPACE.md, borderBottomWidth: 1, borderBottomColor: t.border }}>
-      <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.sm }}>
-        <Text style={s.textScreenTitle}>タイムライン</Text>
+    <View style={{ paddingHorizontal: SPACE.xl, paddingTop: SPACE.lg, paddingBottom: SPACE.md }}>
+      {/* タイトル + LIVE */}
+      <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.sm, marginBottom: SPACE.sm }}>
+        <Text style={s.textScreenTitle}>この街の声</Text>
         <LiveBadge t={t} />
       </View>
-      <Text style={{ fontSize: fs.sm, color: t.sub, marginTop: SPACE.xs }}>
-        近くの人のリアルタイムな声 • {talks.length}件
+
+      {/* 統計チップ */}
+      <View style={{ flexDirection: "row", gap: SPACE.sm }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: t.surface, borderRadius: RADIUS.full, paddingHorizontal: SPACE.md, paddingVertical: SPACE.xs + 1, borderWidth: 1, borderColor: t.border }}>
+          <MessageCircle size={12} color={t.accent} />
+          <Text style={{ fontSize: fs.xxs, fontWeight: WEIGHT.bold, color: t.text }}>{talks.length}件</Text>
+        </View>
+        {hallOfFameCount > 0 && (
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "#FFD700" + "10", borderRadius: RADIUS.full, paddingHorizontal: SPACE.md, paddingVertical: SPACE.xs + 1, borderWidth: 1, borderColor: "#FFD700" + "30" }}>
+            <Text style={{ fontSize: 10 }}>🏆</Text>
+            <Text style={{ fontSize: fs.xxs, fontWeight: WEIGHT.bold, color: "#DAA520" }}>{hallOfFameCount}件の殿堂入り</Text>
+          </View>
+        )}
+      </View>
+
+      {/* ガイドテキスト */}
+      <Text style={{ fontSize: fs.xs, color: t.muted, marginTop: SPACE.sm }}>
+        24時間で消えるつぶやき。10いいねで殿堂入り。
+      </Text>
+    </View>
+  );
+
+  const EmptyState = (
+    <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: SPACE.xl, paddingVertical: SPACE.xxxl * 2 }}>
+      <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: t.accent + "15", alignItems: "center", justifyContent: "center", marginBottom: SPACE.lg }}>
+        <MessageCircle size={28} color={t.accent} />
+      </View>
+      <Text style={{ fontSize: fs.lg, fontWeight: WEIGHT.bold, color: t.text, marginBottom: SPACE.sm }}>
+        まだ声がありません
+      </Text>
+      <Text style={{ fontSize: fs.sm, color: t.sub, textAlign: "center", lineHeight: 20 }}>
+        この場所で最初のひとことを{"\n"}投稿してみましょう
       </Text>
     </View>
   );
@@ -47,7 +80,7 @@ export default function TalkScreen() {
       {talks.length === 0 && !queryLoading ? (
         <>
           {ListHeader}
-          <StateView t={t} type="empty" message="まだ投稿がありません。最初のひとことを投稿してみましょう" />
+          {EmptyState}
         </>
       ) : (
         <FlatList
@@ -57,6 +90,7 @@ export default function TalkScreen() {
           showsVerticalScrollIndicator={false}
           ListHeaderComponent={ListHeader}
           contentContainerStyle={{ paddingBottom: 100 }}
+          ItemSeparatorComponent={() => <View style={{ height: 1, backgroundColor: t.border, marginLeft: SPACE.lg + 32 + SPACE.sm, marginRight: SPACE.lg }} />}
           refreshControl={
             <RefreshControl
               refreshing={isFetching}

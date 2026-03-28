@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, ScrollView, Pressable, StyleSheet, ActivityIndicator, RefreshControl, Alert, Share as RNShare } from "react-native";
+import { View, Text, ScrollView, TextInput, Pressable, StyleSheet, ActivityIndicator, RefreshControl, Alert, Share as RNShare } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
@@ -14,12 +14,16 @@ import {
   Ellipsis,
   Heart,
   Trash2,
+  MessageCircle,
+  Send,
 } from "@/lib/icons";
+import { LinearGradient as SendGradient } from "expo-linear-gradient";
 import ReportModal from "@/components/ui/ReportModal";
 import ProfilePopover from "@/components/ui/ProfilePopover";
 import { CAT_CONFIG } from "@/constants/categories";
 import { useThemeStore } from "@/stores/themeStore";
 import { usePost, useDeletePost } from "@/hooks/usePosts";
+import { useComments, useCreateComment } from "@/hooks/useComments";
 import { useToggleLike, useIsLiked } from "@/hooks/useLikes";
 import { useAuth } from "@/hooks/useAuth";
 import { timeAgo, calcTimeLeft } from "@/lib/adapters";
@@ -30,6 +34,7 @@ import { useGuestGuard } from "@/hooks/useGuestGuard";
 import { useToastStore } from "@/stores/toastStore";
 import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 import CatPill from "@/components/ui/CatPill";
+import CatPlaceholder from "@/components/ui/CatPlaceholder";
 import ImageGallery from "@/components/ui/ImageGallery";
 
 /** 徒歩時間の概算（80m/分） */
@@ -69,6 +74,9 @@ export default function FeedDetailScreen() {
   const deletePostMutation = useDeletePost();
   const [showReport, setShowReport] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [commentText, setCommentText] = useState("");
+  const { data: comments = [] } = useComments(id!);
+  const createCommentMutation = useCreateComment(id!);
 
   const guard = useGuestGuard();
   const toast = useToastStore((s) => s.show);
@@ -138,15 +146,18 @@ export default function FeedDetailScreen() {
         {/* ═══ ヒーロー画像 ═══ */}
         <View style={{ position: "relative", height: 260 }}>
           {post.image_urls && post.image_urls.length > 0 ? (
-            <ImageGallery urls={post.image_urls} height={260} t={t} />
+            <>
+              <ImageGallery urls={post.image_urls} height={260} t={t} />
+              <LinearGradient colors={HERO_GRADIENTS[post.category] ?? HERO_GRADIENTS.lifeline} locations={[0, 0.4, 1]} style={StyleSheet.absoluteFill} pointerEvents="none" />
+            </>
+          ) : post.image_url ? (
+            <>
+              <Image source={{ uri: post.image_url }} style={StyleSheet.absoluteFill} contentFit="cover" />
+              <LinearGradient colors={HERO_GRADIENTS[post.category] ?? HERO_GRADIENTS.lifeline} locations={[0, 0.4, 1]} style={StyleSheet.absoluteFill} pointerEvents="none" />
+            </>
           ) : (
-            <Image source={{ uri: post.image_url ?? undefined }} style={StyleSheet.absoluteFill} contentFit="cover" />
+            <CatPlaceholder category={post.category} size="lg" />
           )}
-          <LinearGradient
-            colors={HERO_GRADIENTS[post.category] ?? HERO_GRADIENTS.lifeline}
-            locations={[0, 0.4, 1]}
-            style={StyleSheet.absoluteFill}
-          />
 
           {/* 戻るボタン（左上） */}
           <Pressable
@@ -322,19 +333,27 @@ export default function FeedDetailScreen() {
             </View>
           )}
 
-          {/* ═══ いいね + 削除 アクションバー ═══ */}
+          {/* ═══ アクションバー ═══ */}
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: SPACE.md, paddingTop: SPACE.lg, borderTopWidth: 1, borderTopColor: t.border }}>
-            <Pressable
-              onPress={handleLike}
-              accessibilityLabel={isLiked ? `いいね済み、${post.likes_count}件` : `いいねする、${post.likes_count}件`}
-              accessibilityRole="button"
-              style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: SPACE.sm, opacity: pressed ? 0.7 : 1 })}
-            >
-              <Heart size={22} fill={isLiked ? t.red : "none"} color={isLiked ? t.red : t.sub} />
-              <Text style={{ fontSize: fs.base, fontWeight: WEIGHT.semibold, color: isLiked ? t.red : t.sub }}>
-                {post.likes_count}
-              </Text>
-            </Pressable>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.xl }}>
+              <Pressable
+                onPress={handleLike}
+                accessibilityLabel={isLiked ? `いいね済み、${post.likes_count}件` : `いいねする、${post.likes_count}件`}
+                accessibilityRole="button"
+                style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: SPACE.sm, minHeight: 44, opacity: pressed ? 0.7 : 1 })}
+              >
+                <Heart size={22} fill={isLiked ? t.red : "none"} color={isLiked ? t.red : t.sub} />
+                <Text style={{ fontSize: fs.base, fontWeight: WEIGHT.semibold, color: isLiked ? t.red : t.sub }}>
+                  {post.likes_count}
+                </Text>
+              </Pressable>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.sm }}>
+                <MessageCircle size={20} color={t.sub} />
+                <Text style={{ fontSize: fs.base, fontWeight: WEIGHT.semibold, color: t.sub }}>
+                  {comments.length}
+                </Text>
+              </View>
+            </View>
 
             {isOwner && (
               <Pressable
@@ -350,8 +369,70 @@ export default function FeedDetailScreen() {
           </View>
         </View>
 
-        <View style={{ height: 40 }} />
+        {/* ═══ コメントセクション ═══ */}
+        <View style={{ paddingHorizontal: SPACE.xl, paddingTop: SPACE.lg, borderTopWidth: 1, borderTopColor: t.border }}>
+          <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.bold, color: t.sub, marginBottom: SPACE.md }}>
+            コメント {comments.length}件
+          </Text>
+
+          {comments.map((c, index) => (
+            <View key={c.id} style={{ flexDirection: "row", gap: SPACE.sm, marginBottom: SPACE.md, paddingBottom: SPACE.md, borderBottomWidth: index < comments.length - 1 ? 1 : 0, borderBottomColor: t.border }}>
+              <Pressable onPress={() => router.push(`/profile/${c.author_id}` as any)}>
+                <Image source={{ uri: c.author?.avatar_url ?? undefined }} style={{ width: 32, height: 32, borderRadius: 16 }} contentFit="cover" />
+              </Pressable>
+              <View style={{ flex: 1 }}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.sm, marginBottom: 2 }}>
+                  <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.bold, color: t.text }}>{c.author?.display_name ?? "匿名"}</Text>
+                  <Text style={{ fontSize: fs.xxs, color: t.muted }}>{timeAgo(c.created_at)}</Text>
+                </View>
+                <Text style={{ fontSize: fs.base, color: t.text, lineHeight: 20 }}>{c.body}</Text>
+              </View>
+            </View>
+          ))}
+
+          {comments.length === 0 && (
+            <Text style={{ fontSize: fs.sm, color: t.muted, textAlign: "center", paddingVertical: SPACE.lg }}>
+              まだコメントがありません
+            </Text>
+          )}
+        </View>
+
+        <View style={{ height: 80 }} />
       </ScrollView>
+
+      {/* コメント入力バー */}
+      <View style={{ position: "absolute", bottom: 0, left: 0, right: 0, flexDirection: "row", alignItems: "center", gap: SPACE.sm, paddingHorizontal: SPACE.lg, paddingVertical: SPACE.md, paddingBottom: 34, backgroundColor: t.surface, borderTopWidth: 1, borderTopColor: t.border }}>
+        <TextInput
+          value={commentText}
+          onChangeText={setCommentText}
+          placeholder="コメントを入力..."
+          placeholderTextColor={t.muted}
+          style={{ flex: 1, fontSize: fs.base, color: t.text, backgroundColor: t.surface2, borderRadius: RADIUS.full, paddingHorizontal: SPACE.lg, paddingVertical: SPACE.sm + 2, borderWidth: 1, borderColor: t.border }}
+        />
+        <Pressable
+          onPress={() => {
+            if (commentText.trim().length === 0) return;
+            guard(async () => {
+              try {
+                await createCommentMutation.mutateAsync(commentText.trim());
+                setCommentText("");
+              } catch (e: unknown) {
+                toast(getUserMessage(e), "error");
+              }
+            }, "コメント");
+          }}
+          style={({ pressed }) => ({ opacity: pressed && commentText.length > 0 ? 0.7 : 1 })}
+        >
+          <SendGradient
+            colors={commentText.trim().length > 0 ? [t.accent, t.blue] : [t.surface2, t.surface2]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{ width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" }}
+          >
+            <Send size={18} color={commentText.trim().length > 0 ? "#000" : t.muted} />
+          </SendGradient>
+        </Pressable>
+      </View>
 
       <ReportModal
         visible={showReport}

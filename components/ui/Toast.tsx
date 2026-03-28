@@ -1,30 +1,45 @@
 import { useEffect } from "react";
-import { Text, Pressable } from "react-native";
-import Animated, { useSharedValue, useAnimatedStyle, withTiming, withDelay, runOnJS } from "react-native-reanimated";
+import { Text, Pressable, useWindowDimensions } from "react-native";
+import Animated, { useSharedValue, useAnimatedStyle, withSpring, withDelay, withTiming, withSequence, runOnJS } from "react-native-reanimated";
 import { AlertCircle, Check, X } from "@/lib/icons";
 import { useToastStore } from "@/stores/toastStore";
 import { useAppStyles } from "@/hooks/useAppStyles";
 import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 
-/** グローバルトースト通知 */
+/** グローバルトースト通知（横からポンッ） */
 export default function Toast() {
   const { message, type, visible, hide } = useToastStore();
   const { t, fs } = useAppStyles();
-  const translateY = useSharedValue(-100);
+  const { width } = useWindowDimensions();
+  const translateX = useSharedValue(width);
+  const scale = useSharedValue(0.8);
 
   useEffect(() => {
     if (visible) {
-      translateY.value = withTiming(0, { duration: 250 });
-      // 3秒後に自動非表示
-      translateY.value = withDelay(
-        3000,
-        withTiming(-100, { duration: 200 }, () => runOnJS(hide)()),
+      // 右からスライドイン + バウンス
+      translateX.value = withSpring(0, { damping: 16, stiffness: 180 });
+      scale.value = withSequence(
+        withSpring(1.05, { damping: 12, stiffness: 200 }),
+        withSpring(1, { damping: 14, stiffness: 150 }),
       );
+      // 3秒後に右へスライドアウト
+      translateX.value = withDelay(
+        3000,
+        withTiming(width, { duration: 250 }, () => {
+          runOnJS(hide)();
+        }),
+      );
+    } else {
+      translateX.value = width;
+      scale.value = 0.8;
     }
   }, [visible, message]);
 
   const animStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: translateY.value }],
+    transform: [
+      { translateX: translateX.value },
+      { scale: scale.value },
+    ],
   }));
 
   if (!visible) return null;
@@ -54,6 +69,11 @@ export default function Toast() {
           backgroundColor: bgColor,
           borderWidth: 1,
           borderColor: borderColor,
+          shadowColor: "#000",
+          shadowOffset: { width: -2, height: 4 },
+          shadowOpacity: 0.15,
+          shadowRadius: 12,
+          elevation: 6,
         },
       ]}
     >
@@ -63,7 +83,7 @@ export default function Toast() {
       </Text>
       <Pressable
         onPress={() => {
-          translateY.value = withTiming(-100, { duration: 150 }, () => runOnJS(hide)());
+          translateX.value = withTiming(width, { duration: 200 }, () => runOnJS(hide)());
         }}
         hitSlop={8}
       >

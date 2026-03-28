@@ -11,6 +11,7 @@ import OnboardingTour from "@/components/ui/OnboardingTour";
 import GuestLoginSheet from "@/components/ui/GuestLoginSheet";
 import Toast from "@/components/ui/Toast";
 import { useRealtimeTalks } from "@/hooks/useRealtimeTalks";
+import { useRealtimeNotifications } from "@/hooks/useNotifications";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -32,6 +33,7 @@ function AppContent() {
   const { isDark } = useThemeStore();
   const t = makeTokens(isDark);
   useRealtimeTalks();
+  useRealtimeNotifications();
 
   return (
     <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>

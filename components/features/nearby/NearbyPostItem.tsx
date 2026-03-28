@@ -12,6 +12,7 @@ import { distLabel } from "@/lib/utils";
 import { WEIGHT, SPACE, RADIUS, getScaledFontSize } from "@/lib/styles";
 import { useFontSizeStore } from "@/stores/fontSizeStore";
 import CatPill from "@/components/ui/CatPill";
+import CatPlaceholder from "@/components/ui/CatPlaceholder";
 import MatchBadge from "@/components/ui/MatchBadge";
 import FeaturedGlow from "@/components/ui/FeaturedGlow";
 
@@ -53,7 +54,11 @@ function NearbyPostItem({ post, t, featured, isDark = true, index = 0, onLongPre
         })}
       >
         <View style={{ position: "relative", height: 180 }}>
-          <Image source={{ uri: post.image_url ?? "" }} style={{ width: "100%", height: "100%" }} contentFit="cover" />
+          {post.image_url ? (
+            <Image source={{ uri: post.image_url }} style={{ width: "100%", height: "100%" }} contentFit="cover" />
+          ) : (
+            <CatPlaceholder category={post.category} size="md" />
+          )}
           <LinearGradient
             colors={["transparent", "rgba(0,0,0,0.7)"]}
             style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 100 }}
@@ -127,7 +132,13 @@ function NearbyPostItem({ post, t, featured, isDark = true, index = 0, onLongPre
 
       <View style={{ flex: 1, flexDirection: "row", gap: SPACE.md, padding: SPACE.md }}>
         <View style={{ position: "relative" }}>
-          <Image source={{ uri: post.image_url ?? "" }} style={{ width: 68, height: 68, borderRadius: RADIUS.sm }} contentFit="cover" />
+          {post.image_url ? (
+            <Image source={{ uri: post.image_url }} style={{ width: 68, height: 68, borderRadius: RADIUS.sm }} contentFit="cover" />
+          ) : (
+            <View style={{ width: 68, height: 68, borderRadius: RADIUS.sm, overflow: "hidden" }}>
+              <CatPlaceholder category={post.category} size="sm" />
+            </View>
+          )}
           <View style={{ position: "absolute", top: -4, right: -4 }}>
             <MatchBadge score={matchScore} />
           </View>

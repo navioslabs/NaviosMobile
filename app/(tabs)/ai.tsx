@@ -15,6 +15,7 @@ import PulseEventCard from "@/components/features/ai/PulseEventCard";
 import SuggestionChips from "@/components/features/ai/SuggestionChips";
 import TrendingSection from "@/components/features/ai/TrendingSection";
 import QuickActions from "@/components/features/ai/QuickActions";
+import WeeklyRanking from "@/components/features/ai/WeeklyRanking";
 import StateView from "@/components/ui/StateView";
 import { useSearchHistory } from "@/hooks/useSearchHistory";
 
@@ -84,6 +85,16 @@ export default function AiScreen() {
         return aTime - bTime;
       })
       .slice(0, 4);
+  }, [feedPosts]);
+
+  /** 週間ランキング: 過去7日間でいいね数上位5件 */
+  const weeklyRanking = useMemo(() => {
+    const posts = feedPosts;
+    const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    return [...posts]
+      .filter((p) => new Date(p.created_at).getTime() > oneWeekAgo && p.likes_count > 0)
+      .sort((a, b) => b.likes_count - a.likes_count)
+      .slice(0, 5);
   }, [feedPosts]);
 
   /** 急上昇 */
@@ -362,6 +373,9 @@ export default function AiScreen() {
               </View>
             </View>
           )}
+
+          {/* 週間ランキング */}
+          <WeeklyRanking posts={weeklyRanking} t={t} />
 
           {/* おすすめフィード */}
           <View style={{ marginBottom: SPACE.xl }}>

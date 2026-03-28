@@ -6,7 +6,7 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
 } from "react-native-reanimated";
-import { PenLine, MessageCircle, Sparkles, Radio, Settings } from "@/lib/icons";
+import { MessageCircle, Sparkles, Radio, Settings } from "@/lib/icons";
 import { makeTokens } from "@/constants/theme";
 import { useThemeStore } from "@/stores/themeStore";
 import { useBadgeStore } from "@/stores/badgeStore";
@@ -61,21 +61,11 @@ function BadgeIcon({ icon: Icon, color, size, count }: { icon: any; color: strin
   );
 }
 
-/** ドットバッジ付きアイコン */
-function DotIcon({ icon: Icon, color, size, show }: { icon: any; color: string; size: number; show: boolean }) {
-  return (
-    <View style={{ width: size + 12, height: size + 4, alignItems: "center", justifyContent: "center" }}>
-      <Icon size={size} color={color} />
-      {show && <View style={styles.dot} />}
-    </View>
-  );
-}
-
 /** タブナビゲーションレイアウト */
 export default function TabLayout() {
   const { isDark } = useThemeStore();
   const t = makeTokens(isDark);
-  const { talkUnread, feedHasNew } = useBadgeStore();
+  const { talkUnread } = useBadgeStore();
 
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
@@ -97,7 +87,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="index"
           options={{
-            title: "ちかく",
+            title: "ホーム",
             tabBarIcon: ({ color, size }) => <Radio size={size} color={color} />,
           }}
         />
@@ -117,10 +107,7 @@ export default function TabLayout() {
         />
         <Tabs.Screen
           name="feed"
-          options={{
-            title: "フィード",
-            tabBarIcon: ({ color, size }) => <DotIcon icon={PenLine} color={color} size={size} show={feedHasNew} />,
-          }}
+          options={{ href: null }}
         />
         <Tabs.Screen
           name="settings"
@@ -160,14 +147,5 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: "800",
     color: "#fff",
-  },
-  dot: {
-    position: "absolute",
-    top: 0,
-    right: 2,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "#00D4A1",
   },
 });

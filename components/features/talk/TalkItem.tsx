@@ -1,15 +1,16 @@
 import { memo } from "react";
 import { View, Text, Pressable } from "react-native";
-import Animated, { FadeInUp } from "react-native-reanimated";
+import Animated, { SlideInLeft } from "react-native-reanimated";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import { MapPin, MessageCircle, Heart, Share } from "@/lib/icons";
+import { MapPin, MessageCircle, Heart, Navigation } from "@/lib/icons";
 import type { ThemeTokens } from "@/constants/theme";
 import type { Talk } from "@/types";
 import { timeAgo } from "@/lib/adapters";
 import { WEIGHT, SPACE, RADIUS, getScaledFontSize } from "@/lib/styles";
 import { useFontSizeStore } from "@/stores/fontSizeStore";
 import { useToggleLike, useIsLiked } from "@/hooks/useLikes";
+import { useGuestGuard } from "@/hooks/useGuestGuard";
 import { useUserTopBadge } from "@/hooks/useBadges";
 import { HALL_OF_FAME_THRESHOLD } from "@/constants/ghost";
 import GhostCountdown from "./GhostCountdown";
@@ -21,52 +22,68 @@ interface TalkItemProps {
   t: ThemeTokens;
 }
 
-/** Talk タイムラインアイテム（SNSフロー型） */
+/** Talk タイムラインアイテム（吹き出し型） */
 function TalkItem({ talk, t }: TalkItemProps) {
   const { scale } = useFontSizeStore();
   const fs = getScaledFontSize(scale);
   const { data: isLiked = false } = useIsLiked("talk", talk.id);
   const toggleLike = useToggleLike();
+  const guard = useGuestGuard();
   const { data: topBadge } = useUserTopBadge(talk.author_id);
 
   if (!talk?.id) return null;
 
   const handleLike = () => {
-    toggleLike.mutate({ targetType: "talk", targetId: talk.id });
+    guard(() => toggleLike.mutate({ targetType: "talk", targetId: talk.id }), "いいね");
   };
 
+  const isHallOfFame = !!talk.is_hall_of_fame;
   const likesRemaining = HALL_OF_FAME_THRESHOLD - talk.likes_count;
-  const showHint = !talk.is_hall_of_fame && likesRemaining > 0 && likesRemaining <= 5;
+  const showHint = !isHallOfFame && likesRemaining > 0 && likesRemaining <= 5;
+
+  // ゴースト: 残り時間に応じた透明度（24h → 0h で 1.0 → 0.4）
+  const ghostOpacity = isHallOfFame ? 1 : (() => {
+    const age = (Date.now() - new Date(talk.created_at).getTime()) / (1000 * 60 * 60);
+    return Math.max(0.4, 1 - (age / 24) * 0.6);
+  })();
 
   return (
-    <Animated.View entering={FadeInUp.duration(300).springify()}>
+    <Animated.View entering={SlideInLeft.duration(400).damping(18).stiffness(120)}>
       <Pressable
         onPress={() => router.push(`/talk-detail/${talk.id}` as any)}
+        accessibilityLabel={`${talk.author?.display_name ?? "匿名"}のトーク: ${talk.message}`}
+        accessibilityRole="button"
         style={({ pressed }) => ({
-          paddingHorizontal: SPACE.xl,
-          paddingVertical: SPACE.md,
-          opacity: pressed ? 0.9 : 1,
-          borderBottomWidth: 1,
-          borderBottomColor: t.border,
-          ...(talk.is_hall_of_fame ? {
-            borderLeftWidth: 3,
-            borderLeftColor: "#FFD700" + "60",
-          } : {}),
+          paddingHorizontal: SPACE.lg,
+          paddingVertical: SPACE.sm + 2,
+          opacity: pressed ? 0.85 : ghostOpacity,
         })}
       >
-        {/* ヘッダー: アバター + 名前 + 時刻 + 位置 */}
-        <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.sm }}>
-          <Pressable onPress={() => router.push(`/profile/${talk.author_id}` as any)}>
+        <View style={{ flexDirection: "row", gap: SPACE.sm }}>
+          {/* アバター（小さめ） */}
+          <Pressable
+            onPress={() => router.push(`/profile/${talk.author_id}` as any)}
+            style={{ marginTop: 2 }}
+          >
             <Image
               source={{ uri: talk.author?.avatar_url ?? "https://i.pravatar.cc/100" }}
-              style={{ width: 40, height: 40, borderRadius: 20 }}
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: 16,
+                borderWidth: isHallOfFame ? 2 : 0,
+                borderColor: isHallOfFame ? "#FFD700" : "transparent",
+              }}
               contentFit="cover"
             />
           </Pressable>
+
+          {/* 吹き出しカード */}
           <View style={{ flex: 1 }}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-              <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.bold, color: t.text }}>
-                {talk.author?.display_name ?? "ユーザー"}
+            {/* 名前 + バッジ行 */}
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 5, marginBottom: 3 }}>
+              <Text style={{ fontSize: fs.xs, fontWeight: WEIGHT.bold, color: t.text }}>
+                {talk.author?.display_name ?? "匿名"}
               </Text>
               {talk.author?.is_verified && (
                 <View style={{ width: 14, height: 14, borderRadius: 7, backgroundColor: t.blue, alignItems: "center", justifyContent: "center" }}>
@@ -76,78 +93,91 @@ function TalkItem({ talk, t }: TalkItemProps) {
               {topBadge && (
                 <BadgePill badgeType={topBadge.badge_type as any} areaName={topBadge.area_name} t={t} compact />
               )}
-              <Text style={{ fontSize: fs.xxs, color: t.muted }}>{timeAgo(talk.created_at)}</Text>
             </View>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.sm, marginTop: 2 }}>
-              {talk.location_text ? (
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
-                  <MapPin size={10} color={t.accent} />
-                  <Text style={{ fontSize: fs.xxs, color: t.accent }}>{talk.location_text}</Text>
+
+            {/* 吹き出し本体 */}
+            <View style={{
+              backgroundColor: isHallOfFame ? "#FFD700" + "10" : t.surface,
+              borderRadius: RADIUS.xl,
+              borderTopLeftRadius: SPACE.xs,
+              borderWidth: isHallOfFame ? 1.5 : 1,
+              borderColor: isHallOfFame ? "#FFD700" + "40" : t.border,
+              padding: SPACE.md,
+              ...(isHallOfFame ? {
+                shadowColor: "#FFD700",
+                shadowOffset: { width: 0, height: 0 },
+                shadowOpacity: 0.15,
+                shadowRadius: 12,
+                elevation: 3,
+              } : {}),
+            }}>
+              {/* メッセージ */}
+              <Text style={{ fontSize: fs.base, lineHeight: 22, color: t.text }}>
+                {talk.message}
+              </Text>
+
+              {/* 画像 */}
+              {talk.image_url && (
+                <View style={{ marginTop: SPACE.sm, borderRadius: RADIUS.md, overflow: "hidden" }}>
+                  <Image source={{ uri: talk.image_url }} style={{ width: "100%", height: 160 }} contentFit="cover" />
                 </View>
-              ) : null}
-              {/* ゴースト/殿堂入り表示 */}
-              {talk.is_hall_of_fame ? (
-                <HallOfFameBadge t={t} compact />
-              ) : (
-                <GhostCountdown createdAt={talk.created_at} t={t} />
+              )}
+
+              {/* 殿堂入りヒント */}
+              {showHint && (
+                <Text style={{ fontSize: fs.xxs, color: "#FFD700", marginTop: SPACE.sm, fontWeight: WEIGHT.semibold }}>
+                  あと{likesRemaining}いいねで殿堂入り
+                </Text>
               )}
             </View>
+
+            {/* メタ行: 距離 + ゴースト/殿堂 + アクション */}
+            <View style={{ flexDirection: "row", alignItems: "center", marginTop: SPACE.xs, paddingHorizontal: SPACE.xs }}>
+              {/* 左: 位置 + ゴースト/殿堂 */}
+              <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: SPACE.sm }}>
+                {talk.location_text && (
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
+                    <MapPin size={10} color={t.accent} />
+                    <Text style={{ fontSize: fs.xxs, fontWeight: WEIGHT.semibold, color: t.accent }}>{talk.location_text}</Text>
+                  </View>
+                )}
+                {isHallOfFame ? (
+                  <HallOfFameBadge t={t} compact />
+                ) : (
+                  <GhostCountdown createdAt={talk.created_at} t={t} />
+                )}
+              </View>
+
+              {/* 右: アクション（いいね + 返信） */}
+              <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.md }}>
+                <Pressable
+                  onPress={() => router.push(`/talk-detail/${talk.id}` as any)}
+                  accessibilityLabel={`返信 ${talk.replies_count || 0}件`}
+                  accessibilityRole="button"
+                  hitSlop={8}
+                  style={({ pressed }) => ({ flexDirection: "row" as const, alignItems: "center" as const, gap: 3, minHeight: 32, opacity: pressed ? 0.6 : 1 })}
+                >
+                  <MessageCircle size={15} color={t.muted} />
+                  {(talk.replies_count ?? 0) > 0 && (
+                    <Text style={{ fontSize: fs.xxs, color: t.muted }}>{talk.replies_count}</Text>
+                  )}
+                </Pressable>
+
+                <Pressable
+                  onPress={handleLike}
+                  accessibilityLabel={isLiked ? `いいね済み ${talk.likes_count}件` : `いいね ${talk.likes_count}件`}
+                  accessibilityRole="button"
+                  hitSlop={8}
+                  style={({ pressed }) => ({ flexDirection: "row" as const, alignItems: "center" as const, gap: 3, minHeight: 32, opacity: pressed ? 0.6 : 1 })}
+                >
+                  <Heart size={15} fill={isLiked ? t.red : "none"} color={isLiked ? t.red : t.muted} />
+                  {talk.likes_count > 0 && (
+                    <Text style={{ fontSize: fs.xxs, color: isLiked ? t.red : t.muted }}>{talk.likes_count}</Text>
+                  )}
+                </Pressable>
+              </View>
+            </View>
           </View>
-        </View>
-
-        {/* 本文 */}
-        <Text style={{ fontSize: fs.base, lineHeight: 22, color: t.text, marginTop: SPACE.sm, marginLeft: 40 + SPACE.sm }}>
-          {talk.message}
-        </Text>
-
-        {/* 殿堂入りヒント */}
-        {showHint && (
-          <Text style={{ fontSize: fs.xxs, color: "#FFD700", marginTop: SPACE.xs, marginLeft: 40 + SPACE.sm, fontWeight: WEIGHT.semibold }}>
-            あと{likesRemaining}いいねで殿堂入り
-          </Text>
-        )}
-
-        {/* 画像 */}
-        {talk.image_url && (
-          <View style={{ marginTop: SPACE.sm, marginLeft: 40 + SPACE.sm, borderRadius: RADIUS.md, overflow: "hidden", borderWidth: 1, borderColor: t.border }}>
-            <Image source={{ uri: talk.image_url }} style={{ width: "100%", height: 180 }} contentFit="cover" />
-          </View>
-        )}
-
-        {/* アクション（44pt最小タップ領域を保証） */}
-        <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.lg, marginTop: SPACE.xs, marginLeft: 40 + SPACE.sm }}>
-          <Pressable
-            onPress={() => router.push(`/talk-detail/${talk.id}` as any)}
-            accessibilityLabel={`返信 ${talk.replies_count || 0}件`}
-            accessibilityRole="button"
-            hitSlop={8}
-            style={({ pressed }) => ({ flexDirection: "row" as const, alignItems: "center" as const, gap: 5, minWidth: 44, minHeight: 44, justifyContent: "center" as const, opacity: pressed ? 0.6 : 1 })}
-          >
-            <MessageCircle size={18} color={t.muted} />
-            <Text style={{ fontSize: fs.xs, color: t.muted }}>{talk.replies_count || ""}</Text>
-          </Pressable>
-
-          <Pressable
-            onPress={handleLike}
-            accessibilityLabel={isLiked ? `いいね済み ${talk.likes_count}件` : `いいね ${talk.likes_count}件`}
-            accessibilityRole="button"
-            hitSlop={8}
-            style={({ pressed }) => ({ flexDirection: "row" as const, alignItems: "center" as const, gap: 5, minWidth: 44, minHeight: 44, justifyContent: "center" as const, opacity: pressed ? 0.6 : 1 })}
-          >
-            <Heart size={18} fill={isLiked ? t.red : "none"} color={isLiked ? t.red : t.muted} />
-            <Text style={{ fontSize: fs.xs, color: isLiked ? t.red : t.muted }}>
-              {talk.likes_count || ""}
-            </Text>
-          </Pressable>
-
-          <Pressable
-            accessibilityLabel="共有"
-            accessibilityRole="button"
-            hitSlop={8}
-            style={({ pressed }) => ({ minWidth: 44, minHeight: 44, alignItems: "center" as const, justifyContent: "center" as const, opacity: pressed ? 0.6 : 1 })}
-          >
-            <Share size={18} color={t.muted} />
-          </Pressable>
         </View>
       </Pressable>
     </Animated.View>
