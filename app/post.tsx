@@ -16,6 +16,7 @@ import { useImagePicker } from "@/hooks/useImagePicker";
 import { useLocation } from "@/hooks/useLocation";
 import { uploadImage } from "@/lib/storage";
 import { getUserMessage } from "@/lib/appError";
+import { useToastStore } from "@/stores/toastStore";
 import { useAppStyles } from "@/hooks/useAppStyles";
 import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 import PlacePickerModal from "@/components/ui/PlacePickerModal";
@@ -150,7 +151,7 @@ export default function PostScreen() {
       setTimeout(() => router.back(), 800);
     } catch (e: unknown) {
       if (__DEV__) console.error("投稿エラー詳細:", e);
-      Alert.alert("エラー", getUserMessage(e));
+      useToastStore.getState().show(getUserMessage(e), "error");
     }
   };
 

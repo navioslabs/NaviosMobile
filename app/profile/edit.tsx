@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, ScrollView, Pressable, TextInput, Alert, Platform, KeyboardAvoidingView } from "react-native";
+import { View, Text, ScrollView, Pressable, TextInput, Platform, KeyboardAvoidingView } from "react-native";
 import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { useForm, Controller } from "react-hook-form";
@@ -19,6 +19,7 @@ import { useAppStyles } from "@/hooks/useAppStyles";
 import { useImagePicker } from "@/hooks/useImagePicker";
 import { uploadImage } from "@/lib/storage";
 import { getUserMessage } from "@/lib/appError";
+import { useToastStore } from "@/stores/toastStore";
 import { Image } from "expo-image";
 import { useFontSizeStore } from "@/stores/fontSizeStore";
 import { getScaledFontSize, WEIGHT, SPACE, RADIUS } from "@/lib/styles";
@@ -65,7 +66,7 @@ export default function ProfileEditScreen() {
       });
       router.back();
     } catch (e: unknown) {
-      Alert.alert("エラー", getUserMessage(e));
+      useToastStore.getState().show(getUserMessage(e), "error");
     }
   };
 

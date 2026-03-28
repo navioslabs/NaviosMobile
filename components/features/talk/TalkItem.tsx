@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { View, Text, Pressable } from "react-native";
+import { View, Text, Pressable, StyleSheet } from "react-native";
 import Animated, { SlideInLeft } from "react-native-reanimated";
 import { Image } from "expo-image";
 import { router } from "expo-router";
@@ -60,11 +60,11 @@ function TalkItem({ talk, t }: TalkItemProps) {
           opacity: pressed ? 0.85 : ghostOpacity,
         })}
       >
-        <View style={{ flexDirection: "row", gap: SPACE.sm }}>
+        <View style={talkStyles.row}>
           {/* アバター（小さめ） */}
           <Pressable
             onPress={() => router.push(`/profile/${talk.author_id}` as any)}
-            style={{ marginTop: 2 }}
+            style={talkStyles.avatarWrap}
           >
             {talk.author?.avatar_url ? (
               <Image
@@ -97,7 +97,7 @@ function TalkItem({ talk, t }: TalkItemProps) {
           {/* 吹き出しカード */}
           <View style={{ flex: 1 }}>
             {/* 名前 + バッジ行 */}
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 5, marginBottom: 3 }}>
+            <View style={talkStyles.nameRow}>
               <Text style={{ fontSize: fs.xs, fontWeight: WEIGHT.bold, color: t.text }}>
                 {talk.author?.display_name ?? "匿名"}
               </Text>
@@ -134,7 +134,7 @@ function TalkItem({ talk, t }: TalkItemProps) {
 
               {/* 画像 */}
               {talk.image_url && (
-                <View style={{ marginTop: SPACE.sm, borderRadius: RADIUS.md, overflow: "hidden" }}>
+                <View style={talkStyles.imageWrap}>
                   <Image source={{ uri: talk.image_url }} style={{ width: "100%", height: 160 }} contentFit="cover" />
                 </View>
               )}
@@ -148,11 +148,11 @@ function TalkItem({ talk, t }: TalkItemProps) {
             </View>
 
             {/* メタ行: 距離 + ゴースト/殿堂 + アクション */}
-            <View style={{ flexDirection: "row", alignItems: "center", marginTop: SPACE.xs, paddingHorizontal: SPACE.xs }}>
+            <View style={talkStyles.metaRow}>
               {/* 左: 位置 + ゴースト/殿堂 */}
-              <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: SPACE.sm }}>
+              <View style={talkStyles.metaLeft}>
                 {talk.location_text && (
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
+                  <View style={talkStyles.locationRow}>
                     <MapPin size={10} color={t.accent} />
                     <Text style={{ fontSize: fs.xxs, fontWeight: WEIGHT.semibold, color: t.accent }}>{talk.location_text}</Text>
                   </View>
@@ -165,7 +165,7 @@ function TalkItem({ talk, t }: TalkItemProps) {
               </View>
 
               {/* 右: アクション（いいね + 返信） */}
-              <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.md }}>
+              <View style={talkStyles.actionGroup}>
                 <Pressable
                   onPress={() => router.push(`/talk-detail/${talk.id}` as any)}
                   accessibilityLabel={`返信 ${talk.replies_count || 0}件`}
@@ -199,5 +199,16 @@ function TalkItem({ talk, t }: TalkItemProps) {
     </Animated.View>
   );
 }
+
+const talkStyles = StyleSheet.create({
+  row: { flexDirection: "row", gap: SPACE.sm },
+  avatarWrap: { marginTop: 2 },
+  nameRow: { flexDirection: "row", alignItems: "center", gap: 5, marginBottom: 3 },
+  metaRow: { flexDirection: "row", alignItems: "center", marginTop: SPACE.xs, paddingHorizontal: SPACE.xs },
+  metaLeft: { flex: 1, flexDirection: "row", alignItems: "center", gap: SPACE.sm },
+  actionGroup: { flexDirection: "row", alignItems: "center", gap: SPACE.md },
+  locationRow: { flexDirection: "row", alignItems: "center", gap: 3 },
+  imageWrap: { marginTop: SPACE.sm, borderRadius: RADIUS.md, overflow: "hidden" },
+});
 
 export default memo(TalkItem);

@@ -54,7 +54,7 @@ function CompactCard({ post, t, isDark, expired, onLongPress }: { post: Post; t:
   }, [scaleAnim]);
 
   return (
-    <View style={{ marginHorizontal: SPACE.lg, marginBottom: SPACE.sm, opacity: expired ? 0.5 : 1 }}>
+    <View style={[cardStyles.compactWrapper, expired && { opacity: 0.5 }]}>
       <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
       <Pressable
         onPress={() => router.push(`/feed/${post.id}` as any)}
@@ -78,7 +78,7 @@ function CompactCard({ post, t, isDark, expired, onLongPress }: { post: Post; t:
         })}
       >
         {/* カテゴリプレースホルダー（アイコン+グラデーション） */}
-        <View style={{ height: 100, borderTopLeftRadius: RADIUS.lg, borderTopRightRadius: RADIUS.lg, overflow: "hidden" }}>
+        <View style={cardStyles.imageHeader}>
           <CatPlaceholder category={post.category} size="md" />
           {/* 距離バッジ */}
           <View style={{ position: "absolute", right: SPACE.sm, top: SPACE.sm, flexDirection: "row", alignItems: "center", gap: 3, backgroundColor: "rgba(0,0,0,0.35)", borderRadius: RADIUS.full, paddingHorizontal: SPACE.sm, paddingVertical: 3 }}>
@@ -94,9 +94,9 @@ function CompactCard({ post, t, isDark, expired, onLongPress }: { post: Post; t:
           )}
         </View>
 
-        <View style={{ padding: SPACE.md, gap: SPACE.sm }}>
+        <View style={cardStyles.cardBody}>
           {/* カテゴリ + 時刻 */}
-          <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.sm }}>
+          <View style={cardStyles.metaRow}>
             <CatPill cat={post.category} small />
             <View style={{ flexDirection: "row", alignItems: "center", gap: 3, marginLeft: "auto" }}>
               <Clock size={10} color={t.muted} />
@@ -117,7 +117,7 @@ function CompactCard({ post, t, isDark, expired, onLongPress }: { post: Post; t:
           ) : null}
 
           {/* 下段: 投稿者 + アクション */}
-          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+          <View style={cardStyles.actionRow}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.sm }}>
               {post.author?.avatar_url ? (
                 <Image
@@ -133,12 +133,12 @@ function CompactCard({ post, t, isDark, expired, onLongPress }: { post: Post; t:
                 {post.author?.display_name ?? "ユーザー"}
               </Text>
             </View>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.md }}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
+            <View style={cardStyles.actionGroup}>
+              <View style={cardStyles.iconText}>
                 <Heart size={14} color={t.muted} />
                 <Text style={{ fontSize: fs.xs, color: t.muted }}>{post.likes_count}</Text>
               </View>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
+              <View style={cardStyles.iconText}>
                 <MessageSquare size={14} color={t.muted} />
                 <Text style={{ fontSize: fs.xs, color: t.muted }}>{post.comments_count || ""}</Text>
               </View>
@@ -225,7 +225,7 @@ function FeedPostCard({ post, t, isDark, featured, expired, onLongPress }: FeedP
         />
 
         {/* カテゴリ別トップアクセントライン */}
-        <View style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, backgroundColor: catColor }} />
+        <View style={[cardStyles.accentLine, { backgroundColor: catColor }]} />
 
         <CardHeader post={post} t={t} />
 
@@ -244,7 +244,7 @@ function FeedPostCard({ post, t, isDark, featured, expired, onLongPress }: FeedP
         </View>
 
         {/* Bottom */}
-        <View style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: SPACE.lg }}>
+        <View style={cardStyles.bottomOverlay}>
           {featured && (
             <View style={{ alignSelf: "flex-start", flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "rgba(0,0,0,0.5)", borderRadius: RADIUS.full, paddingHorizontal: SPACE.sm + 2, paddingVertical: 3, marginBottom: SPACE.xs }}>
               <Text style={{ fontSize: fs.xxs, fontWeight: WEIGHT.bold, color: t.accent }}>
@@ -261,7 +261,7 @@ function FeedPostCard({ post, t, isDark, featured, expired, onLongPress }: FeedP
         </View>
 
         {/* カテゴリ別ボトムアクセントライン */}
-        <View style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 3, backgroundColor: catColor + "80" }} />
+        <View style={[cardStyles.accentLineBottom, { backgroundColor: catColor + "80" }]} />
       </View>
     </Pressable>
     </Animated.View>
@@ -269,7 +269,7 @@ function FeedPostCard({ post, t, isDark, featured, expired, onLongPress }: FeedP
 
   if (featured) {
     return (
-      <View style={{ marginHorizontal: SPACE.lg, marginBottom: SPACE.lg, marginTop: SPACE.sm, paddingTop: SPACE.sm }}>
+      <View style={cardStyles.featuredWrapper}>
         <FeaturedGlow borderRadius={26} accentColor={t.accent} blueColor={t.blue} isDark={isDark}>
           {card}
         </FeaturedGlow>
@@ -278,10 +278,25 @@ function FeedPostCard({ post, t, isDark, featured, expired, onLongPress }: FeedP
   }
 
   return (
-    <View style={{ marginHorizontal: SPACE.lg, marginBottom: SPACE.lg, opacity: expired ? 0.5 : 1 }}>
+    <View style={[cardStyles.fullWrapper, expired && { opacity: 0.5 }]}>
       {card}
     </View>
   );
 }
+
+const cardStyles = StyleSheet.create({
+  compactWrapper: { marginHorizontal: SPACE.lg, marginBottom: SPACE.sm },
+  fullWrapper: { marginHorizontal: SPACE.lg, marginBottom: SPACE.lg },
+  featuredWrapper: { marginHorizontal: SPACE.lg, marginBottom: SPACE.lg, marginTop: SPACE.sm, paddingTop: SPACE.sm },
+  imageHeader: { height: 100, borderTopLeftRadius: RADIUS.lg, borderTopRightRadius: RADIUS.lg, overflow: "hidden" },
+  cardBody: { padding: SPACE.md, gap: SPACE.sm },
+  metaRow: { flexDirection: "row", alignItems: "center", gap: SPACE.sm },
+  accentLine: { position: "absolute", top: 0, left: 0, right: 0, height: 3 },
+  accentLineBottom: { position: "absolute", bottom: 0, left: 0, right: 0, height: 3 },
+  bottomOverlay: { position: "absolute", bottom: 0, left: 0, right: 0, padding: SPACE.lg },
+  actionRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  actionGroup: { flexDirection: "row", alignItems: "center", gap: SPACE.md },
+  iconText: { flexDirection: "row", alignItems: "center", gap: 3 },
+});
 
 export default memo(FeedPostCard);

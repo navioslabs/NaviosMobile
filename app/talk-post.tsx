@@ -14,6 +14,7 @@ import { useImagePicker } from "@/hooks/useImagePicker";
 import { useLocation } from "@/hooks/useLocation";
 import { uploadImage } from "@/lib/storage";
 import { getUserMessage } from "@/lib/appError";
+import { useToastStore } from "@/stores/toastStore";
 import { useAppStyles } from "@/hooks/useAppStyles";
 import { useAuth } from "@/hooks/useAuth";
 import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
@@ -100,7 +101,7 @@ export default function TalkPostScreen() {
     } catch (e: unknown) {
       if (__DEV__) console.error("つぶやき投稿エラー詳細:", e);
       setSending(false);
-      Alert.alert("エラー", getUserMessage(e));
+      useToastStore.getState().show(getUserMessage(e), "error");
     }
   }, [sending, images, granted, lat, lng, placeName, createTalkMutation]);
 

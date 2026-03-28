@@ -13,6 +13,9 @@ import Toast from "@/components/ui/Toast";
 import ErrorBoundary from "@/components/ui/ErrorBoundary";
 import { useRealtimeTalks } from "@/hooks/useRealtimeTalks";
 import { useRealtimeNotifications } from "@/hooks/useNotifications";
+import { initSentry } from "@/lib/sentry";
+
+initSentry();
 
 const queryClient = new QueryClient({
   defaultOptions: {
