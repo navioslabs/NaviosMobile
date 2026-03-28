@@ -9,6 +9,23 @@ export const distLabel = (d: number): string => {
   return `${Math.round(d / 1000)}km`;
 };
 
+/** 本文からハッシュタグを抽出し、正規化した配列で返す */
+export function extractTags(text: string | null | undefined): string[] {
+  if (!text) return [];
+  const matches = text.match(/#[^\s#、。！？,.!?]+/g);
+  if (!matches) return [];
+  // # を除去 → 小文字化 → 重複排除
+  const seen = new Set<string>();
+  return matches.reduce<string[]>((acc, tag) => {
+    const normalized = tag.slice(1).toLowerCase();
+    if (normalized && !seen.has(normalized)) {
+      seen.add(normalized);
+      acc.push(normalized);
+    }
+    return acc;
+  }, []);
+}
+
 /** 2点間の距離をメートルで返す（Haversine公式） */
 export function haversineDistance(
   lat1: number,

@@ -27,6 +27,7 @@ import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 import { HALL_OF_FAME_THRESHOLD } from "@/constants/ghost";
 import GhostCountdown from "@/components/features/talk/GhostCountdown";
 import HallOfFameBadge from "@/components/features/talk/HallOfFameBadge";
+import HashtagText from "@/components/ui/HashtagText";
 
 /** Talk詳細画面（返信スレッド） */
 export default function TalkDetailScreen() {
@@ -174,9 +175,9 @@ export default function TalkDetailScreen() {
           )}
 
           {/* メッセージ本文 */}
-          <Text style={{ fontSize: fs.xl, color: t.text, lineHeight: 28, marginTop: SPACE.md }}>
+          <HashtagText style={{ fontSize: fs.xl, color: t.text, lineHeight: 28, marginTop: SPACE.md }} t={t}>
             {talk.message}
-          </Text>
+          </HashtagText>
 
           {/* 画像 */}
           {talk.image_url && (

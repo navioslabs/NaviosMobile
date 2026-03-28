@@ -53,12 +53,17 @@ export interface Post {
   is_featured: boolean;
   likes_count: number;
   comments_count: number;
+  tags: string[];
   created_at: string;
   updated_at: string;
   /** JOIN で取得する投稿者プロフィール */
   author?: Profile;
   /** PostGIS で算出した距離 (メートル) */
   distance_m?: number;
+  /** 投稿の緯度（詳細取得時のみ） */
+  lat?: number;
+  /** 投稿の経度（詳細取得時のみ） */
+  lng?: number;
 }
 
 // ─── ひとこと ───────────────────────────────────────
@@ -73,6 +78,7 @@ export interface Talk {
   location_text: string | null;
   likes_count: number;
   replies_count: number;
+  tags: string[];
   is_hall_of_fame: boolean;
   created_at: string;
   /** JOIN で取得する投稿者プロフィール */

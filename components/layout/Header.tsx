@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import { View, Text, Pressable } from "react-native";
 import { Image } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { useQueryClient } from "@tanstack/react-query";
@@ -11,7 +12,6 @@ import { useThemeStore } from "@/stores/themeStore";
 import { useAuth } from "@/hooks/useAuth";
 import { useUnreadCount } from "@/hooks/useNotifications";
 import { createStyles, getScaledFontSize, SPACE, WEIGHT } from "@/lib/styles";
-import NaviosLogo from "@/components/ui/NaviosLogo";
 
 interface HeaderProps {
   t: ThemeTokens;
@@ -37,8 +37,20 @@ export default function Header({ t }: HeaderProps) {
 
   return (
     <View style={[s.rowBetween, { paddingHorizontal: SPACE.xl, paddingBottom: SPACE.md, paddingTop: insets.top + SPACE.sm, backgroundColor: t.surface, borderBottomWidth: 1, borderBottomColor: t.border }]}>
-      <Pressable onPress={handleLogoPress} style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
-        <NaviosLogo size={44} textColor={t.accent} isDark={isDark} />
+      <Pressable onPress={handleLogoPress} style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: SPACE.sm, opacity: pressed ? 0.7 : 1 })}>
+        {/* ロゴマーク: グラデーション角丸に「n」 */}
+        <LinearGradient
+          colors={[t.accent, t.accent]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{ width: 32, height: 32, borderRadius: 10, alignItems: "center", justifyContent: "center" }}
+        >
+          <Text style={{ fontSize: 20, fontWeight: "900", color: "#fff", marginTop: -1 }}>n</Text>
+        </LinearGradient>
+        {/* ロゴテキスト */}
+        <Text style={{ fontSize: 24, fontWeight: WEIGHT.extrabold, letterSpacing: -0.8, color: t.text }}>
+          navi<Text style={{ color: t.accent }}>os</Text>
+        </Text>
       </Pressable>
 
       <View style={[s.row, { gap: SPACE.sm }]}>

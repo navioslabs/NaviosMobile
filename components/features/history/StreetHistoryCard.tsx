@@ -1,7 +1,7 @@
 import { View, Text, Pressable } from "react-native";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import { Heart, MessageSquare, Radio, Trophy } from "@/lib/icons";
+import { Heart, MessageSquare, Radio, Trophy, User } from "@/lib/icons";
 import type { ThemeTokens } from "@/constants/theme";
 import type { StreetHistoryItem } from "@/types";
 import { CAT_CONFIG } from "@/constants/categories";
@@ -39,11 +39,17 @@ export default function StreetHistoryCard({ item, t, isDark }: StreetHistoryCard
       })}
     >
       {/* アバター */}
-      <Image
-        source={{ uri: item.author_avatar_url ?? "https://i.pravatar.cc/100" }}
-        style={{ width: 40, height: 40, borderRadius: 20 }}
-        contentFit="cover"
-      />
+      {item.author_avatar_url ? (
+        <Image
+          source={{ uri: item.author_avatar_url }}
+          style={{ width: 40, height: 40, borderRadius: 20 }}
+          contentFit="cover"
+        />
+      ) : (
+        <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: t.border, alignItems: "center", justifyContent: "center" }}>
+          <User size={20} color={t.muted} />
+        </View>
+      )}
 
       <View style={{ flex: 1 }}>
         {/* ヘッダー */}

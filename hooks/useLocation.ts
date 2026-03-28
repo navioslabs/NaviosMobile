@@ -14,6 +14,8 @@ interface LocationState {
   granted: boolean;
   /** 継続監視中かどうか */
   isWatching: boolean;
+  /** 逆ジオコーディングで取得した地名 */
+  placeName: string | null;
   refresh: () => Promise<void>;
 }
 
@@ -31,7 +33,29 @@ export function useLocation(options?: LocationOptions): LocationState {
   const [error, setError] = useState<string | null>(null);
   const [granted, setGranted] = useState(false);
   const [isWatching, setIsWatching] = useState(false);
+  const [placeName, setPlaceName] = useState<string | null>(null);
   const subscriptionRef = useRef<Location.LocationSubscription | null>(null);
+  const lastGeocodeRef = useRef({ lat: 0, lng: 0 });
+
+  /** 逆ジオコーディングで地名を取得（200m以上移動した場合のみ再実行） */
+  const reverseGeocode = async (latitude: number, longitude: number) => {
+    const dLat = latitude - lastGeocodeRef.current.lat;
+    const dLng = longitude - lastGeocodeRef.current.lng;
+    const moved = Math.sqrt(dLat * dLat + dLng * dLng) * 111000;
+    if (lastGeocodeRef.current.lat !== 0 && moved < 200) return;
+
+    try {
+      const results = await Location.reverseGeocodeAsync({ latitude, longitude });
+      if (results.length > 0) {
+        const r = results[0];
+        const parts = [r.city, r.district, r.street].filter(Boolean);
+        setPlaceName(parts.length > 0 ? parts.join(" ") : r.name ?? null);
+        lastGeocodeRef.current = { lat: latitude, lng: longitude };
+      }
+    } catch {
+      // 逆ジオコーディング失敗は無視
+    }
+  };
 
   /** 1回取得 */
   const fetchLocation = async () => {
@@ -51,6 +75,7 @@ export function useLocation(options?: LocationOptions): LocationState {
       });
       setLat(loc.coords.latitude);
       setLng(loc.coords.longitude);
+      reverseGeocode(loc.coords.latitude, loc.coords.longitude);
     } catch (e: any) {
       setError(e.message ?? "位置情報の取得に失敗しました");
     } finally {
@@ -76,6 +101,7 @@ export function useLocation(options?: LocationOptions): LocationState {
       });
       setLat(loc.coords.latitude);
       setLng(loc.coords.longitude);
+      reverseGeocode(loc.coords.latitude, loc.coords.longitude);
       setIsLoading(false);
 
       // 継続監視を開始
@@ -88,6 +114,7 @@ export function useLocation(options?: LocationOptions): LocationState {
         (newLoc) => {
           setLat(newLoc.coords.latitude);
           setLng(newLoc.coords.longitude);
+          reverseGeocode(newLoc.coords.latitude, newLoc.coords.longitude);
         }
       );
       subscriptionRef.current = sub;
@@ -111,5 +138,5 @@ export function useLocation(options?: LocationOptions): LocationState {
     };
   }, [watch]);
 
-  return { lat, lng, isLoading, error, granted, isWatching, refresh: fetchLocation };
+  return { lat, lng, isLoading, error, granted, isWatching, placeName, refresh: fetchLocation };
 }

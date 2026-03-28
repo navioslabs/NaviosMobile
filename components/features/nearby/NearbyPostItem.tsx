@@ -146,10 +146,13 @@ function NearbyPostItem({ post, t, featured, isDark = true, index = 0, onLongPre
 
         <View style={{ flex: 1 }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.sm, marginBottom: SPACE.xs }}>
-            <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.extrabold, color: isClose ? t.accent : t.muted }}>
-              {distLabel(distance)}
-            </Text>
-            <Text style={{ fontSize: fs.xxs, color: t.muted }}>({walkTime(distance)})</Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: accentColor + "20", borderRadius: RADIUS.full, paddingHorizontal: SPACE.sm + 2, paddingVertical: 3 }}>
+              <Navigation size={11} color={accentColor} />
+              <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.extrabold, color: accentColor }}>
+                {distLabel(distance)}
+              </Text>
+            </View>
+            <Text style={{ fontSize: fs.xxs, color: t.muted }}>{walkTime(distance)}</Text>
             <CatPill cat={post.category} small />
           </View>
 

@@ -1,5 +1,6 @@
 import { View, Text } from "react-native";
 import { Image } from "expo-image";
+import { User } from "@/lib/icons";
 import type { ThemeTokens } from "@/constants/theme";
 import type { Post } from "@/types";
 import { timeAgo } from "@/lib/adapters";
@@ -21,7 +22,13 @@ export default function CardHeader({ post, t }: CardHeaderProps) {
     <>
       <View style={{ position: "absolute", top: SPACE.lg, left: SPACE.lg, flexDirection: "row", alignItems: "center", gap: SPACE.sm + 2 }}>
         <View>
-          <Image source={{ uri: post.author?.avatar_url ?? "https://i.pravatar.cc/100" }} style={{ width: 40, height: 40, borderRadius: 20, borderWidth: 2, borderColor: "rgba(255,255,255,0.5)" }} />
+          {post.author?.avatar_url ? (
+            <Image source={{ uri: post.author.avatar_url }} style={{ width: 40, height: 40, borderRadius: 20, borderWidth: 2, borderColor: "rgba(255,255,255,0.5)" }} />
+          ) : (
+            <View style={{ width: 40, height: 40, borderRadius: 20, borderWidth: 2, borderColor: "rgba(255,255,255,0.5)", backgroundColor: "rgba(255,255,255,0.2)", alignItems: "center", justifyContent: "center" }}>
+              <User size={20} color="rgba(255,255,255,0.7)" />
+            </View>
+          )}
           {(post.author?.is_verified ?? false) && (
             <View style={{ position: "absolute", bottom: -1, right: -1, width: 16, height: 16, borderRadius: 8, backgroundColor: "#4A9EFF", alignItems: "center", justifyContent: "center" }}>
               <Text style={{ color: "#fff", fontSize: 8, fontWeight: WEIGHT.extrabold }}>✓</Text>

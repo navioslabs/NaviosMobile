@@ -10,6 +10,7 @@ import { useAppStyles } from "@/hooks/useAppStyles";
 import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 import TalkItem from "@/components/features/talk/TalkItem";
 import StateView from "@/components/ui/StateView";
+import { TalkItemSkeleton } from "@/components/ui/Skeleton";
 
 /** タイムライン画面 */
 export default function TalkScreen() {
@@ -77,7 +78,15 @@ export default function TalkScreen() {
 
   return (
     <View style={s.screen}>
-      {talks.length === 0 && !queryLoading ? (
+      {queryLoading ? (
+        <View>
+          {ListHeader}
+          <TalkItemSkeleton t={t} />
+          <TalkItemSkeleton t={t} />
+          <TalkItemSkeleton t={t} />
+          <TalkItemSkeleton t={t} />
+        </View>
+      ) : talks.length === 0 ? (
         <>
           {ListHeader}
           {EmptyState}

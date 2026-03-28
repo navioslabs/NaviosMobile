@@ -94,42 +94,8 @@ export default function Fab({ t, isDark }: FabProps) {
         pointerEvents={touchable ? "box-none" : "none"}
         style={{ position: "absolute", bottom: Platform.OS === "ios" ? 170 : 150, right: 20, zIndex: 52, gap: 12 }}
       >
-        {/* 投稿する */}
-        <Animated.View style={menuItem1Style}>
-          <Pressable
-            onPress={() => handleMenuPress("/post")}
-            accessibilityLabel="投稿する"
-            accessibilityRole="button"
-            style={({ pressed }) => ({
-              flexDirection: "row" as const,
-              alignItems: "center" as const,
-              gap: 12,
-              borderRadius: 16,
-              padding: 16,
-              minWidth: 190,
-              opacity: pressed ? 0.8 : 1,
-              backgroundColor: t.surface,
-              borderWidth: 1,
-              borderColor: t.border,
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 8 },
-              shadowOpacity: isDark ? 0.5 : 0.12,
-              shadowRadius: 24,
-              elevation: 8,
-            })}
-          >
-            <View style={{ width: 44, height: 44, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: t.accent + "20" }}>
-              <PenLine size={22} color={t.accent} />
-            </View>
-            <View>
-              <Text style={{ fontSize: 15, fontWeight: "700", color: t.text }}>投稿する</Text>
-              <Text style={{ fontSize: 13, color: t.sub }}>ライフライン・イベント・近助</Text>
-            </View>
-          </Pressable>
-        </Animated.View>
-
         {/* トークする */}
-        <Animated.View style={menuItem2Style}>
+        <Animated.View style={menuItem1Style}>
           <Pressable
             onPress={() => handleMenuPress("/talk-post")}
             accessibilityLabel="トークする"
@@ -157,7 +123,41 @@ export default function Fab({ t, isDark }: FabProps) {
             </View>
             <View>
               <Text style={{ fontSize: 15, fontWeight: "700", color: t.text }}>トークする</Text>
-              <Text style={{ fontSize: 13, color: t.sub }}>近くの人に声を届ける</Text>
+              <Text style={{ fontSize: 13, color: t.sub }}>タイムラインに投稿・24h限定</Text>
+            </View>
+          </Pressable>
+        </Animated.View>
+
+        {/* 投稿する */}
+        <Animated.View style={menuItem2Style}>
+          <Pressable
+            onPress={() => handleMenuPress("/post")}
+            accessibilityLabel="投稿する"
+            accessibilityRole="button"
+            style={({ pressed }) => ({
+              flexDirection: "row" as const,
+              alignItems: "center" as const,
+              gap: 12,
+              borderRadius: 16,
+              padding: 16,
+              minWidth: 190,
+              opacity: pressed ? 0.8 : 1,
+              backgroundColor: t.surface,
+              borderWidth: 1,
+              borderColor: t.border,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 8 },
+              shadowOpacity: isDark ? 0.5 : 0.12,
+              shadowRadius: 24,
+              elevation: 8,
+            })}
+          >
+            <View style={{ width: 44, height: 44, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: t.accent + "20" }}>
+              <PenLine size={22} color={t.accent} />
+            </View>
+            <View>
+              <Text style={{ fontSize: 15, fontWeight: "700", color: t.text }}>投稿する</Text>
+              <Text style={{ fontSize: 13, color: t.sub }}>ホームのフィードに掲載</Text>
             </View>
           </Pressable>
         </Animated.View>

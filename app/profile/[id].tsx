@@ -11,6 +11,7 @@ import {
   MessageCircle,
   Heart,
   PenLine,
+  User,
 } from "@/lib/icons";
 import { useProfile, useUserPosts, useUserTalks } from "@/hooks/useProfile";
 import { useUserBadges } from "@/hooks/useBadges";
@@ -40,7 +41,7 @@ export default function ProfileScreen() {
   const profile = remoteProfile
     ? {
         name: remoteProfile.display_name,
-        avatar: remoteProfile.avatar_url ?? "https://i.pravatar.cc/100",
+        avatar: remoteProfile.avatar_url ?? null,
         bio: remoteProfile.bio ?? "",
         verified: remoteProfile.is_verified,
         location: remoteProfile.location_text ?? "",
@@ -93,7 +94,13 @@ export default function ProfileScreen() {
           {/* プロフィールヘッダー */}
           <View style={{ alignItems: "center", paddingVertical: SPACE.xxl, paddingHorizontal: SPACE.xl }}>
             <View style={{ position: "relative", marginBottom: SPACE.lg }}>
-              <Image source={{ uri: profile.avatar }} style={{ width: 80, height: 80, borderRadius: 40, borderWidth: 3, borderColor: t.accent + "40" }} contentFit="cover" />
+              {profile.avatar ? (
+                <Image source={{ uri: profile.avatar }} style={{ width: 80, height: 80, borderRadius: 40, borderWidth: 3, borderColor: t.accent + "40" }} contentFit="cover" />
+              ) : (
+                <View style={{ width: 80, height: 80, borderRadius: 40, borderWidth: 3, borderColor: t.accent + "40", backgroundColor: t.border, alignItems: "center", justifyContent: "center" }}>
+                  <User size={36} color={t.muted} />
+                </View>
+              )}
               {profile.verified && (
                 <View style={{ position: "absolute", bottom: 0, right: 0, width: 24, height: 24, borderRadius: 12, backgroundColor: t.blue, alignItems: "center", justifyContent: "center", borderWidth: 2, borderColor: t.surface }}>
                   <UserCheck size={12} color="#fff" />

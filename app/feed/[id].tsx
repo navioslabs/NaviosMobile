@@ -1,15 +1,14 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
+import Animated, { useSharedValue, useAnimatedStyle, withSequence, withSpring } from "react-native-reanimated";
 import { View, Text, ScrollView, TextInput, Pressable, StyleSheet, ActivityIndicator, RefreshControl, Alert, Share as RNShare } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { Image } from "expo-image";
-import { LinearGradient } from "expo-linear-gradient";
 import {
   ChevronLeft,
   Share,
   Navigation,
   Clock,
   UserCheck,
-  Check,
   Timer,
   Ellipsis,
   Heart,
@@ -36,6 +35,9 @@ import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 import CatPill from "@/components/ui/CatPill";
 import CatPlaceholder from "@/components/ui/CatPlaceholder";
 import ImageGallery from "@/components/ui/ImageGallery";
+import { DetailSkeleton } from "@/components/ui/Skeleton";
+import HashtagText from "@/components/ui/HashtagText";
+import LazyMapView from "@/components/ui/LazyMapView";
 
 /** 徒歩時間の概算（80m/分） */
 const walkTime = (d: number) => `徒歩${Math.max(1, Math.round(d / 80))}分`;
@@ -45,20 +47,6 @@ const deadlineLabel = (timeLeft: number) => {
   if (timeLeft <= 60) return `本日 ${new Date(Date.now() + timeLeft * 60000).getHours()}:${String(new Date(Date.now() + timeLeft * 60000).getMinutes()).padStart(2, "0")} まで`;
   if (timeLeft <= 1440) return `本日中`;
   return `残り${Math.ceil(timeLeft / 60)}時間`;
-};
-
-/** カテゴリ別ヒーローグラデーション */
-const HERO_GRADIENTS: Record<string, [string, string, string]> = {
-  lifeline: ["rgba(0,212,161,0.35)", "rgba(0,0,0,0.1)", "rgba(0,0,0,0.75)"],
-  event: ["rgba(245,166,35,0.35)", "rgba(0,0,0,0.1)", "rgba(0,0,0,0.75)"],
-  help: ["rgba(240,66,92,0.35)", "rgba(0,0,0,0.1)", "rgba(0,0,0,0.75)"],
-};
-
-/** モック持ち物データ（カテゴリ別） */
-const REQUIRED_ITEMS: Record<string, string[]> = {
-  lifeline: [],
-  event: ["動きやすい服装", "飲み物"],
-  help: ["軍手", "作業しやすい服装"],
 };
 
 /** 投稿詳細画面 */
@@ -82,10 +70,19 @@ export default function FeedDetailScreen() {
   const toast = useToastStore((s) => s.show);
   const isOwner = !!user && !!post && user.id === post.author_id;
 
-  const handleLike = () => {
+  const likeScale = useSharedValue(1);
+  const likeAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: likeScale.value }],
+  }));
+
+  const handleLike = useCallback(() => {
     if (!id) return;
+    likeScale.value = withSequence(
+      withSpring(1.3, { damping: 4, stiffness: 300 }),
+      withSpring(1, { damping: 6, stiffness: 200 }),
+    );
     guard(() => toggleLike.mutate({ targetType: "post", targetId: id }), "いいね");
-  };
+  }, [id, guard, toggleLike, likeScale]);
 
   const handleDelete = () => {
     Alert.alert("投稿を削除", "この投稿を削除しますか？この操作は取り消せません。", [
@@ -107,8 +104,8 @@ export default function FeedDetailScreen() {
 
   if (isLoading) {
     return (
-      <View style={[s.screen, { alignItems: "center", justifyContent: "center" }]}>
-        <ActivityIndicator size="large" color={t.accent} />
+      <View style={s.screen}>
+        <DetailSkeleton t={t} />
       </View>
     );
   }
@@ -125,9 +122,10 @@ export default function FeedDetailScreen() {
   }
 
   const catConfig = CAT_CONFIG[post.category];
-  const items = REQUIRED_ITEMS[post.category] || [];
   const timeLeft = calcTimeLeft(post.deadline);
   const isUrgent = timeLeft <= 60;
+  const imageUrls = post.image_urls?.length ? post.image_urls : post.image_url ? [post.image_url] : [];
+  const hasImages = imageUrls.length > 0;
 
   return (
     <View style={s.screen}>
@@ -143,59 +141,29 @@ export default function FeedDetailScreen() {
           />
         }
       >
-        {/* ═══ ヒーロー画像 ═══ */}
-        <View style={{ position: "relative", height: 260 }}>
-          {post.image_urls && post.image_urls.length > 0 ? (
-            <>
-              <ImageGallery urls={post.image_urls} height={260} t={t} />
-              <LinearGradient colors={HERO_GRADIENTS[post.category] ?? HERO_GRADIENTS.lifeline} locations={[0, 0.4, 1]} style={StyleSheet.absoluteFill} pointerEvents="none" />
-            </>
-          ) : post.image_url ? (
-            <>
-              <Image source={{ uri: post.image_url }} style={StyleSheet.absoluteFill} contentFit="cover" />
-              <LinearGradient colors={HERO_GRADIENTS[post.category] ?? HERO_GRADIENTS.lifeline} locations={[0, 0.4, 1]} style={StyleSheet.absoluteFill} pointerEvents="none" />
-            </>
-          ) : (
-            <CatPlaceholder category={post.category} size="lg" />
-          )}
-
-          {/* 戻るボタン（左上） */}
-          <Pressable
-            onPress={() => router.back()}
-            accessibilityLabel="戻る"
-            accessibilityRole="button"
-            style={({ pressed }) => ({
-              position: "absolute",
-              top: 52,
-              left: SPACE.lg,
-              width: 38,
-              height: 38,
-              borderRadius: 19,
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: catConfig.color + "60",
-              opacity: pressed ? 0.7 : 1,
-            })}
-          >
-            <ChevronLeft size={22} color="#fff" />
-          </Pressable>
-
-          {/* カテゴリピル（画像上、不透明背景で視認性確保） */}
-          <View style={{ position: "absolute", top: 56, left: SPACE.lg + 46, flexDirection: "row", gap: SPACE.sm }}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 4, borderRadius: RADIUS.full, paddingHorizontal: 10, paddingVertical: 5, backgroundColor: catConfig.color, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 4, elevation: 3 }}>
-              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "#fff" }} />
-              <Text style={{ fontSize: fs.xxs, fontWeight: WEIGHT.extrabold, color: "#fff" }}>{catConfig.label}</Text>
+        {/* ═══ ヘッダーバー ═══ */}
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: SPACE.lg, paddingTop: 52, paddingBottom: SPACE.sm, backgroundColor: t.surface }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.sm }}>
+            <Pressable
+              onPress={() => router.back()}
+              accessibilityLabel="戻る"
+              accessibilityRole="button"
+              style={({ pressed }) => [s.iconButton, { opacity: pressed ? 0.7 : 1 }]}
+            >
+              <ChevronLeft size={20} color={t.text} />
+            </Pressable>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 4, borderRadius: RADIUS.full, paddingHorizontal: 10, paddingVertical: 5, backgroundColor: catConfig.color + "18" }}>
+              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: catConfig.color }} />
+              <Text style={{ fontSize: fs.xxs, fontWeight: WEIGHT.extrabold, color: catConfig.color }}>{catConfig.label}</Text>
             </View>
             {isUrgent && (
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 4, borderRadius: RADIUS.full, paddingHorizontal: 10, paddingVertical: 5, backgroundColor: t.red, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 4, elevation: 3 }}>
-                <Timer size={12} color="#fff" />
-                <Text style={{ fontSize: fs.xxs, fontWeight: WEIGHT.extrabold, color: "#fff" }}>急ぎ</Text>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 4, borderRadius: RADIUS.full, paddingHorizontal: 10, paddingVertical: 5, backgroundColor: t.red + "18" }}>
+                <Timer size={12} color={t.red} />
+                <Text style={{ fontSize: fs.xxs, fontWeight: WEIGHT.extrabold, color: t.red }}>急ぎ</Text>
               </View>
             )}
           </View>
-
-          {/* 共有 + 保存 + メニューボタン（右上） */}
-          <View style={{ position: "absolute", top: 52, right: SPACE.lg, flexDirection: "row", gap: SPACE.sm }}>
+          <View style={{ flexDirection: "row", gap: SPACE.sm }}>
             <Pressable
               onPress={() => {
                 RNShare.share({
@@ -204,17 +172,7 @@ export default function FeedDetailScreen() {
               }}
               accessibilityLabel="共有"
               accessibilityRole="button"
-              style={({ pressed }) => ({
-                width: 38,
-                height: 38,
-                borderRadius: 12,
-                alignItems: "center",
-                justifyContent: "center",
-                backgroundColor: t.surface,
-                borderWidth: 1,
-                borderColor: t.border,
-                opacity: pressed ? 0.7 : 1,
-              })}
+              style={({ pressed }) => [s.iconButton, { opacity: pressed ? 0.7 : 1 }]}
             >
               <Share size={17} color={t.sub} />
             </Pressable>
@@ -222,23 +180,23 @@ export default function FeedDetailScreen() {
               onPress={() => guard(() => setShowReport(true), "通報")}
               accessibilityLabel="通報・その他"
               accessibilityRole="button"
-              style={({ pressed }) => ({
-                width: 38,
-                height: 38,
-                borderRadius: 12,
-                alignItems: "center",
-                justifyContent: "center",
-                backgroundColor: t.surface,
-                borderWidth: 1,
-                borderColor: t.border,
-                opacity: pressed ? 0.7 : 1,
-              })}
+              style={({ pressed }) => [s.iconButton, { opacity: pressed ? 0.7 : 1 }]}
             >
               <Ellipsis size={17} color={t.sub} />
             </Pressable>
           </View>
-
         </View>
+
+        {/* ═══ 画像エリア（グラデーションなし） ═══ */}
+        {hasImages ? (
+          <View style={{ backgroundColor: t.bg }}>
+            <ImageGallery urls={imageUrls} height={280} t={t} />
+          </View>
+        ) : (
+          <View style={{ height: 160 }}>
+            <CatPlaceholder category={post.category} size="lg" />
+          </View>
+        )}
 
         {/* ═══ コンテンツ ═══ */}
         <View style={{ padding: SPACE.xl }}>
@@ -288,9 +246,9 @@ export default function FeedDetailScreen() {
 
           {/* ═══ 概要 ═══ */}
           <Text style={{ fontSize: fs.xs, fontWeight: WEIGHT.semibold, color: t.muted, marginBottom: SPACE.sm, letterSpacing: 0.5 }}>概要</Text>
-          <Text style={{ fontSize: fs.base, color: t.text, lineHeight: 24, marginBottom: SPACE.xxl }}>
+          <HashtagText style={{ fontSize: fs.base, color: t.text, lineHeight: 24, marginBottom: SPACE.xxl }} t={t}>
             {post.content ?? post.title}
-          </Text>
+          </HashtagText>
 
           {/* ═══ 締め切りカード ═══ */}
           <View style={{
@@ -310,27 +268,14 @@ export default function FeedDetailScreen() {
             </View>
           </View>
 
-          {/* ═══ 必要な持ち物カード ═══ */}
-          {items.length > 0 && (
-            <View style={{
-              borderRadius: RADIUS.xl,
-              padding: SPACE.lg,
-              marginBottom: SPACE.lg,
-              backgroundColor: isDark ? "#0E0E18" : "#F8F8F6",
-              borderWidth: 1,
-              borderColor: t.border,
-            }}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.sm, marginBottom: SPACE.md }}>
-                <Check size={16} color={t.accent} />
-                <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.bold, color: t.accent }}>必要な持ち物</Text>
-              </View>
-              {items.map((item) => (
-                <View key={item} style={{ flexDirection: "row", alignItems: "center", gap: SPACE.md, marginBottom: SPACE.md }}>
-                  <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: t.accent }} />
-                  <Text style={{ fontSize: fs.base, fontWeight: WEIGHT.semibold, color: t.text }}>{item}</Text>
-                </View>
-              ))}
-            </View>
+          {/* ═══ 場所（Lv3: タップで地図表示） ═══ */}
+          {post.location_text && (
+            <LazyMapView
+              lat={post.lat ?? 0}
+              lng={post.lng ?? 0}
+              locationText={post.location_text}
+              t={t}
+            />
           )}
 
           {/* ═══ アクションバー ═══ */}
@@ -342,7 +287,9 @@ export default function FeedDetailScreen() {
                 accessibilityRole="button"
                 style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: SPACE.sm, minHeight: 44, opacity: pressed ? 0.7 : 1 })}
               >
-                <Heart size={22} fill={isLiked ? t.red : "none"} color={isLiked ? t.red : t.sub} />
+                <Animated.View style={likeAnimatedStyle}>
+                  <Heart size={22} fill={isLiked ? t.red : "none"} color={isLiked ? t.red : t.sub} />
+                </Animated.View>
                 <Text style={{ fontSize: fs.base, fontWeight: WEIGHT.semibold, color: isLiked ? t.red : t.sub }}>
                   {post.likes_count}
                 </Text>
@@ -416,6 +363,7 @@ export default function FeedDetailScreen() {
               try {
                 await createCommentMutation.mutateAsync(commentText.trim());
                 setCommentText("");
+                toast("コメントを投稿しました", "success");
               } catch (e: unknown) {
                 toast(getUserMessage(e), "error");
               }

@@ -15,6 +15,7 @@ import { useLocation } from "@/hooks/useLocation";
 import { uploadImage } from "@/lib/storage";
 import { getUserMessage } from "@/lib/appError";
 import { useAppStyles } from "@/hooks/useAppStyles";
+import { useAuth } from "@/hooks/useAuth";
 import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 
 const MAX_LENGTH = 140;
@@ -31,9 +32,10 @@ const PLACEHOLDER_EXAMPLES = [
 /** つぶやき投稿画面 */
 export default function TalkPostScreen() {
   const { s, t, fs } = useAppStyles();
+  const { profile } = useAuth();
   const createTalkMutation = useCreateTalk();
   const { images, isFull, pickImage, takePhoto, removeImage } = useImagePicker();
-  const { lat, lng, granted } = useLocation();
+  const { lat, lng, granted, placeName } = useLocation();
   const [submitted, setSubmitted] = React.useState(false);
   const [sending, setSending] = React.useState(false);
   const [placeholderIndex, setPlaceholderIndex] = React.useState(0);
@@ -88,6 +90,7 @@ export default function TalkPostScreen() {
         message: data.message.trim(),
         image_url,
         image_urls,
+        location_text: placeName ?? undefined,
         lat: granted ? lat : undefined,
         lng: granted ? lng : undefined,
       });
@@ -115,9 +118,13 @@ export default function TalkPostScreen() {
 
       {/* アバター + テキスト入力 */}
       <View style={{ flexDirection: "row", gap: SPACE.md, alignItems: "flex-start" }}>
-        <LinearGradient colors={[t.accent, t.blue]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center" }}>
-          <User size={22} color="#fff" />
-        </LinearGradient>
+        {profile?.avatar_url ? (
+          <Image source={{ uri: profile.avatar_url }} style={{ width: 44, height: 44, borderRadius: 22 }} contentFit="cover" />
+        ) : (
+          <LinearGradient colors={[t.accent, t.blue]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center" }}>
+            <User size={22} color="#fff" />
+          </LinearGradient>
+        )}
         <Controller
           control={control}
           name="message"
@@ -136,6 +143,7 @@ export default function TalkPostScreen() {
         />
       </View>
       {errors.message && <Text style={{ fontSize: fs.xxs, color: t.red }}>{errors.message.message}</Text>}
+      <Text style={{ fontSize: fs.xxs, color: t.muted }}>#ハッシュタグ を使うと検索で見つけてもらいやすくなります</Text>
 
       {/* コンパクト位置情報（インライン1行） */}
       <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.xs }}>

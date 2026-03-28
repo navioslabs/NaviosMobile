@@ -12,8 +12,16 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   newArchEnabled: true,
   ios: {
     supportsTablet: true,
+    config: {
+      googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY ?? "",
+    },
   },
   android: {
+    config: {
+      googleMaps: {
+        apiKey: process.env.GOOGLE_MAPS_API_KEY ?? "",
+      },
+    },
     adaptiveIcon: {
       backgroundColor: "#E6F4FE",
       foregroundImage: "./assets/images/android-icon-foreground.png",
@@ -49,6 +57,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   extra: {
     SUPABASE_URL: process.env.SUPABASE_URL,
     SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
+    GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY,
     router: {},
     eas: {
       projectId: "e7c48e91-1fdb-4605-bc82-338035d6d5f7",

@@ -4,7 +4,7 @@ import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
-import { Navigation, Flame, Clock, Heart, MessageSquare } from "@/lib/icons";
+import { Navigation, Flame, Clock, Heart, MessageSquare, User } from "@/lib/icons";
 import { CAT_CONFIG } from "@/constants/categories";
 import type { ThemeTokens } from "@/constants/theme";
 import type { Post } from "@/types";
@@ -17,6 +17,7 @@ import CrowdTag from "@/components/ui/CrowdTag";
 import FeaturedGlow from "@/components/ui/FeaturedGlow";
 import CatPill from "@/components/ui/CatPill";
 import CatPlaceholder from "@/components/ui/CatPlaceholder";
+import HashtagText from "@/components/ui/HashtagText";
 import CardHeader from "./CardHeader";
 import CardActions from "./CardActions";
 
@@ -110,18 +111,24 @@ function CompactCard({ post, t, isDark, expired, onLongPress }: { post: Post; t:
 
           {/* 本文（あれば1行） */}
           {post.content ? (
-            <Text style={{ fontSize: fs.sm, color: t.sub, lineHeight: 18 }} numberOfLines={1}>
+            <HashtagText style={{ fontSize: fs.sm, color: t.sub, lineHeight: 18 }} numberOfLines={1} t={t}>
               {post.content}
-            </Text>
+            </HashtagText>
           ) : null}
 
           {/* 下段: 投稿者 + アクション */}
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.sm }}>
-              <Image
-                source={{ uri: post.author?.avatar_url ?? "https://i.pravatar.cc/100" }}
-                style={{ width: 22, height: 22, borderRadius: 11 }}
-              />
+              {post.author?.avatar_url ? (
+                <Image
+                  source={{ uri: post.author.avatar_url }}
+                  style={{ width: 22, height: 22, borderRadius: 11 }}
+                />
+              ) : (
+                <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: t.border, alignItems: "center", justifyContent: "center" }}>
+                  <User size={12} color={t.muted} />
+                </View>
+              )}
               <Text style={{ fontSize: fs.xs, fontWeight: WEIGHT.semibold, color: t.sub }}>
                 {post.author?.display_name ?? "ユーザー"}
               </Text>
@@ -157,6 +164,7 @@ function FeedPostCard({ post, t, isDark, featured, expired, onLongPress }: FeedP
   const fs = getScaledFontSize(scale);
   const catColor = CAT_CONFIG[post.category]?.color || t.accent;
   const gradColors = CAT_GRADIENTS[post.category] || CAT_GRADIENTS.lifeline;
+  const multiCount = post.image_urls?.length ?? 0;
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   const handlePressIn = useCallback(() => {
@@ -188,16 +196,24 @@ function FeedPostCard({ post, t, isDark, featured, expired, onLongPress }: FeedP
         elevation: featured ? 8 : 4,
       }}
     >
-      <View style={{ aspectRatio: hasImage ? 3 / 4 : 16 / 9 }}>
-        {hasImage ? (
-          <>
-            <Image source={{ uri: post.image_url! }} style={StyleSheet.absoluteFill} contentFit="cover" />
-            {post.image_urls && post.image_urls.length > 1 && (
-              <View style={{ position: "absolute", top: SPACE.sm, left: SPACE.sm, backgroundColor: "rgba(0,0,0,0.6)", borderRadius: RADIUS.sm, paddingHorizontal: 6, paddingVertical: 2 }}>
-                <Text style={{ fontSize: fs.xxs, fontWeight: WEIGHT.bold, color: "#fff" }}>+{post.image_urls.length - 1}</Text>
-              </View>
-            )}
-          </>
+      <View style={{ aspectRatio: multiCount >= 2 ? 4 / 3 : hasImage ? 3 / 4 : 16 / 9 }}>
+        {multiCount >= 3 ? (
+          /* 3枚: 左に大1枚 + 右に小2枚 */
+          <View style={{ flex: 1, flexDirection: "row" }}>
+            <Image source={{ uri: post.image_urls![0] }} style={{ flex: 2 }} contentFit="cover" />
+            <View style={{ flex: 1, gap: 2, marginLeft: 2 }}>
+              <Image source={{ uri: post.image_urls![1] }} style={{ flex: 1 }} contentFit="cover" />
+              <Image source={{ uri: post.image_urls![2] }} style={{ flex: 1 }} contentFit="cover" />
+            </View>
+          </View>
+        ) : multiCount === 2 ? (
+          /* 2枚: 横2分割 */
+          <View style={{ flex: 1, flexDirection: "row", gap: 2 }}>
+            <Image source={{ uri: post.image_urls![0] }} style={{ flex: 1 }} contentFit="cover" />
+            <Image source={{ uri: post.image_urls![1] }} style={{ flex: 1 }} contentFit="cover" />
+          </View>
+        ) : hasImage ? (
+          <Image source={{ uri: post.image_url! }} style={StyleSheet.absoluteFill} contentFit="cover" />
         ) : (
           <CatPlaceholder category={post.category} size="lg" />
         )}
@@ -236,7 +252,7 @@ function FeedPostCard({ post, t, isDark, featured, expired, onLongPress }: FeedP
               </Text>
             </View>
           )}
-          <Text style={{ fontSize: fs.lg + 1, fontWeight: WEIGHT.bold, color: "#fff", lineHeight: 24 }}>{post.title + (post.content ? "\n" + post.content : "")}</Text>
+          <HashtagText style={{ fontSize: fs.lg + 1, fontWeight: WEIGHT.bold, color: "#fff", lineHeight: 24 }} t={t}>{post.title + (post.content ? "\n" + post.content : "")}</HashtagText>
           <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.sm, marginTop: SPACE.sm }}>
             <UrgencyBar timeLeft={calcTimeLeft(post.deadline)} subColor={t.sub} />
             {post.crowd ? <CrowdTag crowd={crowdLabel(post.crowd)} /> : null}

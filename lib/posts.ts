@@ -1,6 +1,7 @@
 import { supabase } from "@/lib/supabase";
 import type { Post } from "@/types";
 import { DEFAULT_RADIUS } from "@/constants/location";
+import { extractTags } from "@/lib/utils";
 
 const PAGE_SIZE = 20;
 
@@ -40,15 +41,25 @@ export async function fetchPosts(filters?: {
   return data as Post[];
 }
 
-/** 投稿詳細取得 */
+/** 投稿詳細取得（座標付き） */
 export async function fetchPostById(id: string): Promise<Post> {
   const { data, error } = await supabase
     .from("posts")
-    .select("*, author:profiles(*)")
+    .select("*, author:profiles(*), location::text")
     .eq("id", id)
     .single();
   if (error) throw error;
-  return data as Post;
+
+  // PostGIS WKT "POINT(lng lat)" からlat/lngを抽出
+  const post = data as Post & { location?: string };
+  if (post.location) {
+    const match = post.location.match(/POINT\(([-\d.]+)\s+([-\d.]+)\)/);
+    if (match) {
+      (post as any).lng = parseFloat(match[1]);
+      (post as any).lat = parseFloat(match[2]);
+    }
+  }
+  return post as Post;
 }
 
 /** ちかく一覧（PostGIS距離計算） */
@@ -157,7 +168,8 @@ export async function createPost(input: {
   if (!user) throw new Error("ログインが必要です");
 
   const { lat, lng, ...rest } = input;
-  const insertData: Record<string, any> = { ...rest, author_id: user.id };
+  const tags = extractTags(`${input.title ?? ""} ${input.content ?? ""}`);
+  const insertData: Record<string, any> = { ...rest, author_id: user.id, tags };
   // image_url には1枚目を入れる（後方互換）
   if (!insertData.image_url && insertData.image_urls?.length > 0) {
     insertData.image_url = insertData.image_urls[0];

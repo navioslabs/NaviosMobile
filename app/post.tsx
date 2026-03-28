@@ -19,6 +19,8 @@ import { uploadImage } from "@/lib/storage";
 import { getUserMessage } from "@/lib/appError";
 import { useAppStyles } from "@/hooks/useAppStyles";
 import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
+import PlacePickerModal from "@/components/ui/PlacePickerModal";
+import type { SelectedPlace } from "@/components/ui/PlacePickerModal";
 
 /** カテゴリ別の説明文 */
 const CAT_HINTS: Record<CategoryId, string> = {
@@ -83,7 +85,7 @@ export default function PostScreen() {
   const { s, t, fs, isDark } = useAppStyles();
   const createPostMutation = useCreatePost();
   const { images, isFull, pickImage, takePhoto, removeImage } = useImagePicker();
-  const { lat, lng, granted } = useLocation();
+  const { lat, lng, granted, placeName } = useLocation();
 
   const { control, handleSubmit, watch, setValue, formState: { errors, isValid } } = useForm<CreatePostForm>({
     resolver: zodResolver(createPostSchema),
@@ -97,6 +99,8 @@ export default function PostScreen() {
   const [selectedChip, setSelectedChip] = useState<QuickChipId | null>(null);
   const [showPicker, setShowPicker] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [showPlacePicker, setShowPlacePicker] = useState(false);
+  const [selectedPlace, setSelectedPlace] = useState<SelectedPlace | null>(null);
 
   const hasContent = (title?.trim().length ?? 0) > 0 || images.length > 0;
 
@@ -137,6 +141,7 @@ export default function PostScreen() {
         image_url,
         image_urls,
         deadline: data.deadline.toISOString(),
+        location_text: selectedPlace ? `${selectedPlace.name}${selectedPlace.address ? " " + selectedPlace.address : ""}` : (placeName ?? undefined),
         lat: granted ? lat : undefined,
         lng: granted ? lng : undefined,
       });
@@ -263,6 +268,7 @@ export default function PostScreen() {
           )}
         />
         {errors.content && <Text style={{ fontSize: fs.xxs, color: t.red, marginTop: SPACE.xs }}>{errors.content.message}</Text>}
+        <Text style={{ fontSize: fs.xxs, color: t.muted, marginTop: SPACE.xs }}>#ハッシュタグ を使うと検索で見つけてもらいやすくなります</Text>
       </View>
 
       {/* 期限 */}
@@ -362,19 +368,74 @@ export default function PostScreen() {
       </View>
 
       {/* 場所 */}
+      {/* 場所（Lv1: 現在地 / Lv2: 場所検索） */}
       <View>
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: SPACE.sm }}>
           <Text style={s.textSectionLabel}>場所</Text>
           <Text style={{ fontSize: fs.xxs, color: t.muted }}>任意</Text>
         </View>
-        <View style={[s.card, { flexDirection: "row" as const, alignItems: "center" as const, gap: SPACE.sm + 2 }]}>
-          <MapPin size={18} color={granted ? t.accent : t.sub} />
-          <Text style={{ flex: 1, fontSize: fs.base, color: granted ? t.text : t.sub }}>
-            {granted ? "📍 位置情報つきで近くの人に届きやすくなります" : "位置なしでも投稿できます（許可すると届きやすい）"}
-          </Text>
-          <Locate size={16} color={granted ? t.accent : t.sub} />
-        </View>
+
+        {selectedPlace ? (
+          /* 場所選択済み */
+          <View style={[s.card, { flexDirection: "row" as const, alignItems: "center" as const, gap: SPACE.sm + 2 }]}>
+            <MapPin size={18} color={t.accent} />
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: fs.base, fontWeight: WEIGHT.bold, color: t.text }}>{selectedPlace.name}</Text>
+              {selectedPlace.address ? (
+                <Text style={{ fontSize: fs.xs, color: t.sub, marginTop: 1 }}>{selectedPlace.address}</Text>
+              ) : null}
+            </View>
+            <Pressable onPress={() => setSelectedPlace(null)} hitSlop={8}>
+              <Text style={{ fontSize: fs.xs, color: t.muted }}>変更</Text>
+            </Pressable>
+          </View>
+        ) : (
+          /* 未選択: 2ボタン */
+          <View style={{ gap: SPACE.sm }}>
+            {/* Lv1: 現在地で投稿 */}
+            <View style={[s.card, { flexDirection: "row" as const, alignItems: "center" as const, gap: SPACE.sm + 2 }]}>
+              <Locate size={18} color={granted ? t.accent : t.sub} />
+              <Text style={{ flex: 1, fontSize: fs.sm, color: granted ? t.text : t.sub }}>
+                {granted ? `📍 ${placeName ?? "位置情報を取得中..."}` : "位置情報が許可されていません"}
+              </Text>
+              {granted && (
+                <View style={{ backgroundColor: t.accent + "20", borderRadius: RADIUS.full, paddingHorizontal: SPACE.sm + 2, paddingVertical: 2 }}>
+                  <Text style={{ fontSize: fs.xxs, fontWeight: WEIGHT.bold, color: t.accent }}>自動</Text>
+                </View>
+              )}
+            </View>
+
+            {/* Lv2: 場所を検索 */}
+            <Pressable
+              onPress={() => setShowPlacePicker(true)}
+              style={({ pressed }) => ({
+                flexDirection: "row" as const,
+                alignItems: "center" as const,
+                gap: SPACE.sm + 2,
+                paddingVertical: SPACE.md,
+                paddingHorizontal: SPACE.lg,
+                borderRadius: RADIUS.xl,
+                borderWidth: 1,
+                borderStyle: "dashed" as const,
+                borderColor: t.border,
+                opacity: pressed ? 0.7 : 1,
+              })}
+            >
+              <MapPin size={16} color={t.sub} />
+              <Text style={{ fontSize: fs.sm, color: t.sub }}>別の場所を検索して指定</Text>
+            </Pressable>
+          </View>
+        )}
       </View>
+
+      <PlacePickerModal
+        visible={showPlacePicker}
+        onClose={() => setShowPlacePicker(false)}
+        onSelect={(place) => { setSelectedPlace(place); setShowPlacePicker(false); }}
+        t={t}
+        currentLat={lat}
+        currentLng={lng}
+      />
 
       {/* エラーバナー */}
       {createPostMutation.error && (

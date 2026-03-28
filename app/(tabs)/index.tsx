@@ -18,14 +18,13 @@ import ScanHeader from "@/components/features/nearby/ScanHeader";
 import NearbyPostItem from "@/components/features/nearby/NearbyPostItem";
 import DistanceSectionHeader from "@/components/features/nearby/DistanceSectionHeader";
 import StateView from "@/components/ui/StateView";
+import { PostCardSkeleton } from "@/components/ui/Skeleton";
 import DatePicker from "@/components/features/feed/DatePicker";
-import FeedSummary from "@/components/features/feed/FeedSummary";
 import CategoryChips from "@/components/features/feed/CategoryChips";
 import FeedPostCard from "@/components/features/feed/FeedPostCard";
 import { REFETCH_THRESHOLD_M } from "@/constants/location";
 
 type ViewMode = "nearby" | "feed";
-type FilterType = "top" | "nearby" | "urgent" | null;
 
 interface NearbySection {
   title: string;
@@ -87,7 +86,7 @@ export default function HomeScreen() {
   const [viewMode, setViewMode] = useState<ViewMode>("nearby");
 
   // ── ちかくモード用 ──
-  const { lat, lng, isLoading: locationLoading, granted, isWatching } = useLocation({
+  const { lat, lng, isLoading: locationLoading, granted, isWatching, placeName } = useLocation({
     watch: isFocused,
   });
 
@@ -190,7 +189,6 @@ export default function HomeScreen() {
   // ── フィードモード用 ──
   const [selDate, setSelDate] = useState(0);
   const [selCat, setSelCat] = useState("all");
-  const [summaryFilter, setSummaryFilter] = useState<FilterType>(null);
 
   const dateRange = useMemo(() => {
     const now = new Date();
@@ -216,24 +214,10 @@ export default function HomeScreen() {
   const datePosts: Post[] = feedData?.flat ?? [];
 
   const feedFiltered = useMemo(() => {
-    let posts = datePosts;
-    if (summaryFilter === "top") {
-      posts = [...posts].sort((a, b) => b.likes_count - a.likes_count);
-    } else if (summaryFilter === "nearby") {
-      posts = posts.filter((p) => (p.distance_m ?? Infinity) <= 200);
-    } else if (summaryFilter === "urgent") {
-      posts = [...posts]
-        .filter((p) => !isExpired(p.deadline))
-        .sort((a, b) => {
-          const aTime = a.deadline ? new Date(a.deadline).getTime() : Infinity;
-          const bTime = b.deadline ? new Date(b.deadline).getTime() : Infinity;
-          return aTime - bTime;
-        });
-    }
-    const active = posts.filter((p) => !isExpired(p.deadline));
-    const expired = posts.filter((p) => isExpired(p.deadline));
+    const active = datePosts.filter((p) => !isExpired(p.deadline));
+    const expired = datePosts.filter((p) => isExpired(p.deadline));
     return [...active, ...expired];
-  }, [datePosts, selCat, summaryFilter]);
+  }, [datePosts]);
 
   const getPostCount = useCallback((offset: number) => offset === selDate ? datePosts.length : 0, [selDate, datePosts]);
 
@@ -249,7 +233,7 @@ export default function HomeScreen() {
     return (
       <View style={s.screen}>
         <ModeSwitch mode={viewMode} onChangeMode={setViewMode} t={t} fs={fs} />
-        <ScanHeader t={t} isDark={isDark} postCount={0} />
+        <ScanHeader t={t} isDark={isDark} postCount={0} placeName={placeName} />
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: SPACE.xl }}>
           <MapPin size={48} color={t.muted} />
           <Text style={{ fontSize: fs.lg, fontWeight: WEIGHT.bold, color: t.text, marginTop: SPACE.lg, textAlign: "center" }}>
@@ -268,8 +252,12 @@ export default function HomeScreen() {
     return (
       <View style={s.screen}>
         <ModeSwitch mode={viewMode} onChangeMode={setViewMode} t={t} fs={fs} />
-        <ScanHeader t={t} isDark={isDark} postCount={0} isWatching={isWatching} />
-        <StateView t={t} type="loading" />
+        <ScanHeader t={t} isDark={isDark} postCount={0} isWatching={isWatching} placeName={placeName} />
+        <View style={{ padding: SPACE.md, gap: SPACE.sm }}>
+          <PostCardSkeleton t={t} />
+          <PostCardSkeleton t={t} />
+          <PostCardSkeleton t={t} />
+        </View>
       </View>
     );
   }
@@ -278,14 +266,10 @@ export default function HomeScreen() {
   if (viewMode === "feed") {
     const FeedListHeader = (
       <>
-        <FeedSummary
-          t={t}
-          posts={datePosts}
-          dateLabel={getDateLabel(selDate)}
-          totalCount={feedFiltered.length}
-          activeFilter={summaryFilter}
-          onFilterChange={setSummaryFilter}
-        />
+        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: SPACE.xl, paddingTop: SPACE.sm, paddingBottom: SPACE.xs }}>
+          <Text style={{ fontSize: fs.sm, color: t.sub }}>{getDateLabel(selDate)}</Text>
+          <Text style={{ fontSize: fs.xs, fontWeight: WEIGHT.semibold, color: t.accent }}>{feedFiltered.length}件</Text>
+        </View>
         <CategoryChips t={t} selected={selCat} onSelect={setSelCat} />
       </>
     );
@@ -380,6 +364,7 @@ export default function HomeScreen() {
         urgentCount={urgentCount}
         dataUpdatedAt={dataUpdatedAt}
         isWatching={isWatching}
+        placeName={placeName}
         scoreBarAnimStyle={scoreBarStyle}
       />
 

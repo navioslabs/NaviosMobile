@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { View, Text, TextInput, Pressable, ScrollView, ActivityIndicator, RefreshControl } from "react-native";
 import Animated, { FadeIn, FadeOut, FadeInUp } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { Sparkles, Search, Zap, MessageCircle, MessageSquare, Trophy, Heart, Inbox } from "@/lib/icons";
 import { useAppStyles } from "@/hooks/useAppStyles";
 import { useThemeStore } from "@/stores/themeStore";
@@ -21,11 +21,12 @@ import { useSearchHistory } from "@/hooks/useSearchHistory";
 
 /** AI画面（さがす） */
 export default function AiScreen() {
+  const { q } = useLocalSearchParams<{ q?: string }>();
   const { s, t, fs } = useAppStyles();
   const { isDark } = useThemeStore();
   const { history, addHistory, clearHistory } = useSearchHistory();
-  const [query, setQuery] = useState("");
-  const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [query, setQuery] = useState(q ?? "");
+  const [debouncedQuery, setDebouncedQuery] = useState(q ?? "");
   const [searchTab, setSearchTab] = useState<"posts" | "talks">("posts");
   const [searchCategory, setSearchCategory] = useState<string | undefined>(undefined);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -56,6 +57,14 @@ export default function AiScreen() {
       addHistory(query.trim());
     }
   }, [query, addHistory]);
+
+  /** タグタップ等で q パラメータが変わった時に検索を反映 */
+  useEffect(() => {
+    if (q) {
+      setQuery(q);
+      setDebouncedQuery(q);
+    }
+  }, [q]);
 
   useEffect(() => {
     return () => { if (timerRef.current) clearTimeout(timerRef.current); };

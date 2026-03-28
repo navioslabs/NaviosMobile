@@ -1,6 +1,7 @@
 import { supabase } from "@/lib/supabase";
 import type { Talk, TalkReply } from "@/types";
 import { GHOST_DURATION_MS } from "@/constants/ghost";
+import { extractTags } from "@/lib/utils";
 
 /** ひとこと一覧取得（24h以内 or 殿堂入り） */
 export async function fetchTalks(): Promise<Talk[]> {
@@ -53,7 +54,8 @@ export async function createTalk(input: {
   if (!user) throw new Error("ログインが必要です");
 
   const { lat, lng, ...rest } = input;
-  const insertData: Record<string, any> = { ...rest, author_id: user.id };
+  const tags = extractTags(input.message);
+  const insertData: Record<string, any> = { ...rest, author_id: user.id, tags };
   if (!insertData.image_url && insertData.image_urls?.length > 0) {
     insertData.image_url = insertData.image_urls[0];
   }

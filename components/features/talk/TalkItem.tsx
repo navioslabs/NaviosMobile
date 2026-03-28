@@ -3,7 +3,7 @@ import { View, Text, Pressable } from "react-native";
 import Animated, { SlideInLeft } from "react-native-reanimated";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import { MapPin, MessageCircle, Heart, Navigation } from "@/lib/icons";
+import { MapPin, MessageCircle, Heart, Navigation, User } from "@/lib/icons";
 import type { ThemeTokens } from "@/constants/theme";
 import type { Talk } from "@/types";
 import { timeAgo } from "@/lib/adapters";
@@ -16,6 +16,7 @@ import { HALL_OF_FAME_THRESHOLD } from "@/constants/ghost";
 import GhostCountdown from "./GhostCountdown";
 import HallOfFameBadge from "./HallOfFameBadge";
 import BadgePill from "@/components/features/badges/BadgePill";
+import HashtagText from "@/components/ui/HashtagText";
 
 interface TalkItemProps {
   talk: Talk;
@@ -65,17 +66,32 @@ function TalkItem({ talk, t }: TalkItemProps) {
             onPress={() => router.push(`/profile/${talk.author_id}` as any)}
             style={{ marginTop: 2 }}
           >
-            <Image
-              source={{ uri: talk.author?.avatar_url ?? "https://i.pravatar.cc/100" }}
-              style={{
+            {talk.author?.avatar_url ? (
+              <Image
+                source={{ uri: talk.author.avatar_url }}
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 16,
+                  borderWidth: isHallOfFame ? 2 : 0,
+                  borderColor: isHallOfFame ? "#FFD700" : "transparent",
+                }}
+                contentFit="cover"
+              />
+            ) : (
+              <View style={{
                 width: 32,
                 height: 32,
                 borderRadius: 16,
+                backgroundColor: t.border,
+                alignItems: "center",
+                justifyContent: "center",
                 borderWidth: isHallOfFame ? 2 : 0,
                 borderColor: isHallOfFame ? "#FFD700" : "transparent",
-              }}
-              contentFit="cover"
-            />
+              }}>
+                <User size={16} color={t.muted} />
+              </View>
+            )}
           </Pressable>
 
           {/* 吹き出しカード */}
@@ -112,9 +128,9 @@ function TalkItem({ talk, t }: TalkItemProps) {
               } : {}),
             }}>
               {/* メッセージ */}
-              <Text style={{ fontSize: fs.base, lineHeight: 22, color: t.text }}>
+              <HashtagText style={{ fontSize: fs.base, lineHeight: 22, color: t.text }} t={t}>
                 {talk.message}
-              </Text>
+              </HashtagText>
 
               {/* 画像 */}
               {talk.image_url && (
