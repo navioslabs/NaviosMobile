@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, TextInput, Pressable, ScrollView, Alert, ActivityIndicator, Platform } from "react-native";
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, withSequence, FadeIn } from "react-native-reanimated";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -85,8 +85,6 @@ export default function PostScreen() {
   const { images, isFull, pickImage, takePhoto, removeImage } = useImagePicker();
   const { lat, lng, granted } = useLocation();
 
-  const submittedRef = useRef(false);
-
   const { control, handleSubmit, watch, setValue, formState: { errors, isValid } } = useForm<CreatePostForm>({
     resolver: zodResolver(createPostSchema),
     defaultValues: { category: "lifeline", title: "", content: "", deadline: undefined },
@@ -102,8 +100,8 @@ export default function PostScreen() {
 
   const hasContent = (title?.trim().length ?? 0) > 0 || images.length > 0;
 
-  // 破棄確認（data.action.dispatch で preventRemove をバイパスして戻る）
-  usePreventRemove(hasContent && !submittedRef.current, ({ data }) => {
+  // 破棄確認（submitted は state なので usePreventRemove が再評価される）
+  usePreventRemove(hasContent && !submitted, ({ data }) => {
     Alert.alert(
       "投稿を破棄しますか？",
       "入力した内容は保存されません",
@@ -113,8 +111,8 @@ export default function PostScreen() {
           text: "破棄する",
           style: "destructive",
           onPress: () => {
-            submittedRef.current = true;
-            router.back();
+            setSubmitted(true);
+            setTimeout(() => router.back(), 50);
           },
         },
       ]
@@ -142,7 +140,6 @@ export default function PostScreen() {
         lat: granted ? lat : undefined,
         lng: granted ? lng : undefined,
       });
-      submittedRef.current = true;
       setSubmitted(true);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setTimeout(() => router.back(), 800);

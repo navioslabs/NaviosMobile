@@ -6,7 +6,7 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
 } from "react-native-reanimated";
-import { Rss, MessageCircle, Sparkles, Radio, Settings } from "@/lib/icons";
+import { PenLine, MessageCircle, Sparkles, Radio, Settings } from "@/lib/icons";
 import { makeTokens } from "@/constants/theme";
 import { useThemeStore } from "@/stores/themeStore";
 import { useBadgeStore } from "@/stores/badgeStore";
@@ -119,7 +119,7 @@ export default function TabLayout() {
           name="feed"
           options={{
             title: "フィード",
-            tabBarIcon: ({ color, size }) => <DotIcon icon={Rss} color={color} size={size} show={feedHasNew} />,
+            tabBarIcon: ({ color, size }) => <DotIcon icon={PenLine} color={color} size={size} show={feedHasNew} />,
           }}
         />
         <Tabs.Screen

@@ -44,7 +44,7 @@ export default function StreetHistoryScreen() {
         backgroundColor: t.surface, borderBottomWidth: 1, borderBottomColor: t.border,
       }}>
         <Pressable
-          onPress={() => router.back()}
+          onPress={() => router.canGoBack() ? router.back() : router.replace("/(tabs)")}
           style={({ pressed }) => ({ width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", opacity: pressed ? 0.7 : 1 })}
         >
           <ChevronLeft size={24} color={t.text} />

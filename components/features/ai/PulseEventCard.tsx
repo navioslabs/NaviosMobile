@@ -1,6 +1,7 @@
 import { memo } from "react";
-import { View, Text } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import { Image } from "expo-image";
+import { router } from "expo-router";
 import { Navigation, Flame } from "@/lib/icons";
 import type { ThemeTokens } from "@/constants/theme";
 import type { Post } from "@/types";
@@ -12,7 +13,6 @@ import CatPill from "@/components/ui/CatPill";
 import MatchBadge from "@/components/ui/MatchBadge";
 import UrgencyBar from "@/components/ui/UrgencyBar";
 import CrowdTag from "@/components/ui/CrowdTag";
-import GoButton from "@/components/ui/GoButton";
 import HotStrip from "@/components/ui/HotStrip";
 
 interface PulseEventCardProps {
@@ -28,8 +28,20 @@ function PulseEventCard({ event, t }: PulseEventCardProps) {
   const isHot = matchScore >= 85;
 
   return (
-    <View
-      style={{ borderRadius: 18, overflow: "hidden", position: "relative", backgroundColor: t.surface, borderWidth: isHot ? 1.5 : 1, borderColor: isHot ? t.accent + "35" : t.border }}
+    <Pressable
+      onPress={() => router.push(`/feed/${event.id}` as any)}
+      accessibilityLabel={`${event.title}、いいね${event.likes_count}件`}
+      accessibilityRole="button"
+      style={({ pressed }) => ({
+        borderRadius: 18,
+        overflow: "hidden",
+        position: "relative",
+        backgroundColor: t.surface,
+        borderWidth: isHot ? 1.5 : 1,
+        borderColor: isHot ? t.accent + "35" : t.border,
+        opacity: pressed ? 0.9 : 1,
+        transform: [{ scale: pressed ? 0.98 : 1 }],
+      })}
     >
       {isHot && <HotStrip />}
       <View style={{ flexDirection: "row", gap: 12, padding: 14 }}>
@@ -44,7 +56,10 @@ function PulseEventCard({ event, t }: PulseEventCardProps) {
             )}
             <CatPill cat={event.category} small />
           </View>
-          <Text style={{ fontSize: fs.base, fontWeight: WEIGHT.bold, lineHeight: 20, marginBottom: 5, color: t.text }} numberOfLines={1}>
+          <Text style={{ fontSize: fs.base, fontWeight: WEIGHT.bold, lineHeight: 20, marginBottom: 2, color: t.text }} numberOfLines={1}>
+            {event.title}
+          </Text>
+          <Text style={{ fontSize: fs.xxs, color: t.muted, marginBottom: 4 }} numberOfLines={1}>
             {event.author?.display_name ?? "ユーザー"}
           </Text>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
@@ -58,10 +73,9 @@ function PulseEventCard({ event, t }: PulseEventCardProps) {
         </View>
         <View style={{ alignItems: "flex-end", justifyContent: "space-between" }}>
           <MatchBadge score={matchScore} />
-          <GoButton small />
         </View>
       </View>
-    </View>
+    </Pressable>
   );
 }
 

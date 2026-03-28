@@ -70,6 +70,20 @@ export async function createTalk(input: {
   return data as Talk;
 }
 
+/** ひとことテキスト検索 */
+export async function searchTalks(query: string): Promise<Talk[]> {
+  const cutoff = new Date(Date.now() - GHOST_DURATION_MS).toISOString();
+  const { data, error } = await supabase
+    .from("talks")
+    .select("*, author:profiles(*)")
+    .ilike("message", `%${query}%`)
+    .or(`is_hall_of_fame.eq.true,created_at.gte.${cutoff}`)
+    .order("likes_count", { ascending: false })
+    .limit(20);
+  if (error) throw error;
+  return data as Talk[];
+}
+
 /** ひとこと削除 */
 export async function deleteTalk(id: string): Promise<void> {
   const { error } = await supabase.from("talks").delete().eq("id", id);

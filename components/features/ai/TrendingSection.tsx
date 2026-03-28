@@ -39,7 +39,6 @@ function TrendingCard({ post, t, index }: { post: Post; t: ThemeTokens; index: n
           transform: [{ scale: pressed ? 0.97 : 1 }],
         })}
       >
-        {/* 画像 */}
         {post.image_url ? (
           <Image source={{ uri: post.image_url }} style={{ width: "100%", height: 100 }} contentFit="cover" />
         ) : (
@@ -47,10 +46,7 @@ function TrendingCard({ post, t, index }: { post: Post; t: ThemeTokens; index: n
             <TrendingUp size={28} color={catColor + "40"} />
           </View>
         )}
-
-        {/* カテゴリカラーライン */}
         <View style={{ height: 2, backgroundColor: catColor }} />
-
         <View style={{ padding: SPACE.sm + 2 }}>
           <CatPill cat={post.category} small />
           <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.bold, color: t.text, marginTop: SPACE.xs, lineHeight: 18 }} numberOfLines={2}>
@@ -72,12 +68,10 @@ function TrendingCard({ post, t, index }: { post: Post; t: ThemeTokens; index: n
   );
 }
 
-/** 急上昇セクション（横スクロールカルーセル） */
+/** 急上昇セクション（横スクロールカルーセル + 空状態対応） */
 export default function TrendingSection({ posts, t }: TrendingSectionProps) {
   const { scale } = useFontSizeStore();
   const fs = getScaledFontSize(scale);
-
-  if (posts.length === 0) return null;
 
   return (
     <View style={{ marginBottom: SPACE.xl }}>
@@ -86,14 +80,31 @@ export default function TrendingSection({ posts, t }: TrendingSectionProps) {
         <Text style={{ fontSize: fs.base, fontWeight: WEIGHT.bold, color: t.text }}>急上昇</Text>
         <Text style={{ fontSize: fs.xs, color: t.muted, marginLeft: "auto" }}>直近で話題</Text>
       </View>
-      <FlatList
-        data={posts}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={{ gap: SPACE.md }}
-        renderItem={({ item, index }) => <TrendingCard post={item} t={t} index={index} />}
-      />
+
+      {posts.length > 0 ? (
+        <FlatList
+          data={posts}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={{ gap: SPACE.md }}
+          renderItem={({ item, index }) => <TrendingCard post={item} t={t} index={index} />}
+        />
+      ) : (
+        <View style={{
+          borderRadius: RADIUS.lg, padding: SPACE.lg,
+          backgroundColor: t.surface, borderWidth: 1, borderColor: t.border,
+          alignItems: "center",
+        }}>
+          <TrendingUp size={24} color={t.muted} />
+          <Text style={{ fontSize: fs.sm, color: t.muted, marginTop: SPACE.sm, textAlign: "center" }}>
+            まだ急上昇の投稿はありません
+          </Text>
+          <Text style={{ fontSize: fs.xs, color: t.muted, marginTop: SPACE.xs, textAlign: "center" }}>
+            投稿にいいねを押すとここに表示されます
+          </Text>
+        </View>
+      )}
     </View>
   );
 }

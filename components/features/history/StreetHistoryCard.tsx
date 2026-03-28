@@ -1,7 +1,7 @@
 import { View, Text, Pressable } from "react-native";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import { Heart, MessageSquare, Rss, Trophy } from "@/lib/icons";
+import { Heart, MessageSquare, Radio, Trophy } from "@/lib/icons";
 import type { ThemeTokens } from "@/constants/theme";
 import type { StreetHistoryItem } from "@/types";
 import { CAT_CONFIG } from "@/constants/categories";
@@ -54,7 +54,7 @@ export default function StreetHistoryCard({ item, t, isDark }: StreetHistoryCard
             alignItems: "center", justifyContent: "center",
             backgroundColor: isTalk ? t.blue + "20" : t.accent + "20",
           }}>
-            {isTalk ? <Rss size={10} color={t.blue} /> : <MessageSquare size={10} color={t.accent} />}
+            {isTalk ? <Radio size={10} color={t.blue} /> : <MessageSquare size={10} color={t.accent} />}
           </View>
           <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.bold, color: t.text }} numberOfLines={1}>
             {item.author_display_name}

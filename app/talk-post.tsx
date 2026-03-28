@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useCallback } from "react";
+import React, { useEffect, useCallback } from "react";
 import { View, Text, TextInput, Pressable, ScrollView, Alert, ActivityIndicator } from "react-native";
 import { router } from "expo-router";
 import { usePreventRemove } from "@react-navigation/native";
@@ -34,7 +34,7 @@ export default function TalkPostScreen() {
   const createTalkMutation = useCreateTalk();
   const { images, isFull, pickImage, takePhoto, removeImage } = useImagePicker();
   const { lat, lng, granted } = useLocation();
-  const submittedRef = useRef(false);
+  const [submitted, setSubmitted] = React.useState(false);
   const [placeholderIndex, setPlaceholderIndex] = React.useState(0);
 
   const { control, handleSubmit, watch, formState: { errors } } = useForm<CreateTalkForm>({
@@ -58,14 +58,17 @@ export default function TalkPostScreen() {
     return () => clearInterval(timer);
   }, []);
 
-  // 破棄確認
-  usePreventRemove(hasContent && !submittedRef.current, ({ data }) => {
+  // 破棄確認（submitted が state なので usePreventRemove が再評価される）
+  usePreventRemove(hasContent && !submitted, ({ data }) => {
     Alert.alert(
       "投稿を破棄しますか？",
       "入力した内容は保存されません",
       [
         { text: "編集を続ける", style: "cancel" },
-        { text: "破棄する", style: "destructive", onPress: () => router.back() },
+        { text: "破棄する", style: "destructive", onPress: () => {
+          setSubmitted(true);
+          setTimeout(() => router.back(), 50);
+        }},
       ]
     );
   });
@@ -86,9 +89,9 @@ export default function TalkPostScreen() {
         lat: granted ? lat : undefined,
         lng: granted ? lng : undefined,
       });
-      submittedRef.current = true;
+      setSubmitted(true);
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      router.back();
+      setTimeout(() => router.back(), 50);
     } catch (e: unknown) {
       Alert.alert("エラー", getUserMessage(e));
     }

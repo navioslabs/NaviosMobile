@@ -68,6 +68,10 @@ export default function RootLayout() {
           name="profile/edit"
           options={{ headerShown: false }}
         />
+        <Stack.Screen
+          name="street-history"
+          options={{ headerShown: false }}
+        />
       </Stack>
       <StatusBar style={isDark ? "light" : "dark"} />
       <OnboardingTour t={t} />

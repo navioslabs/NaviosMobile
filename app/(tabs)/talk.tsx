@@ -78,14 +78,16 @@ export default function TalkScreen() {
 function LiveBadge({ t }: { t: any }) {
   const pulse = useSharedValue(1);
 
-  pulse.value = withRepeat(
-    withSequence(
-      withTiming(1.06, { duration: 800, easing: Easing.inOut(Easing.ease) }),
-      withTiming(1.0, { duration: 800, easing: Easing.inOut(Easing.ease) }),
-    ),
-    -1,
-    true,
-  );
+  useEffect(() => {
+    pulse.value = withRepeat(
+      withSequence(
+        withTiming(1.06, { duration: 800, easing: Easing.inOut(Easing.ease) }),
+        withTiming(1.0, { duration: 800, easing: Easing.inOut(Easing.ease) }),
+      ),
+      -1,
+      true,
+    );
+  }, []);
 
   const animStyle = useAnimatedStyle(() => ({
     transform: [{ scale: pulse.value }],

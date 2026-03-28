@@ -12,6 +12,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { Plus, PenLine, Mic } from "@/lib/icons";
 import type { ThemeTokens } from "@/constants/theme";
+import { useGuestGuard } from "@/hooks/useGuestGuard";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -22,6 +23,7 @@ interface FabProps {
 
 /** フローティングアクションボタン（投稿・つぶやき） */
 export default function Fab({ t, isDark }: FabProps) {
+  const guard = useGuestGuard();
   const [touchable, setTouchable] = useState(false);
   const progress = useSharedValue(0);
   const rotation = useSharedValue(0);
@@ -53,8 +55,8 @@ export default function Fab({ t, isDark }: FabProps) {
 
   const handleMenuPress = useCallback((route: string) => {
     close();
-    router.push(route as any);
-  }, []);
+    guard(() => router.push(route as any), "投稿");
+  }, [guard]);
 
   const iconStyle = useAnimatedStyle(() => ({
     transform: [{ rotate: `${rotation.value}deg` }],

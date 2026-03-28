@@ -7,9 +7,11 @@ import { useFontSizeStore } from "@/stores/fontSizeStore";
 interface SuggestionChipsProps {
   t: ThemeTokens;
   onSelect: (query: string) => void;
+  /** 動的サジェスト（渡されなければデフォルトを使用） */
+  suggestions?: string[];
 }
 
-const SUGGESTIONS = [
+const DEFAULT_SUGGESTIONS = [
   "空いてるカフェ",
   "今近いイベント",
   "子連れ向け",
@@ -18,13 +20,14 @@ const SUGGESTIONS = [
 ];
 
 /** AI検索のサジェスションチップ（折り返し表示 + スタッガーアニメーション） */
-export default function SuggestionChips({ t, onSelect }: SuggestionChipsProps) {
+export default function SuggestionChips({ t, onSelect, suggestions }: SuggestionChipsProps) {
   const { scale } = useFontSizeStore();
   const fs = getScaledFontSize(scale);
+  const items = suggestions ?? DEFAULT_SUGGESTIONS;
 
   return (
     <View style={{ flexDirection: "row", flexWrap: "wrap", gap: SPACE.sm, marginBottom: SPACE.lg }}>
-      {SUGGESTIONS.map((s, i) => (
+      {items.map((s, i) => (
         <Animated.View key={s} entering={FadeInRight.delay(i * 50).duration(300).springify().damping(14)}>
           <Pressable
             onPress={() => onSelect(s)}

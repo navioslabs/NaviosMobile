@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   fetchTalks,
   fetchTalkById,
+  searchTalks,
   createTalk,
   deleteTalk,
   createTalkReply,
@@ -22,6 +23,15 @@ export function useTalk(id: string) {
     queryKey: ["talks", "detail", id],
     queryFn: () => fetchTalkById(id),
     enabled: !!id,
+  });
+}
+
+/** ひとこと検索 */
+export function useSearchTalks(query: string) {
+  return useQuery({
+    queryKey: ["talks", "search", query],
+    queryFn: () => searchTalks(query),
+    enabled: query.trim().length > 0,
   });
 }
 
