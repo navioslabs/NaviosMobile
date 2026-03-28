@@ -24,13 +24,14 @@ interface NearbyPostItemProps {
   featured?: boolean;
   isDark?: boolean;
   index?: number;
+  onLongPress?: () => void;
 }
 
 /** 近隣投稿リストアイテム */
 /** スタッガー遅延（最大400msでキャップ） */
 const staggerDelay = (i: number) => Math.min(i * 60, 400);
 
-function NearbyPostItem({ post, t, featured, isDark = true, index = 0 }: NearbyPostItemProps) {
+function NearbyPostItem({ post, t, featured, isDark = true, index = 0, onLongPress }: NearbyPostItemProps) {
   const { scale } = useFontSizeStore();
   const fs = getScaledFontSize(scale);
   const distance = post.distance_m ?? 0;
@@ -41,6 +42,10 @@ function NearbyPostItem({ post, t, featured, isDark = true, index = 0 }: NearbyP
     const featuredCard = (
       <Pressable
         onPress={() => router.push(`/feed/${post.id}` as any)}
+        onLongPress={onLongPress}
+        delayLongPress={400}
+        accessibilityLabel={`注目: ${post.title}、${distLabel(distance)}、マッチ度${matchScore}%`}
+        accessibilityRole="button"
         style={({ pressed }) => ({
           borderRadius: RADIUS.xxl,
           overflow: "hidden" as const,
@@ -102,6 +107,10 @@ function NearbyPostItem({ post, t, featured, isDark = true, index = 0 }: NearbyP
     <Animated.View entering={FadeInUp.delay(staggerDelay(index)).duration(400).springify().damping(14)}>
     <Pressable
       onPress={() => router.push(`/feed/${post.id}` as any)}
+      onLongPress={onLongPress}
+      delayLongPress={400}
+      accessibilityLabel={`${post.title}、${distLabel(distance)}、${walkTime(distance)}、マッチ度${matchScore}%`}
+      accessibilityRole="button"
       style={({ pressed }) => ({
         flexDirection: "row" as const,
         marginHorizontal: SPACE.md,

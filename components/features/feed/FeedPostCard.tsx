@@ -31,10 +31,11 @@ interface FeedPostCardProps {
   isDark: boolean;
   featured?: boolean;
   expired?: boolean;
+  onLongPress?: () => void;
 }
 
 /** 画像なし投稿用コンパクトカード */
-function CompactCard({ post, t, isDark, expired }: { post: Post; t: ThemeTokens; isDark: boolean; expired?: boolean }) {
+function CompactCard({ post, t, isDark, expired, onLongPress }: { post: Post; t: ThemeTokens; isDark: boolean; expired?: boolean; onLongPress?: () => void }) {
   const { scale } = useFontSizeStore();
   const fs = getScaledFontSize(scale);
   const catColor = CAT_CONFIG[post.category]?.color || t.accent;
@@ -43,6 +44,10 @@ function CompactCard({ post, t, isDark, expired }: { post: Post; t: ThemeTokens;
     <View style={{ marginHorizontal: SPACE.lg, marginBottom: SPACE.sm, opacity: expired ? 0.5 : 1 }}>
       <Pressable
         onPress={() => router.push(`/feed/${post.id}` as any)}
+        onLongPress={onLongPress}
+        delayLongPress={400}
+        accessibilityLabel={`${post.title}、${CAT_CONFIG[post.category]?.label}、${distLabel(post.distance_m ?? 0)}`}
+        accessibilityRole="button"
         style={({ pressed }) => ({
           flexDirection: "row" as const,
           borderRadius: RADIUS.lg,
@@ -122,12 +127,12 @@ function CompactCard({ post, t, isDark, expired }: { post: Post; t: ThemeTokens;
 }
 
 /** フィード投稿カード（カテゴリ別デザイン） */
-function FeedPostCard({ post, t, isDark, featured, expired }: FeedPostCardProps) {
+function FeedPostCard({ post, t, isDark, featured, expired, onLongPress }: FeedPostCardProps) {
   const hasImage = !!post.image_url;
 
   // 画像なし & Featured でない → コンパクトカード
   if (!hasImage && !featured) {
-    return <CompactCard post={post} t={t} isDark={isDark} expired={expired} />;
+    return <CompactCard post={post} t={t} isDark={isDark} expired={expired} onLongPress={onLongPress} />;
   }
 
   const { scale } = useFontSizeStore();
@@ -138,6 +143,10 @@ function FeedPostCard({ post, t, isDark, featured, expired }: FeedPostCardProps)
   const card = (
     <Pressable
       onPress={() => router.push(`/feed/${post.id}` as any)}
+      onLongPress={onLongPress}
+      delayLongPress={400}
+      accessibilityLabel={`${post.title}、${CAT_CONFIG[post.category]?.label}、${distLabel(post.distance_m ?? 0)}${featured ? "、注目" : ""}`}
+      accessibilityRole="button"
       style={({ pressed }) => ({
         borderRadius: 26,
         overflow: "hidden" as const,

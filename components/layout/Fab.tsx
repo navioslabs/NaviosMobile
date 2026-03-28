@@ -96,6 +96,8 @@ export default function Fab({ t, isDark }: FabProps) {
         <Animated.View style={menuItem1Style}>
           <Pressable
             onPress={() => handleMenuPress("/post")}
+            accessibilityLabel="投稿する"
+            accessibilityRole="button"
             style={({ pressed }) => ({
               flexDirection: "row" as const,
               alignItems: "center" as const,
@@ -128,6 +130,8 @@ export default function Fab({ t, isDark }: FabProps) {
         <Animated.View style={menuItem2Style}>
           <Pressable
             onPress={() => handleMenuPress("/talk-post")}
+            accessibilityLabel="トークする"
+            accessibilityRole="button"
             style={({ pressed }) => ({
               flexDirection: "row" as const,
               alignItems: "center" as const,
@@ -174,7 +178,7 @@ export default function Fab({ t, isDark }: FabProps) {
           },
         ]}
       >
-        <Pressable onPress={handleToggle}>
+        <Pressable onPress={handleToggle} accessibilityLabel="新規作成メニュー" accessibilityRole="button">
           <View
             style={{
               width: 64,

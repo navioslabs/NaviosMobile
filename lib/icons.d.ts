@@ -51,6 +51,13 @@ export declare const User: LucideIcon;
 export declare const UserCheck: LucideIcon;
 export declare const Users: LucideIcon;
 export declare const WifiOff: LucideIcon;
+export declare const X: LucideIcon;
 export declare const Zap: LucideIcon;
+export declare const TrendingUp: LucideIcon;
+export declare const Wifi: LucideIcon;
+export declare const MapPinOff: LucideIcon;
+export declare const RefreshCw: LucideIcon;
+export declare const Info: LucideIcon;
+export declare const ChevronDown: LucideIcon;
 
 export type { LucideIcon } from "lucide-react-native";

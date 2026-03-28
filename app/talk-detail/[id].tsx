@@ -14,6 +14,7 @@ import {
   Trash2,
 } from "@/lib/icons";
 import ReportModal from "@/components/ui/ReportModal";
+import ProfilePopover from "@/components/ui/ProfilePopover";
 import { LinearGradient } from "expo-linear-gradient";
 import { useTalk, useCreateReply, useDeleteTalk } from "@/hooks/useTalks";
 import { useToggleLike, useIsLiked } from "@/hooks/useLikes";
@@ -35,6 +36,7 @@ export default function TalkDetailScreen() {
   const toggleLike = useToggleLike();
   const [replyText, setReplyText] = useState("");
   const [showReport, setShowReport] = useState(false);
+  const [profileTarget, setProfileTarget] = useState<any>(null);
 
   const talk = data;
   const replies = data?.replies ?? [];
@@ -125,7 +127,13 @@ export default function TalkDetailScreen() {
         {/* 元投稿 */}
         <View style={{ padding: SPACE.xl, borderBottomWidth: 1, borderBottomColor: t.border }}>
           <View style={{ flexDirection: "row", gap: SPACE.md }}>
-            <Pressable onPress={() => router.push(`/profile/${talk.author_id}` as any)}>
+            <Pressable
+              onPress={() => setProfileTarget(talk.author ?? null)}
+              onLongPress={() => router.push(`/profile/${talk.author_id}` as any)}
+              delayLongPress={500}
+              accessibilityLabel={`${talk.author?.display_name ?? "匿名"}のプロフィール`}
+              accessibilityRole="button"
+            >
               <Image source={{ uri: talk.author?.avatar_url ?? undefined }} style={{ width: 48, height: 48, borderRadius: 24 }} contentFit="cover" />
             </Pressable>
             <View style={{ flex: 1 }}>
@@ -183,7 +191,13 @@ export default function TalkDetailScreen() {
 
           {replies.map((reply, index) => (
             <View key={reply.id} style={{ flexDirection: "row", gap: SPACE.md, marginBottom: SPACE.lg, paddingBottom: SPACE.lg, borderBottomWidth: index < replies.length - 1 ? 1 : 0, borderBottomColor: t.border }}>
-              <Pressable onPress={() => router.push(`/profile/${reply.author_id}` as any)}>
+              <Pressable
+                onPress={() => setProfileTarget(reply.author ?? null)}
+                onLongPress={() => router.push(`/profile/${reply.author_id}` as any)}
+                delayLongPress={500}
+                accessibilityLabel={`${reply.author?.display_name ?? "匿名"}のプロフィール`}
+                accessibilityRole="button"
+              >
                 <Image source={{ uri: reply.author?.avatar_url ?? undefined }} style={{ width: 36, height: 36, borderRadius: 18 }} contentFit="cover" />
               </Pressable>
               <View style={{ flex: 1 }}>
@@ -242,6 +256,13 @@ export default function TalkDetailScreen() {
         t={t}
         targetType="talk"
         targetId={talk.id}
+      />
+
+      <ProfilePopover
+        profile={profileTarget}
+        visible={!!profileTarget}
+        onClose={() => setProfileTarget(null)}
+        t={t}
       />
     </View>
   );

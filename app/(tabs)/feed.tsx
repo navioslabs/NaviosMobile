@@ -5,6 +5,7 @@ import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { isExpired } from "@/lib/adapters";
 import type { Post } from "@/types";
+import PostPreviewSheet from "@/components/ui/PostPreviewSheet";
 import { useAppStyles } from "@/hooks/useAppStyles";
 import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 import { usePosts } from "@/hooks/usePosts";
@@ -34,6 +35,7 @@ export default function FeedScreen() {
   const [selDate, setSelDate] = useState(0);
   const [selCat, setSelCat] = useState("all");
   const [summaryFilter, setSummaryFilter] = useState<FilterType>(null);
+  const [previewPost, setPreviewPost] = useState<Post | null>(null);
 
   const { data: serverPosts, isLoading: queryLoading, refetch } = usePosts({
     category: selCat === "all" ? undefined : selCat,
@@ -77,7 +79,7 @@ export default function FeedScreen() {
   const getPostCount = useCallback((offset: number) => getPostsForDate(offset, allPosts).length, [allPosts]);
   const renderItem = useCallback(
     ({ item, index }: { item: Post; index: number }) => (
-      <FeedPostCard post={item} t={t} isDark={isDark} featured={index === 0 && !isExpired(item.deadline)} expired={isExpired(item.deadline)} />
+      <FeedPostCard post={item} t={t} isDark={isDark} featured={index === 0 && !isExpired(item.deadline)} expired={isExpired(item.deadline)} onLongPress={() => setPreviewPost(item)} />
     ),
     [t, isDark]
   );
@@ -149,6 +151,14 @@ export default function FeedScreen() {
           }
         />
       )}
+
+      <PostPreviewSheet
+        post={previewPost}
+        visible={!!previewPost}
+        onClose={() => setPreviewPost(null)}
+        t={t}
+        isDark={isDark}
+      />
     </View>
   );
 }

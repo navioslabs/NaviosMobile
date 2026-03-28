@@ -1,9 +1,11 @@
 import { FlatList, View, Text, RefreshControl } from "react-native";
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withSequence, withTiming, Easing } from "react-native-reanimated";
+import { useIsFocused } from "@react-navigation/native";
 import { Radio } from "@/lib/icons";
 import { useTalks } from "@/hooks/useTalks";
 import { useRealtimeTalks } from "@/hooks/useRealtimeTalks";
+import { useBadgeStore } from "@/stores/badgeStore";
 import type { Talk } from "@/types";
 import { useAppStyles } from "@/hooks/useAppStyles";
 import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
@@ -13,10 +15,17 @@ import StateView from "@/components/ui/StateView";
 /** タイムライン画面 */
 export default function TalkScreen() {
   const { s, t, fs } = useAppStyles();
+  const isFocused = useIsFocused();
+  const clearTalkUnread = useBadgeStore((s) => s.clearTalkUnread);
 
   const { data: serverTalks, isLoading: queryLoading, isFetching, refetch } = useTalks();
   useRealtimeTalks();
   const talks: Talk[] = (serverTalks ?? []).filter((t) => t?.id);
+
+  // タブフォーカス時に未読をクリア
+  useEffect(() => {
+    if (isFocused) clearTalkUnread();
+  }, [isFocused, clearTalkUnread]);
 
   const renderItem = useCallback(
     ({ item }: { item: Talk }) => <TalkItem talk={item} t={t} />,

@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { View, StyleSheet } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 import { Tabs } from "expo-router";
 import Animated, {
   useSharedValue,
@@ -9,6 +9,7 @@ import Animated, {
 import { Rss, MessageCircle, Sparkles, Radio, Settings } from "@/lib/icons";
 import { makeTokens } from "@/constants/theme";
 import { useThemeStore } from "@/stores/themeStore";
+import { useBadgeStore } from "@/stores/badgeStore";
 import Header from "@/components/layout/Header";
 import Fab from "@/components/layout/Fab";
 
@@ -46,10 +47,35 @@ function AiTabIcon({ focused, t }: { focused: boolean; t: ReturnType<typeof make
   );
 }
 
+/** 数値バッジ付きアイコン */
+function BadgeIcon({ icon: Icon, color, size, count }: { icon: any; color: string; size: number; count: number }) {
+  return (
+    <View style={{ width: size + 12, height: size + 4, alignItems: "center", justifyContent: "center" }}>
+      <Icon size={size} color={color} />
+      {count > 0 && (
+        <View style={styles.badge}>
+          <Text style={styles.badgeText}>{count > 99 ? "99+" : count}</Text>
+        </View>
+      )}
+    </View>
+  );
+}
+
+/** ドットバッジ付きアイコン */
+function DotIcon({ icon: Icon, color, size, show }: { icon: any; color: string; size: number; show: boolean }) {
+  return (
+    <View style={{ width: size + 12, height: size + 4, alignItems: "center", justifyContent: "center" }}>
+      <Icon size={size} color={color} />
+      {show && <View style={styles.dot} />}
+    </View>
+  );
+}
+
 /** タブナビゲーションレイアウト */
 export default function TabLayout() {
   const { isDark } = useThemeStore();
   const t = makeTokens(isDark);
+  const { talkUnread, feedHasNew } = useBadgeStore();
 
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
@@ -79,7 +105,7 @@ export default function TabLayout() {
           name="talk"
           options={{
             title: "タイムライン",
-            tabBarIcon: ({ color, size }) => <MessageCircle size={size} color={color} />,
+            tabBarIcon: ({ color, size }) => <BadgeIcon icon={MessageCircle} color={color} size={size} count={talkUnread} />,
           }}
         />
         <Tabs.Screen
@@ -93,7 +119,7 @@ export default function TabLayout() {
           name="feed"
           options={{
             title: "フィード",
-            tabBarIcon: ({ color, size }) => <Rss size={size} color={color} />,
+            tabBarIcon: ({ color, size }) => <DotIcon icon={Rss} color={color} size={size} show={feedHasNew} />,
           }}
         />
         <Tabs.Screen
@@ -117,5 +143,31 @@ const styles = StyleSheet.create({
     marginTop: -12,
     alignItems: "center",
     justifyContent: "center",
+  },
+  badge: {
+    position: "absolute",
+    top: -2,
+    right: -2,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: "#F0425C",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 3,
+  },
+  badgeText: {
+    fontSize: 9,
+    fontWeight: "800",
+    color: "#fff",
+  },
+  dot: {
+    position: "absolute",
+    top: 0,
+    right: 2,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#00D4A1",
   },
 });

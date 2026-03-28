@@ -7,6 +7,7 @@ import { makeTokens } from "@/constants/theme";
 import { useThemeStore } from "@/stores/themeStore";
 import AuthProvider from "@/components/providers/AuthProvider";
 import OfflineBanner from "@/components/ui/OfflineBanner";
+import OnboardingTour from "@/components/ui/OnboardingTour";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -68,6 +69,7 @@ export default function RootLayout() {
         />
       </Stack>
       <StatusBar style={isDark ? "light" : "dark"} />
+      <OnboardingTour t={t} />
     </ThemeProvider>
     </AuthProvider>
     </QueryClientProvider>

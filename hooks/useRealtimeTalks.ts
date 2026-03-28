@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
+import { useBadgeStore } from "@/stores/badgeStore";
 
 /**
  * talks テーブルのリアルタイム購読
@@ -8,6 +9,7 @@ import { supabase } from "@/lib/supabase";
  */
 export function useRealtimeTalks() {
   const qc = useQueryClient();
+  const incrementTalkUnread = useBadgeStore((s) => s.incrementTalkUnread);
 
   useEffect(() => {
     const channel = supabase
@@ -15,8 +17,9 @@ export function useRealtimeTalks() {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "talks" },
-        () => {
+        (payload) => {
           qc.invalidateQueries({ queryKey: ["talks", "list"] });
+          if (payload.eventType === "INSERT") incrementTalkUnread();
         }
       )
       .on(

@@ -17,6 +17,7 @@ import {
   Trash2,
 } from "@/lib/icons";
 import ReportModal from "@/components/ui/ReportModal";
+import ProfilePopover from "@/components/ui/ProfilePopover";
 import { CAT_CONFIG } from "@/constants/categories";
 import { useThemeStore } from "@/stores/themeStore";
 import { usePost, useDeletePost } from "@/hooks/usePosts";
@@ -39,6 +40,13 @@ const deadlineLabel = (timeLeft: number) => {
   return `残り${Math.ceil(timeLeft / 60)}時間`;
 };
 
+/** カテゴリ別ヒーローグラデーション */
+const HERO_GRADIENTS: Record<string, [string, string, string]> = {
+  lifeline: ["rgba(0,212,161,0.35)", "rgba(0,0,0,0.1)", "rgba(0,0,0,0.75)"],
+  event: ["rgba(245,166,35,0.35)", "rgba(0,0,0,0.1)", "rgba(0,0,0,0.75)"],
+  help: ["rgba(240,66,92,0.35)", "rgba(0,0,0,0.1)", "rgba(0,0,0,0.75)"],
+};
+
 /** モック持ち物データ（カテゴリ別） */
 const REQUIRED_ITEMS: Record<string, string[]> = {
   lifeline: [],
@@ -59,6 +67,7 @@ export default function FeedDetailScreen() {
   const deletePostMutation = useDeletePost();
   const [isSaved, setIsSaved] = useState(false);
   const [showReport, setShowReport] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
 
   const isOwner = !!user && !!post && user.id === post.author_id;
 
@@ -127,7 +136,7 @@ export default function FeedDetailScreen() {
         <View style={{ position: "relative", height: 260 }}>
           <Image source={{ uri: post.image_url ?? undefined }} style={StyleSheet.absoluteFill} contentFit="cover" />
           <LinearGradient
-            colors={["rgba(0,0,0,0.45)", "rgba(0,0,0,0.1)", "rgba(0,0,0,0.75)"]}
+            colors={HERO_GRADIENTS[post.category] ?? HERO_GRADIENTS.lifeline}
             locations={[0, 0.4, 1]}
             style={StyleSheet.absoluteFill}
           />
@@ -135,6 +144,8 @@ export default function FeedDetailScreen() {
           {/* 戻るボタン（左上） */}
           <Pressable
             onPress={() => router.back()}
+            accessibilityLabel="戻る"
+            accessibilityRole="button"
             style={({ pressed }) => ({
               position: "absolute",
               top: 52,
@@ -144,7 +155,7 @@ export default function FeedDetailScreen() {
               borderRadius: 19,
               alignItems: "center",
               justifyContent: "center",
-              backgroundColor: "rgba(0,0,0,0.35)",
+              backgroundColor: catConfig.color + "60",
               opacity: pressed ? 0.7 : 1,
             })}
           >
@@ -168,6 +179,8 @@ export default function FeedDetailScreen() {
           {/* 共有 + 保存 + メニューボタン（右上） */}
           <View style={{ position: "absolute", top: 52, right: SPACE.lg, flexDirection: "row", gap: SPACE.sm }}>
             <Pressable
+              accessibilityLabel="共有"
+              accessibilityRole="button"
               style={({ pressed }) => ({
                 width: 38,
                 height: 38,
@@ -184,6 +197,8 @@ export default function FeedDetailScreen() {
             </Pressable>
             <Pressable
               onPress={() => setIsSaved(!isSaved)}
+              accessibilityLabel={isSaved ? "保存済み" : "保存する"}
+              accessibilityRole="button"
               style={({ pressed }) => ({
                 width: 38,
                 height: 38,
@@ -200,6 +215,8 @@ export default function FeedDetailScreen() {
             </Pressable>
             <Pressable
               onPress={() => setShowReport(true)}
+              accessibilityLabel="通報・その他"
+              accessibilityRole="button"
               style={({ pressed }) => ({
                 width: 38,
                 height: 38,
@@ -233,7 +250,11 @@ export default function FeedDetailScreen() {
 
           {/* ═══ 発信者情報 ═══ */}
           <Pressable
-            onPress={() => router.push(`/profile/${post.author_id}` as any)}
+            onPress={() => setShowProfile(true)}
+            onLongPress={() => router.push(`/profile/${post.author_id}` as any)}
+            delayLongPress={500}
+            accessibilityLabel={`発信者: ${post.author?.display_name ?? "匿名"}のプロフィールを表示`}
+            accessibilityRole="button"
             style={({ pressed }) => ({
               flexDirection: "row",
               alignItems: "center",
@@ -311,6 +332,8 @@ export default function FeedDetailScreen() {
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: SPACE.md, paddingTop: SPACE.lg, borderTopWidth: 1, borderTopColor: t.border }}>
             <Pressable
               onPress={handleLike}
+              accessibilityLabel={isLiked ? `いいね済み、${post.likes_count}件` : `いいねする、${post.likes_count}件`}
+              accessibilityRole="button"
               style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: SPACE.sm, opacity: pressed ? 0.7 : 1 })}
             >
               <Heart size={22} fill={isLiked ? t.red : "none"} color={isLiked ? t.red : t.sub} />
@@ -322,6 +345,8 @@ export default function FeedDetailScreen() {
             {isOwner && (
               <Pressable
                 onPress={handleDelete}
+                accessibilityLabel="投稿を削除"
+                accessibilityRole="button"
                 style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: SPACE.xs, opacity: pressed ? 0.7 : 1 })}
               >
                 <Trash2 size={18} color={t.red} />
@@ -340,6 +365,13 @@ export default function FeedDetailScreen() {
         t={t}
         targetType="feed"
         targetId={post.id}
+      />
+
+      <ProfilePopover
+        profile={post.author ?? null}
+        visible={showProfile}
+        onClose={() => setShowProfile(false)}
+        t={t}
       />
     </View>
   );

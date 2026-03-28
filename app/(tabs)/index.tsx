@@ -1,5 +1,6 @@
 import { SectionList, View, Text, RefreshControl, Pressable } from "react-native";
 import { useMemo, useEffect, useRef, useState, useCallback } from "react";
+import PostPreviewSheet from "@/components/ui/PostPreviewSheet";
 import Animated, { FadeInDown, FadeOutUp, useSharedValue, useAnimatedStyle, withSequence, withTiming } from "react-native-reanimated";
 import { useIsFocused } from "@react-navigation/native";
 import { useQueryClient } from "@tanstack/react-query";
@@ -49,6 +50,7 @@ export default function NearByScreen() {
   const [displayPosts, setDisplayPosts] = useState<Post[]>([]);
   const [pendingPosts, setPendingPosts] = useState<Post[] | null>(null);
   const [showNewBanner, setShowNewBanner] = useState(false);
+  const [previewPost, setPreviewPost] = useState<Post | null>(null);
 
   // スコアバーパルス用
   const scoreBarPulse = useSharedValue(1);
@@ -192,6 +194,8 @@ export default function NearByScreen() {
         <Animated.View entering={FadeInDown.duration(300).springify()} exiting={FadeOutUp.duration(200)}>
           <Pressable
             onPress={applyPendingPosts}
+            accessibilityLabel="新しい投稿を表示する"
+            accessibilityRole="button"
             style={({ pressed }) => ({
               flexDirection: "row",
               alignItems: "center",
@@ -224,7 +228,7 @@ export default function NearByScreen() {
         keyExtractor={(item) => item.id}
         renderItem={({ item, index, section }) => {
           const isFeatured = section === sections[0] && index === 0;
-          return <NearbyPostItem post={item} t={t} featured={isFeatured} isDark={isDark} />;
+          return <NearbyPostItem post={item} t={t} featured={isFeatured} isDark={isDark} onLongPress={() => setPreviewPost(item)} />;
         }}
         renderSectionHeader={({ section }) => (
           <DistanceSectionHeader title={section.title} count={section.data.length} color={section.color} t={t} />
@@ -253,6 +257,14 @@ export default function NearByScreen() {
             progressBackgroundColor={t.surface}
           />
         }
+      />
+
+      <PostPreviewSheet
+        post={previewPost}
+        visible={!!previewPost}
+        onClose={() => setPreviewPost(null)}
+        t={t}
+        isDark={isDark}
       />
     </View>
   );

@@ -8,6 +8,7 @@ import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 import { useSearchPosts, usePosts } from "@/hooks/usePosts";
 import PulseEventCard from "@/components/features/ai/PulseEventCard";
 import SuggestionChips from "@/components/features/ai/SuggestionChips";
+import TrendingSection from "@/components/features/ai/TrendingSection";
 import StateView from "@/components/ui/StateView";
 
 /** AI画面（さがす） */
@@ -46,7 +47,7 @@ export default function AiScreen() {
   const isLoading = query.trim().length > 0 && (query.trim() !== debouncedQuery || searchLoading);
 
   /** おすすめフィード: deadline が近い順 */
-  const { data: feedPosts, isFetching: feedFetching, refetch: refetchFeed } = usePosts({ limit: 10 });
+  const { data: feedPosts, isFetching: feedFetching, refetch: refetchFeed } = usePosts({ limit: 20 });
   const pulseEvents = useMemo(() => {
     const posts = feedPosts ?? [];
     return [...posts]
@@ -56,6 +57,16 @@ export default function AiScreen() {
         return aTime - bTime;
       })
       .slice(0, 4);
+  }, [feedPosts]);
+
+  /** 急上昇: 直近24時間以内でいいね数が多い順 */
+  const trendingPosts = useMemo(() => {
+    const posts = feedPosts ?? [];
+    const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+    return [...posts]
+      .filter((p) => new Date(p.created_at).getTime() > oneDayAgo && p.likes_count > 0)
+      .sort((a, b) => b.likes_count - a.likes_count)
+      .slice(0, 6);
   }, [feedPosts]);
 
   const isSearching = query.trim().length > 0;
@@ -96,6 +107,7 @@ export default function AiScreen() {
           onChangeText={handleQueryChange}
           placeholder="何をお探しですか？"
           placeholderTextColor={t.sub}
+          accessibilityLabel="検索キーワードを入力"
           style={{ flex: 1, fontSize: fs.lg, color: t.text }}
         />
         {isSearching ? (
@@ -177,6 +189,9 @@ export default function AiScreen() {
           {/* 通常モード */}
           {/* サジェストチップ */}
           <SuggestionChips t={t} onSelect={(q) => handleQueryChange(q)} />
+
+          {/* 急上昇セクション */}
+          <TrendingSection posts={trendingPosts} t={t} />
 
           {/* おすすめフィード */}
           <View style={{ marginBottom: SPACE.xl }}>
