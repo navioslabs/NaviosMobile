@@ -9,7 +9,6 @@ import {
   Navigation,
   Clock,
   UserCheck,
-  Bookmark,
   Check,
   Timer,
   Ellipsis,
@@ -28,6 +27,7 @@ import { distLabel } from "@/lib/utils";
 import { getUserMessage } from "@/lib/appError";
 import { useAppStyles } from "@/hooks/useAppStyles";
 import { useGuestGuard } from "@/hooks/useGuestGuard";
+import { useToastStore } from "@/stores/toastStore";
 import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 import CatPill from "@/components/ui/CatPill";
 import ImageGallery from "@/components/ui/ImageGallery";
@@ -67,11 +67,11 @@ export default function FeedDetailScreen() {
   const { data: isLiked = false } = useIsLiked("post", id);
   const toggleLike = useToggleLike();
   const deletePostMutation = useDeletePost();
-  const [isSaved, setIsSaved] = useState(false);
   const [showReport, setShowReport] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
 
   const guard = useGuestGuard();
+  const toast = useToastStore((s) => s.show);
   const isOwner = !!user && !!post && user.id === post.author_id;
 
   const handleLike = () => {
@@ -90,7 +90,7 @@ export default function FeedDetailScreen() {
             await deletePostMutation.mutateAsync(id!);
             router.back();
           } catch (e: unknown) {
-            Alert.alert("エラー", getUserMessage(e));
+            toast(getUserMessage(e), "error");
           }
         },
       },
@@ -206,24 +206,6 @@ export default function FeedDetailScreen() {
               })}
             >
               <Share size={17} color={t.sub} />
-            </Pressable>
-            <Pressable
-              onPress={() => setIsSaved(!isSaved)}
-              accessibilityLabel={isSaved ? "保存済み" : "保存する"}
-              accessibilityRole="button"
-              style={({ pressed }) => ({
-                width: 38,
-                height: 38,
-                borderRadius: 12,
-                alignItems: "center",
-                justifyContent: "center",
-                backgroundColor: t.surface,
-                borderWidth: 1,
-                borderColor: t.border,
-                opacity: pressed ? 0.7 : 1,
-              })}
-            >
-              <Bookmark size={17} fill={isSaved ? t.text : "none"} color={t.sub} />
             </Pressable>
             <Pressable
               onPress={() => guard(() => setShowReport(true), "通報")}

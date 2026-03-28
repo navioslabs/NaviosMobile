@@ -114,28 +114,39 @@ function TalkItem({ talk, t }: TalkItemProps) {
           </View>
         )}
 
-        {/* アクション */}
-        <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.xxl, marginTop: SPACE.sm, marginLeft: 40 + SPACE.sm }}>
+        {/* アクション（44pt最小タップ領域を保証） */}
+        <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.lg, marginTop: SPACE.xs, marginLeft: 40 + SPACE.sm }}>
           <Pressable
             onPress={() => router.push(`/talk-detail/${talk.id}` as any)}
-            style={({ pressed }) => ({ flexDirection: "row" as const, alignItems: "center" as const, gap: 5, opacity: pressed ? 0.6 : 1 })}
+            accessibilityLabel={`返信 ${talk.replies_count || 0}件`}
+            accessibilityRole="button"
+            hitSlop={8}
+            style={({ pressed }) => ({ flexDirection: "row" as const, alignItems: "center" as const, gap: 5, minWidth: 44, minHeight: 44, justifyContent: "center" as const, opacity: pressed ? 0.6 : 1 })}
           >
-            <MessageCircle size={16} color={t.muted} />
+            <MessageCircle size={18} color={t.muted} />
             <Text style={{ fontSize: fs.xs, color: t.muted }}>{talk.replies_count || ""}</Text>
           </Pressable>
 
           <Pressable
             onPress={handleLike}
-            style={({ pressed }) => ({ flexDirection: "row" as const, alignItems: "center" as const, gap: 5, opacity: pressed ? 0.6 : 1 })}
+            accessibilityLabel={isLiked ? `いいね済み ${talk.likes_count}件` : `いいね ${talk.likes_count}件`}
+            accessibilityRole="button"
+            hitSlop={8}
+            style={({ pressed }) => ({ flexDirection: "row" as const, alignItems: "center" as const, gap: 5, minWidth: 44, minHeight: 44, justifyContent: "center" as const, opacity: pressed ? 0.6 : 1 })}
           >
-            <Heart size={16} fill={isLiked ? t.red : "none"} color={isLiked ? t.red : t.muted} />
+            <Heart size={18} fill={isLiked ? t.red : "none"} color={isLiked ? t.red : t.muted} />
             <Text style={{ fontSize: fs.xs, color: isLiked ? t.red : t.muted }}>
               {talk.likes_count || ""}
             </Text>
           </Pressable>
 
-          <Pressable style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}>
-            <Share size={16} color={t.muted} />
+          <Pressable
+            accessibilityLabel="共有"
+            accessibilityRole="button"
+            hitSlop={8}
+            style={({ pressed }) => ({ minWidth: 44, minHeight: 44, alignItems: "center" as const, justifyContent: "center" as const, opacity: pressed ? 0.6 : 1 })}
+          >
+            <Share size={18} color={t.muted} />
           </Pressable>
         </View>
       </Pressable>

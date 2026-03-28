@@ -9,6 +9,8 @@ import AuthProvider from "@/components/providers/AuthProvider";
 import OfflineBanner from "@/components/ui/OfflineBanner";
 import OnboardingTour from "@/components/ui/OnboardingTour";
 import GuestLoginSheet from "@/components/ui/GuestLoginSheet";
+import Toast from "@/components/ui/Toast";
+import { useRealtimeTalks } from "@/hooks/useRealtimeTalks";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -25,14 +27,13 @@ export const unstable_settings = {
   anchor: "(tabs)",
 };
 
-/** ルートレイアウト */
-export default function RootLayout() {
+/** Realtime購読 + 画面ツリー（QueryClientProvider 内で使用） */
+function AppContent() {
   const { isDark } = useThemeStore();
   const t = makeTokens(isDark);
+  useRealtimeTalks();
 
   return (
-    <QueryClientProvider client={queryClient}>
-    <AuthProvider>
     <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
       <OfflineBanner />
       <Stack
@@ -76,7 +77,17 @@ export default function RootLayout() {
       <StatusBar style={isDark ? "light" : "dark"} />
       <OnboardingTour t={t} />
       <GuestLoginSheet />
+      <Toast />
     </ThemeProvider>
+  );
+}
+
+/** ルートレイアウト */
+export default function RootLayout() {
+  return (
+    <QueryClientProvider client={queryClient}>
+    <AuthProvider>
+      <AppContent />
     </AuthProvider>
     </QueryClientProvider>
   );

@@ -1,8 +1,9 @@
-import { memo } from "react";
-import { View, Text, Pressable, StyleSheet } from "react-native";
+import { memo, useCallback, useRef } from "react";
+import { View, Text, Pressable, StyleSheet, Animated } from "react-native";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
+import * as Haptics from "expo-haptics";
 import { Navigation, Flame, Clock, Heart, MessageSquare } from "@/lib/icons";
 import { CAT_CONFIG } from "@/constants/categories";
 import type { ThemeTokens } from "@/constants/theme";
@@ -39,11 +40,24 @@ function CompactCard({ post, t, isDark, expired, onLongPress }: { post: Post; t:
   const { scale } = useFontSizeStore();
   const fs = getScaledFontSize(scale);
   const catColor = CAT_CONFIG[post.category]?.color || t.accent;
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const handlePressIn = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    Animated.spring(scaleAnim, { toValue: 0.97, useNativeDriver: true, speed: 50, bounciness: 4 }).start();
+  }, [scaleAnim]);
+
+  const handlePressOut = useCallback(() => {
+    Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true, speed: 40, bounciness: 6 }).start();
+  }, [scaleAnim]);
 
   return (
     <View style={{ marginHorizontal: SPACE.lg, marginBottom: SPACE.sm, opacity: expired ? 0.5 : 1 }}>
+      <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
       <Pressable
         onPress={() => router.push(`/feed/${post.id}` as any)}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
         onLongPress={onLongPress}
         delayLongPress={400}
         accessibilityLabel={`${post.title}、${CAT_CONFIG[post.category]?.label}、${distLabel(post.distance_m ?? 0)}`}
@@ -60,8 +74,6 @@ function CompactCard({ post, t, isDark, expired, onLongPress }: { post: Post; t:
           shadowOpacity: 0.2,
           shadowRadius: SPACE.sm,
           elevation: 2,
-          opacity: pressed ? 0.92 : 1,
-          transform: [{ scale: pressed ? 0.99 : 1 }],
         })}
       >
         {/* カテゴリカラーのアクセントライン */}
@@ -122,6 +134,7 @@ function CompactCard({ post, t, isDark, expired, onLongPress }: { post: Post; t:
           </View>
         </View>
       </Pressable>
+      </Animated.View>
     </View>
   );
 }
@@ -139,15 +152,28 @@ function FeedPostCard({ post, t, isDark, featured, expired, onLongPress }: FeedP
   const fs = getScaledFontSize(scale);
   const catColor = CAT_CONFIG[post.category]?.color || t.accent;
   const gradColors = CAT_GRADIENTS[post.category] || CAT_GRADIENTS.lifeline;
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const handlePressIn = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    Animated.spring(scaleAnim, { toValue: 0.97, useNativeDriver: true, speed: 50, bounciness: 4 }).start();
+  }, [scaleAnim]);
+
+  const handlePressOut = useCallback(() => {
+    Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true, speed: 40, bounciness: 6 }).start();
+  }, [scaleAnim]);
 
   const card = (
+    <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
     <Pressable
       onPress={() => router.push(`/feed/${post.id}` as any)}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
       onLongPress={onLongPress}
       delayLongPress={400}
       accessibilityLabel={`${post.title}、${CAT_CONFIG[post.category]?.label}、${distLabel(post.distance_m ?? 0)}${featured ? "、注目" : ""}`}
       accessibilityRole="button"
-      style={({ pressed }) => ({
+      style={{
         borderRadius: 26,
         overflow: "hidden" as const,
         shadowColor: featured ? t.accent : isDark ? "#000" : "rgba(0,0,0,0.06)",
@@ -155,9 +181,7 @@ function FeedPostCard({ post, t, isDark, featured, expired, onLongPress }: FeedP
         shadowOpacity: featured ? 0.4 : 0.3,
         shadowRadius: featured ? 20 : SPACE.md,
         elevation: featured ? 8 : 4,
-        opacity: pressed ? 0.95 : 1,
-        transform: [{ scale: pressed ? 0.98 : 1 }],
-      })}
+      }}
     >
       <View style={{ aspectRatio: hasImage ? 3 / 4 : 16 / 9 }}>
         {hasImage ? (
@@ -219,6 +243,7 @@ function FeedPostCard({ post, t, isDark, featured, expired, onLongPress }: FeedP
         <View style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 3, backgroundColor: catColor + "80" }} />
       </View>
     </Pressable>
+    </Animated.View>
   );
 
   if (featured) {

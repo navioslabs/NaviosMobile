@@ -70,13 +70,13 @@ export async function createTalk(input: {
   return data as Talk;
 }
 
-/** ひとことテキスト検索 */
+/** ひとことテキスト検索（メッセージ + 位置情報） */
 export async function searchTalks(query: string): Promise<Talk[]> {
   const cutoff = new Date(Date.now() - GHOST_DURATION_MS).toISOString();
   const { data, error } = await supabase
     .from("talks")
     .select("*, author:profiles(*)")
-    .ilike("message", `%${query}%`)
+    .or(`message.ilike.%${query}%,location_text.ilike.%${query}%`)
     .or(`is_hall_of_fame.eq.true,created_at.gte.${cutoff}`)
     .order("likes_count", { ascending: false })
     .limit(20);

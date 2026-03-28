@@ -16,14 +16,17 @@ import SuggestionChips from "@/components/features/ai/SuggestionChips";
 import TrendingSection from "@/components/features/ai/TrendingSection";
 import QuickActions from "@/components/features/ai/QuickActions";
 import StateView from "@/components/ui/StateView";
+import { useSearchHistory } from "@/hooks/useSearchHistory";
 
 /** AI画面（さがす） */
 export default function AiScreen() {
   const { s, t, fs } = useAppStyles();
   const { isDark } = useThemeStore();
+  const { history, addHistory, clearHistory } = useSearchHistory();
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [searchTab, setSearchTab] = useState<"posts" | "talks">("posts");
+  const [searchCategory, setSearchCategory] = useState<string | undefined>(undefined);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isDebouncing = useRef(false);
 
@@ -47,15 +50,18 @@ export default function AiScreen() {
   const handleSubmitEditing = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
     isDebouncing.current = false;
-    if (query.trim().length > 0) setDebouncedQuery(query.trim());
-  }, [query]);
+    if (query.trim().length > 0) {
+      setDebouncedQuery(query.trim());
+      addHistory(query.trim());
+    }
+  }, [query, addHistory]);
 
   useEffect(() => {
     return () => { if (timerRef.current) clearTimeout(timerRef.current); };
   }, []);
 
   /** サーバー検索 */
-  const { data: postResults, isLoading: postsSearchLoading } = useSearchPosts(debouncedQuery);
+  const { data: postResults, isLoading: postsSearchLoading } = useSearchPosts(debouncedQuery, searchCategory);
   const { data: talkResults, isLoading: talksSearchLoading } = useSearchTalks(debouncedQuery);
 
   const isSearching = query.trim().length > 0;
@@ -66,7 +72,8 @@ export default function AiScreen() {
   const talkCount = talkResults?.length ?? 0;
 
   /** おすすめフィード */
-  const { data: feedPosts, isFetching: feedFetching, refetch: refetchFeed } = usePosts({ limit: 20 });
+  const { data: feedData, isFetching: feedFetching, refetch: refetchFeed } = usePosts({ limit: 20 });
+  const feedPosts = feedData?.flat ?? [];
 
   const pulseEvents = useMemo(() => {
     const posts = feedPosts ?? [];
@@ -212,6 +219,39 @@ export default function AiScreen() {
             </Pressable>
           </View>
 
+          {/* カテゴリフィルタ（投稿タブ時のみ） */}
+          {searchTab === "posts" && (
+            <View style={{ flexDirection: "row", gap: SPACE.xs, marginBottom: SPACE.md }}>
+              {[
+                { id: undefined, label: "すべて" },
+                { id: "lifeline", label: "ライフライン" },
+                { id: "event", label: "イベント" },
+                { id: "help", label: "近助" },
+              ].map((c) => {
+                const active = searchCategory === c.id;
+                return (
+                  <Pressable
+                    key={c.label}
+                    onPress={() => setSearchCategory(c.id)}
+                    style={({ pressed }) => ({
+                      paddingHorizontal: SPACE.md,
+                      paddingVertical: SPACE.xs + 2,
+                      borderRadius: RADIUS.full,
+                      backgroundColor: active ? t.accent + "20" : t.surface2,
+                      borderWidth: 1,
+                      borderColor: active ? t.accent : t.border,
+                      opacity: pressed ? 0.7 : 1,
+                    })}
+                  >
+                    <Text style={{ fontSize: fs.xxs, fontWeight: WEIGHT.bold, color: active ? t.accent : t.sub }}>
+                      {c.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          )}
+
           {isLoading ? (
             <Animated.View entering={FadeIn.duration(250)} exiting={FadeOut.duration(150)} style={{ alignItems: "center", paddingVertical: SPACE.xxxl }}>
               <ActivityIndicator size="large" color={t.accent} />
@@ -258,6 +298,42 @@ export default function AiScreen() {
       ) : (
         <>
           {/* 通常モード */}
+
+          {/* 検索履歴 */}
+          {history.length > 0 && (
+            <View style={{ marginBottom: SPACE.lg }}>
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: SPACE.sm }}>
+                <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.semibold, color: t.sub }}>最近の検索</Text>
+                <Pressable onPress={clearHistory} hitSlop={8}>
+                  <Text style={{ fontSize: fs.xs, color: t.muted }}>クリア</Text>
+                </Pressable>
+              </View>
+              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: SPACE.sm }}>
+                {history.map((h) => (
+                  <Pressable
+                    key={h}
+                    onPress={() => handleQueryChange(h)}
+                    style={({ pressed }) => ({
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 4,
+                      paddingHorizontal: SPACE.md,
+                      paddingVertical: SPACE.sm,
+                      borderRadius: RADIUS.full,
+                      backgroundColor: t.surface2,
+                      borderWidth: 1,
+                      borderColor: t.border,
+                      opacity: pressed ? 0.7 : 1,
+                    })}
+                  >
+                    <Search size={12} color={t.muted} />
+                    <Text style={{ fontSize: fs.sm, color: t.text }}>{h}</Text>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+          )}
+
           {/* サジェストチップ（S-2: 動的） */}
           <SuggestionChips t={t} onSelect={handleQueryChange} suggestions={dynamicSuggestions} />
 

@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
-import { View, Text, FlatList, RefreshControl, Pressable } from "react-native";
+import { View, Text, FlatList, RefreshControl, Pressable, ActivityIndicator } from "react-native";
 import { Inbox } from "@/lib/icons";
 import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
@@ -15,10 +15,6 @@ import CategoryChips from "@/components/features/feed/CategoryChips";
 import FeedPostCard from "@/components/features/feed/FeedPostCard";
 
 type FilterType = "top" | "nearby" | "urgent" | null;
-
-/** created_at から現在までの経過時間（時間）を算出 */
-const hoursAgo = (createdAt: string): number =>
-  (Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60);
 
 const getDateLabel = (offset: number): string => {
   if (offset === 0) return "📍 今日 • 越谷市";
@@ -37,24 +33,33 @@ export default function FeedScreen() {
   const [summaryFilter, setSummaryFilter] = useState<FilterType>(null);
   const [previewPost, setPreviewPost] = useState<Post | null>(null);
 
-  const { data: serverPosts, isLoading: queryLoading, isFetching, refetch } = usePosts({
+  /** 日付オフセットからサーバーサイドフィルタ用のレンジを算出 */
+  const dateRange = useMemo(() => {
+    const now = new Date();
+    if (selDate === 0) {
+      const after = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+      return { createdAfter: after };
+    }
+    if (selDate === 1) {
+      const after = new Date(now.getTime() - 48 * 60 * 60 * 1000).toISOString();
+      const before = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+      return { createdAfter: after, createdBefore: before };
+    }
+    // 2日以上前
+    const after = new Date(now.getTime() - (selDate + 1) * 24 * 60 * 60 * 1000).toISOString();
+    const before = new Date(now.getTime() - selDate * 24 * 60 * 60 * 1000).toISOString();
+    return { createdAfter: after, createdBefore: before };
+  }, [selDate]);
+
+  const { data, isLoading: queryLoading, isFetching, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = usePosts({
     category: selCat === "all" ? undefined : selCat,
+    ...dateRange,
   });
 
-  const allPosts: Post[] = serverPosts ?? [];
-
-  /** 日付オフセットに応じて投稿をフィルタ */
-  const getPostsForDate = (offset: number, posts: Post[]): Post[] => {
-    if (offset === 0) return posts.filter((p) => hoursAgo(p.created_at) <= 24);
-    if (offset === 1) return posts.filter((p) => hoursAgo(p.created_at) > 24 && hoursAgo(p.created_at) <= 48);
-    if (offset <= 3) return posts.filter((p) => hoursAgo(p.created_at) > 48 && hoursAgo(p.created_at) <= 96);
-    return posts.filter((_, i) => i % (offset + 1) === 0);
-  };
-
-  const datePosts = getPostsForDate(selDate, allPosts);
+  const datePosts: Post[] = data?.flat ?? [];
 
   const filtered = useMemo(() => {
-    let posts = selCat === "all" ? datePosts : datePosts.filter((p) => p.category === selCat);
+    let posts = datePosts;
 
     if (summaryFilter === "top") {
       posts = [...posts].sort((a, b) => b.likes_count - a.likes_count);
@@ -76,7 +81,7 @@ export default function FeedScreen() {
     return [...active, ...expired];
   }, [datePosts, selCat, summaryFilter]);
 
-  const getPostCount = useCallback((offset: number) => getPostsForDate(offset, allPosts).length, [allPosts]);
+  const getPostCount = useCallback((offset: number) => offset === selDate ? datePosts.length : 0, [selDate, datePosts]);
   const renderItem = useCallback(
     ({ item, index }: { item: Post; index: number }) => (
       <FeedPostCard post={item} t={t} isDark={isDark} featured={index === 0 && !isExpired(item.deadline)} expired={isExpired(item.deadline)} onLongPress={() => setPreviewPost(item)} />
@@ -140,9 +145,20 @@ export default function FeedScreen() {
           showsVerticalScrollIndicator={false}
           ListHeaderComponent={ListHeader}
           contentContainerStyle={{ paddingBottom: 90 }}
+          onEndReached={() => {
+            if (hasNextPage && !isFetchingNextPage) fetchNextPage();
+          }}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={
+            isFetchingNextPage ? (
+              <View style={{ paddingVertical: SPACE.xl, alignItems: "center" }}>
+                <ActivityIndicator size="small" color={t.accent} />
+              </View>
+            ) : null
+          }
           refreshControl={
             <RefreshControl
-              refreshing={isFetching && !queryLoading}
+              refreshing={isFetching && !queryLoading && !isFetchingNextPage}
               onRefresh={() => refetch()}
               tintColor={t.accent}
               colors={[t.accent]}

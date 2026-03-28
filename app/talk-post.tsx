@@ -35,6 +35,7 @@ export default function TalkPostScreen() {
   const { images, isFull, pickImage, takePhoto, removeImage } = useImagePicker();
   const { lat, lng, granted } = useLocation();
   const [submitted, setSubmitted] = React.useState(false);
+  const [sending, setSending] = React.useState(false);
   const [placeholderIndex, setPlaceholderIndex] = React.useState(0);
 
   const { control, handleSubmit, watch, formState: { errors } } = useForm<CreateTalkForm>({
@@ -74,7 +75,8 @@ export default function TalkPostScreen() {
   });
 
   const onSubmit = useCallback(async (data: CreateTalkForm) => {
-    if (isPending) return;
+    if (sending) return;
+    setSending(true);
     try {
       let image_url: string | undefined;
       let image_urls: string[] | undefined;
@@ -90,12 +92,13 @@ export default function TalkPostScreen() {
         lng: granted ? lng : undefined,
       });
       setSubmitted(true);
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      setTimeout(() => router.back(), 50);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setTimeout(() => router.back(), 600);
     } catch (e: unknown) {
+      setSending(false);
       Alert.alert("エラー", getUserMessage(e));
     }
-  }, [isPending, images, granted, lat, lng, createTalkMutation]);
+  }, [sending, images, granted, lat, lng, createTalkMutation]);
 
   /** 文字数カウントの色を決定 */
   const countColor = remaining < 0 ? t.red : remaining <= 20 ? t.amber : t.muted;
@@ -186,14 +189,14 @@ export default function TalkPostScreen() {
       {/* 文字数カウント + 送信ボタン */}
       <View style={s.rowBetween}>
         <Text style={{ fontSize: fs.sm, fontWeight: remaining < 0 ? WEIGHT.bold : WEIGHT.normal, color: countColor }}>
-          {countText}
+          {submitted ? "投稿しました！" : countText}
         </Text>
         <Pressable
           onPress={handleSubmit(onSubmit)}
-          disabled={!isValid || isPending}
+          disabled={!isValid || sending || submitted}
         >
           <LinearGradient
-            colors={[t.accent, t.blue]}
+            colors={submitted ? ["#4CAF50", "#66BB6A"] : [t.accent, t.blue]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={{
@@ -203,16 +206,18 @@ export default function TalkPostScreen() {
               borderRadius: RADIUS.lg,
               paddingHorizontal: SPACE.xxl + 4,
               paddingVertical: SPACE.md,
-              opacity: isValid && !isPending ? 1 : 0.3,
+              opacity: (isValid && !sending && !submitted) || submitted ? 1 : 0.3,
             }}
           >
-            {isPending ? (
+            {sending ? (
               <ActivityIndicator size="small" color="#000" />
+            ) : submitted ? (
+              <Text style={{ fontSize: 15 }}>✓</Text>
             ) : (
               <Send size={15} color={isValid ? "#000" : t.muted} />
             )}
-            <Text style={{ fontWeight: WEIGHT.extrabold, fontSize: fs.lg, color: isValid ? "#000" : t.muted }}>
-              {isPending ? "投稿中..." : "投稿する"}
+            <Text style={{ fontWeight: WEIGHT.extrabold, fontSize: fs.lg, color: submitted ? "#fff" : isValid ? "#000" : t.muted }}>
+              {submitted ? "投稿完了" : sending ? "投稿中..." : "投稿する"}
             </Text>
           </LinearGradient>
         </Pressable>

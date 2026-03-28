@@ -22,6 +22,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { timeAgo } from "@/lib/adapters";
 import { useAppStyles } from "@/hooks/useAppStyles";
 import { useGuestGuard } from "@/hooks/useGuestGuard";
+import { useToastStore } from "@/stores/toastStore";
 import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 import { HALL_OF_FAME_THRESHOLD } from "@/constants/ghost";
 import GhostCountdown from "@/components/features/talk/GhostCountdown";
@@ -43,6 +44,7 @@ export default function TalkDetailScreen() {
   const [profileTarget, setProfileTarget] = useState<any>(null);
 
   const guard = useGuestGuard();
+  const toast = useToastStore((s) => s.show);
   const talk = data;
   const replies = data?.replies ?? [];
   const isOwner = !!user && !!talk && user.id === talk.author_id;
@@ -260,7 +262,7 @@ export default function TalkDetailScreen() {
                 await createReplyMutation.mutateAsync(replyText.trim());
                 setReplyText("");
               } catch (e: unknown) {
-                Alert.alert("エラー", getUserMessage(e));
+                toast(getUserMessage(e), "error");
               }
             }, "返信");
           }}

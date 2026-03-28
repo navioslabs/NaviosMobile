@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   fetchPosts,
   fetchPostById,
@@ -9,11 +9,20 @@ import {
 } from "@/lib/posts";
 import { refreshBadges } from "@/lib/badges";
 
-/** フィード一覧 */
-export function usePosts(filters?: { category?: string; limit?: number }) {
-  return useQuery({
+/** フィード一覧（ページネーション対応） */
+export function usePosts(filters?: { category?: string; limit?: number; createdAfter?: string; createdBefore?: string }) {
+  return useInfiniteQuery({
     queryKey: ["posts", "list", filters],
-    queryFn: () => fetchPosts(filters),
+    queryFn: ({ pageParam = 0 }) => fetchPosts({ ...filters, page: pageParam }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, _allPages, lastPageParam) =>
+      lastPage.length >= 20 ? lastPageParam + 1 : undefined,
+    select: (data) => ({
+      pages: data.pages,
+      pageParams: data.pageParams,
+      // フラット化したデータ（既存コードとの互換性）
+      flat: data.pages.flat(),
+    }),
   });
 }
 
@@ -40,11 +49,11 @@ export function useNearbyPosts(lat: number, lng: number, radius?: number) {
   });
 }
 
-/** 検索 */
-export function useSearchPosts(query: string) {
+/** 検索（カテゴリフィルタ対応） */
+export function useSearchPosts(query: string, category?: string) {
   return useQuery({
-    queryKey: ["search", query],
-    queryFn: () => searchPosts(query),
+    queryKey: ["search", "posts", query, category],
+    queryFn: () => searchPosts(query, category),
     enabled: query.trim().length > 0,
   });
 }

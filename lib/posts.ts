@@ -1,24 +1,37 @@
 import { supabase } from "@/lib/supabase";
 import type { Post } from "@/types";
 
-/** フィード一覧取得（24h超の期限切れ投稿を除外） */
+const PAGE_SIZE = 20;
+
+/** フィード一覧取得（サーバーサイド日付フィルタ + 期限切れ除外 + ページネーション） */
 export async function fetchPosts(filters?: {
   category?: string;
   limit?: number;
+  createdAfter?: string;
+  createdBefore?: string;
+  page?: number;
 }): Promise<Post[]> {
   const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const page = filters?.page ?? 0;
+  const limit = filters?.limit ?? PAGE_SIZE;
+  const from = page * limit;
+  const to = from + limit - 1;
 
   let query = supabase
     .from("posts")
     .select("*, author:profiles(*)")
     .or(`deadline.is.null,deadline.gt.${cutoff}`)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .range(from, to);
 
   if (filters?.category && filters.category !== "all") {
     query = query.eq("category", filters.category);
   }
-  if (filters?.limit) {
-    query = query.limit(filters.limit);
+  if (filters?.createdAfter) {
+    query = query.gte("created_at", filters.createdAfter);
+  }
+  if (filters?.createdBefore) {
+    query = query.lte("created_at", filters.createdBefore);
   }
 
   const { data, error } = await query;
@@ -83,14 +96,25 @@ export async function fetchNearbyPosts(
   })) as Post[];
 }
 
-/** テキスト検索 */
-export async function searchPosts(query: string): Promise<Post[]> {
-  const { data, error } = await supabase
+/** テキスト検索（カテゴリフィルタ対応） */
+export async function searchPosts(query: string, category?: string): Promise<Post[]> {
+  // 期限切れ24h超を除外
+  const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+  let q = supabase
     .from("posts")
     .select("*, author:profiles(*)")
-    .or(`title.ilike.%${query}%,content.ilike.%${query}%`)
+    .or(`title.ilike.%${query}%,content.ilike.%${query}%,location_text.ilike.%${query}%`)
+    .or(`deadline.is.null,deadline.gt.${cutoff}`)
+    .order("likes_count", { ascending: false })
     .order("created_at", { ascending: false })
     .limit(30);
+
+  if (category) {
+    q = q.eq("category", category);
+  }
+
+  const { data, error } = await q;
   if (error) throw error;
   return data as Post[];
 }

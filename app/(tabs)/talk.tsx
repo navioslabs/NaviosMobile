@@ -4,7 +4,6 @@ import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withSequence, w
 import { useIsFocused } from "@react-navigation/native";
 import { Radio } from "@/lib/icons";
 import { useTalks } from "@/hooks/useTalks";
-import { useRealtimeTalks } from "@/hooks/useRealtimeTalks";
 import { useBadgeStore } from "@/stores/badgeStore";
 import type { Talk } from "@/types";
 import { useAppStyles } from "@/hooks/useAppStyles";
@@ -19,7 +18,6 @@ export default function TalkScreen() {
   const clearTalkUnread = useBadgeStore((s) => s.clearTalkUnread);
 
   const { data: serverTalks, isLoading: queryLoading, isFetching, refetch } = useTalks();
-  useRealtimeTalks();
   const talks: Talk[] = (serverTalks ?? []).filter((t) => t?.id);
 
   // タブフォーカス時に未読をクリア
