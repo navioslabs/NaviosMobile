@@ -102,14 +102,21 @@ export default function PostScreen() {
 
   const hasContent = (title?.trim().length ?? 0) > 0 || images.length > 0;
 
-  // 破棄確認
+  // 破棄確認（data.action.dispatch で preventRemove をバイパスして戻る）
   usePreventRemove(hasContent && !submittedRef.current, ({ data }) => {
     Alert.alert(
       "投稿を破棄しますか？",
       "入力した内容は保存されません",
       [
         { text: "編集を続ける", style: "cancel" },
-        { text: "破棄する", style: "destructive", onPress: () => router.back() },
+        {
+          text: "破棄する",
+          style: "destructive",
+          onPress: () => {
+            submittedRef.current = true;
+            router.back();
+          },
+        },
       ]
     );
   });
@@ -135,12 +142,10 @@ export default function PostScreen() {
         lat: granted ? lat : undefined,
         lng: granted ? lng : undefined,
       });
+      submittedRef.current = true;
       setSubmitted(true);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      setTimeout(() => {
-        submittedRef.current = true;
-        router.back();
-      }, 800);
+      setTimeout(() => router.back(), 800);
     } catch (e: unknown) {
       Alert.alert("エラー", getUserMessage(e));
     }

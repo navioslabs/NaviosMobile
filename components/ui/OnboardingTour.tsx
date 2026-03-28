@@ -80,7 +80,7 @@ export default function OnboardingTour({ t }: OnboardingTourProps) {
       <Animated.View entering={FadeIn.duration(300)} exiting={FadeOut.duration(200)} style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.7)", justifyContent: "center", alignItems: "center", padding: SPACE.xl }}>
         <Animated.View
           key={step}
-          entering={SlideInRight.duration(300).springify().damping(16)}
+          entering={SlideInRight.duration(350)}
           exiting={SlideOutLeft.duration(200)}
           style={{
             width: width - SPACE.xl * 2,
