@@ -1,6 +1,5 @@
 import { View, Text, Pressable, Modal } from "react-native";
 import { Image } from "expo-image";
-import Animated, { FadeIn, FadeOut, SlideInDown, SlideOutDown } from "react-native-reanimated";
 import { router } from "expo-router";
 import { UserCheck, MapPin, ChevronRight } from "@/lib/icons";
 import type { ThemeTokens } from "@/constants/theme";
@@ -29,12 +28,10 @@ export default function ProfilePopover({ profile, visible, onClose, t }: Profile
 
   return (
     <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
-      <Animated.View entering={FadeIn.duration(200)} exiting={FadeOut.duration(150)} style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "center", alignItems: "center", padding: SPACE.xl }}>
+      <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "center", alignItems: "center", padding: SPACE.xl }}>
         <Pressable style={{ flex: 1, width: "100%" }} onPress={onClose} />
 
-        <Animated.View
-          entering={SlideInDown.duration(250).springify().damping(16)}
-          exiting={SlideOutDown.duration(200)}
+        <View
           style={{
             width: "100%",
             maxWidth: 340,
@@ -118,10 +115,10 @@ export default function ProfilePopover({ profile, visible, onClose, t }: Profile
               <ChevronRight size={16} color={t.sub} />
             </Pressable>
           </View>
-        </Animated.View>
+        </View>
 
         <Pressable style={{ flex: 1, width: "100%" }} onPress={onClose} />
-      </Animated.View>
+      </View>
     </Modal>
   );
 }

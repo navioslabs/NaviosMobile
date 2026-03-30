@@ -229,13 +229,18 @@ function FeedPostCard({ post, t, isDark, featured, expired, onLongPress }: FeedP
 
         <CardHeader post={post} t={t} />
 
-        {/* Featured badge */}
-        {featured && (
+        {/* Featured / 終了 badge */}
+        {expired ? (
+          <View style={{ position: "absolute", top: SPACE.lg, right: SPACE.lg, flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "rgba(100,100,120,0.9)", borderRadius: RADIUS.full, paddingHorizontal: SPACE.sm + 2, paddingVertical: SPACE.xs }}>
+            <Clock size={12} color="#fff" />
+            <Text style={{ fontSize: fs.xxs, fontWeight: WEIGHT.extrabold, color: "#fff" }}>終了</Text>
+          </View>
+        ) : featured ? (
           <View style={{ position: "absolute", top: SPACE.lg, right: SPACE.lg, flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "rgba(240,66,92,0.9)", borderRadius: RADIUS.full, paddingHorizontal: SPACE.sm + 2, paddingVertical: SPACE.xs }}>
             <Flame size={12} color="#fff" />
             <Text style={{ fontSize: fs.xxs, fontWeight: WEIGHT.extrabold, color: "#fff" }}>注目</Text>
           </View>
-        )}
+        ) : null}
 
         {/* Distance badge */}
         <View style={{ position: "absolute", right: SPACE.lg, top: "50%", transform: [{ translateY: -14 }], flexDirection: "row", alignItems: "center", gap: SPACE.xs, backgroundColor: "rgba(0,0,0,0.5)", borderRadius: RADIUS.full, paddingHorizontal: SPACE.md, paddingVertical: 6 }}>

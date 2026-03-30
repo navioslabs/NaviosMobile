@@ -38,7 +38,6 @@ export default function ProfileEditScreen() {
       bio: profile?.bio ?? "",
       locationText: profile?.location_text ?? "越谷市",
       isPublic: profile?.is_public ?? true,
-      showLocation: profile?.show_location ?? true,
       showCheckins: profile?.show_checkins ?? false,
     },
     mode: "onChange",
@@ -61,7 +60,7 @@ export default function ProfileEditScreen() {
         location_text: data.locationText?.trim() || undefined,
         avatar_url,
         is_public: data.isPublic,
-        show_location: data.showLocation,
+        show_location: true,
         show_checkins: data.showCheckins,
       });
       router.back();
@@ -186,9 +185,9 @@ export default function ProfileEditScreen() {
             </Text>
           </View>
 
-          {/* 地域 */}
+          {/* 活動エリア */}
           <View>
-            <Text style={[s.textSectionLabel, { marginBottom: SPACE.sm }]}>地域</Text>
+            <Text style={[s.textSectionLabel, { marginBottom: SPACE.sm }]}>活動エリア</Text>
             <View style={[s.card, { flexDirection: "row", alignItems: "center", gap: SPACE.sm + 2 }]}>
               <MapPin size={18} color={t.accent} />
               <Controller
@@ -199,7 +198,7 @@ export default function ProfileEditScreen() {
                     value={value ?? ""}
                     onChangeText={onChange}
                     onBlur={onBlur}
-                    placeholder="地域を入力"
+                    placeholder="例: 越谷市、渋谷区など"
                     placeholderTextColor={t.muted}
                     style={{ flex: 1, fontSize: fs.lg, color: t.text }}
                   />
@@ -214,7 +213,6 @@ export default function ProfileEditScreen() {
             <View style={{ gap: SPACE.sm }}>
               {([
                 { name: "isPublic" as const, label: "プロフィールを公開", desc: "他のユーザーからプロフィールが見えます" },
-                { name: "showLocation" as const, label: "位置情報を表示", desc: "投稿に位置情報を表示します" },
                 { name: "showCheckins" as const, label: "チェックイン履歴を公開", desc: "訪問履歴を他のユーザーに公開します" },
               ] as const).map((item) => (
                 <Controller

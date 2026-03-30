@@ -1,10 +1,9 @@
-import { SectionList, View, Text, FlatList, RefreshControl, Pressable, ActivityIndicator } from "react-native";
+import { SectionList, View, Text, FlatList, RefreshControl, Pressable, ActivityIndicator, Platform } from "react-native";
 import { useMemo, useEffect, useRef, useState, useCallback } from "react";
 import PostPreviewSheet from "@/components/ui/PostPreviewSheet";
-import Animated, { FadeInDown, FadeOutUp, useSharedValue, useAnimatedStyle, withSequence, withTiming } from "react-native-reanimated";
 import { useIsFocused } from "@react-navigation/native";
 import { useQueryClient } from "@tanstack/react-query";
-import { MapPin, ArrowLeft, Clock, Radio, PenLine, Inbox } from "@/lib/icons";
+import { MapPin, RefreshCw, Clock, Radio, PenLine, Inbox } from "@/lib/icons";
 import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { useNearbyPosts, usePosts } from "@/hooks/usePosts";
@@ -33,11 +32,11 @@ interface NearbySection {
 }
 
 const getDateLabel = (offset: number): string => {
-  if (offset === 0) return "📍 今日 • 越谷市";
-  if (offset === 1) return "📅 明日";
+  if (offset === 0) return "今日";
+  if (offset === 1) return "明日";
   const d = new Date();
   d.setDate(d.getDate() + offset);
-  return `📅 ${d.getMonth() + 1}/${d.getDate()}`;
+  return `${d.getMonth() + 1}/${d.getDate()}`;
 };
 
 /** モード切替タブ */
@@ -100,57 +99,9 @@ export default function HomeScreen() {
 
   const nearbyLoading = locationLoading || nearbyQueryLoading;
 
-  const [displayPosts, setDisplayPosts] = useState<Post[]>([]);
-  const [pendingPosts, setPendingPosts] = useState<Post[] | null>(null);
-  const [showNewBanner, setShowNewBanner] = useState(false);
   const [previewPost, setPreviewPost] = useState<Post | null>(null);
 
-  const scoreBarPulse = useSharedValue(1);
-  const scoreBarStyle = useAnimatedStyle(() => ({
-    transform: [{ scaleX: scoreBarPulse.value }],
-  }));
-
-  const isInitialLoad = useRef(true);
-
-  useEffect(() => {
-    if (!serverPosts) return;
-    if (isInitialLoad.current) {
-      setDisplayPosts(serverPosts);
-      isInitialLoad.current = false;
-      return;
-    }
-    const currentIds = new Set(displayPosts.map((p) => p.id));
-    const newIds = serverPosts.map((p) => p.id);
-    const hasNew = newIds.some((id) => !currentIds.has(id));
-    const countChanged = serverPosts.length !== displayPosts.length;
-    if (hasNew || countChanged) {
-      setPendingPosts(serverPosts);
-      setShowNewBanner(true);
-      requestAnimationFrame(() => {
-        scoreBarPulse.value = withSequence(
-          withTiming(1.15, { duration: 200 }),
-          withTiming(1.0, { duration: 300 }),
-        );
-      });
-    } else {
-      setDisplayPosts(serverPosts);
-    }
-  }, [serverPosts]);
-
-  const applyPendingPosts = useCallback(() => {
-    if (pendingPosts) {
-      setDisplayPosts(pendingPosts);
-      setPendingPosts(null);
-    }
-    setShowNewBanner(false);
-    try {
-      listRef.current?.scrollToLocation({ sectionIndex: 0, itemIndex: 0, animated: true });
-    } catch {
-      // セクションが空の場合は無視
-    }
-  }, [pendingPosts]);
-
-  const nearbyPosts = displayPosts;
+  const nearbyPosts = serverPosts ?? [];
 
   const lastQueryCoords = useRef({ lat: 0, lng: 0 });
   useEffect(() => {
@@ -162,17 +113,21 @@ export default function HomeScreen() {
     }
   }, [lat, lng, qc]);
 
-  const activePosts = useMemo(() => nearbyPosts.filter((p) => !isExpired(p.deadline)), [nearbyPosts]);
+  const activePosts = useMemo(() => {
+    const active = nearbyPosts.filter((p) => !isExpired(p.deadline));
+    const expired = nearbyPosts.filter((p) => isExpired(p.deadline));
+    return [...active, ...expired];
+  }, [nearbyPosts]);
 
   const sections: NearbySection[] = useMemo(() => {
     const byScore = (a: Post, b: Post) =>
       calcMatchScore(b.distance_m ?? 0, b.deadline) - calcMatchScore(a.distance_m ?? 0, a.deadline);
-    const close = activePosts.filter((p) => (p.distance_m ?? 0) <= 200).sort(byScore);
-    const mid = activePosts.filter((p) => (p.distance_m ?? 0) > 200 && (p.distance_m ?? 0) <= 500).sort(byScore);
-    const far = activePosts.filter((p) => (p.distance_m ?? 0) > 500).sort(byScore);
+    const close = activePosts.filter((p) => (p.distance_m ?? 0) <= 300).sort(byScore);
+    const mid = activePosts.filter((p) => (p.distance_m ?? 0) > 300 && (p.distance_m ?? 0) <= 600).sort(byScore);
+    const far = activePosts.filter((p) => (p.distance_m ?? 0) > 600).sort(byScore);
     const result: NearbySection[] = [];
-    result.push({ title: "すぐ近く（200m以内）", color: "#00D4A1", data: close });
-    if (mid.length > 0) result.push({ title: "徒歩圏内（500m以内）", color: "#F5A623", data: mid });
+    result.push({ title: "すぐ近く（300m以内）", color: "#00D4A1", data: close });
+    if (mid.length > 0) result.push({ title: "徒歩圏内（600m以内）", color: "#F5A623", data: mid });
     if (far.length > 0) result.push({ title: "その他", color: "#8887A0", data: far });
     return result;
   }, [activePosts]);
@@ -332,9 +287,10 @@ export default function HomeScreen() {
               <RefreshControl
                 refreshing={feedFetching && !feedQueryLoading && !isFetchingNextPage}
                 onRefresh={() => feedRefetch()}
-                tintColor={t.accent}
-                colors={[t.accent]}
-                progressBackgroundColor={t.surface}
+                tintColor="transparent"
+                colors={["transparent"]}
+                progressBackgroundColor="transparent"
+                style={Platform.OS === "android" ? { height: 0 } : undefined}
               />
             }
           />
@@ -365,71 +321,59 @@ export default function HomeScreen() {
         dataUpdatedAt={dataUpdatedAt}
         isWatching={isWatching}
         placeName={placeName}
-        scoreBarAnimStyle={scoreBarStyle}
       />
 
-      {/* 街の記憶ボタン */}
-      <Pressable
-        onPress={() => router.push("/street-history")}
-        style={({ pressed }) => ({
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: SPACE.sm,
-          marginHorizontal: SPACE.xl,
-          marginTop: SPACE.sm,
-          paddingVertical: SPACE.sm,
-          borderRadius: RADIUS.lg,
-          backgroundColor: t.surface,
-          borderWidth: 1,
-          borderColor: t.border,
-          opacity: pressed ? 0.7 : 1,
-        })}
-      >
-        <Clock size={14} color={t.accent} />
-        <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.semibold, color: t.accent }}>この場所の記憶を見る</Text>
-      </Pressable>
-
-      {/* 新着バナー */}
-      {showNewBanner && (
-        <Animated.View entering={FadeInDown.duration(300).springify()} exiting={FadeOutUp.duration(200)}>
-          <Pressable
-            onPress={applyPendingPosts}
-            accessibilityLabel="新しい投稿を表示する"
-            accessibilityRole="button"
-            style={({ pressed }) => ({
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: SPACE.sm,
-              marginHorizontal: SPACE.xl,
-              marginVertical: SPACE.sm,
-              paddingVertical: SPACE.sm + 2,
-              borderRadius: RADIUS.full,
-              backgroundColor: t.accent,
-              opacity: pressed ? 0.8 : 1,
-              shadowColor: t.accent,
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.3,
-              shadowRadius: 8,
-              elevation: 4,
-            })}
-          >
-            <ArrowLeft size={14} color="#000" style={{ transform: [{ rotate: "90deg" }] }} />
-            <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.bold, color: "#000" }}>
-              新しい投稿があります
-            </Text>
-          </Pressable>
-        </Animated.View>
-      )}
+      {/* アクションボタン行 */}
+      <View style={{ flexDirection: "row", gap: SPACE.sm, marginHorizontal: SPACE.xl, marginTop: SPACE.sm }}>
+        <Pressable
+          onPress={() => router.push("/street-history")}
+          style={({ pressed }) => ({
+            flex: 1,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: SPACE.sm,
+            paddingVertical: SPACE.sm,
+            borderRadius: RADIUS.lg,
+            backgroundColor: t.surface,
+            borderWidth: 1,
+            borderColor: t.border,
+            opacity: pressed ? 0.7 : 1,
+          })}
+        >
+          <Clock size={14} color={t.accent} />
+          <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.semibold, color: t.accent }}>記憶を見る</Text>
+        </Pressable>
+        <Pressable
+          onPress={() => nearbyRefetch()}
+          style={({ pressed }) => ({
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: SPACE.xs,
+            paddingVertical: SPACE.sm,
+            paddingHorizontal: SPACE.lg,
+            borderRadius: RADIUS.lg,
+            backgroundColor: nearbyFetching ? t.accent + "20" : t.surface,
+            borderWidth: 1,
+            borderColor: nearbyFetching ? t.accent + "40" : t.border,
+            opacity: pressed ? 0.7 : 1,
+          })}
+        >
+          <RefreshCw size={14} color={t.accent} />
+          <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.semibold, color: t.accent }}>
+            {nearbyFetching ? "更新中" : "更新"}
+          </Text>
+        </Pressable>
+      </View>
 
       <SectionList
         ref={listRef}
         sections={sections}
         keyExtractor={(item) => item.id}
         renderItem={({ item, index, section }) => {
-          const isFeatured = section === sections[0] && index === 0;
-          return <NearbyPostItem post={item} t={t} featured={isFeatured} isDark={isDark} onLongPress={() => setPreviewPost(item)} />;
+          const isFeatured = section === sections[0] && index === 0 && !isExpired(item.deadline);
+          return <NearbyPostItem post={item} t={t} featured={isFeatured} expired={isExpired(item.deadline)} isDark={isDark} onLongPress={() => setPreviewPost(item)} />;
         }}
         renderSectionHeader={({ section }) => (
           <DistanceSectionHeader title={section.title} count={section.data.length} color={section.color} t={t} />
@@ -448,11 +392,8 @@ export default function HomeScreen() {
         stickySectionHeadersEnabled={false}
         refreshControl={
           <RefreshControl
-            refreshing={nearbyFetching && !showNewBanner}
-            onRefresh={() => {
-              applyPendingPosts();
-              nearbyRefetch();
-            }}
+            refreshing={nearbyFetching}
+            onRefresh={() => nearbyRefetch()}
             tintColor={t.accent}
             colors={[t.accent]}
             progressBackgroundColor={t.surface}

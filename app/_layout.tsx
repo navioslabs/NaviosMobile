@@ -1,8 +1,9 @@
+import { useState } from "react";
 import { DarkTheme, DefaultTheme, ThemeProvider } from "@react-navigation/native";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import "react-native-reanimated";
+import * as SplashScreen from "expo-splash-screen";
 import { makeTokens } from "@/constants/theme";
 import { useThemeStore } from "@/stores/themeStore";
 import AuthProvider from "@/components/providers/AuthProvider";
@@ -10,12 +11,17 @@ import OfflineBanner from "@/components/ui/OfflineBanner";
 import OnboardingTour from "@/components/ui/OnboardingTour";
 import GuestLoginSheet from "@/components/ui/GuestLoginSheet";
 import Toast from "@/components/ui/Toast";
+import SplashTransition from "@/components/ui/SplashTransition";
 import ErrorBoundary from "@/components/ui/ErrorBoundary";
 import { useRealtimeTalks } from "@/hooks/useRealtimeTalks";
 import { useRealtimeNotifications } from "@/hooks/useNotifications";
+import { useAuth } from "@/hooks/useAuth";
 import { initSentry } from "@/lib/sentry";
 
 initSentry();
+
+// Expo のネイティブスプラッシュを自動で消さないようにする
+SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -36,6 +42,8 @@ export const unstable_settings = {
 function AppContent() {
   const { isDark } = useThemeStore();
   const t = makeTokens(isDark);
+  const { isLoading: authLoading } = useAuth();
+  const [splashDone, setSplashDone] = useState(false);
   useRealtimeTalks();
   useRealtimeNotifications();
 
@@ -79,11 +87,21 @@ function AppContent() {
           name="street-history"
           options={{ headerShown: false }}
         />
+        <Stack.Screen
+          name="notifications"
+          options={{ headerShown: false }}
+        />
       </Stack>
       <StatusBar style={isDark ? "light" : "dark"} />
       <OnboardingTour t={t} />
       <GuestLoginSheet />
       <Toast />
+      {!splashDone && (
+        <SplashTransition
+          ready={!authLoading}
+          onFinish={() => setSplashDone(true)}
+        />
+      )}
     </ThemeProvider>
   );
 }

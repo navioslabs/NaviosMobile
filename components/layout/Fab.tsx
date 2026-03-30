@@ -1,15 +1,7 @@
-import { useState, useCallback, useEffect } from "react";
-import { View, Text, Pressable, Platform, StyleSheet } from "react-native";
+import { useState, useCallback, useEffect, useRef } from "react";
+import { View, Text, Pressable, Platform, StyleSheet, Animated } from "react-native";
 import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-  withTiming,
-  interpolate,
-  runOnJS,
-} from "react-native-reanimated";
 import { Plus, PenLine, Mic } from "@/lib/icons";
 import type { ThemeTokens } from "@/constants/theme";
 import { useGuestGuard } from "@/hooks/useGuestGuard";
@@ -25,28 +17,35 @@ interface FabProps {
 export default function Fab({ t, isDark }: FabProps) {
   const guard = useGuestGuard();
   const [touchable, setTouchable] = useState(false);
-  const progress = useSharedValue(0);
-  const rotation = useSharedValue(0);
-  const fabScale = useSharedValue(1);
+  const progress = useRef(new Animated.Value(0)).current;
+  const rotation = useRef(new Animated.Value(0)).current;
+  const fabScale = useRef(new Animated.Value(1)).current;
+
+  /** progress の現在値を追跡する */
+  const progressVal = useRef(0);
+  useEffect(() => {
+    const id = progress.addListener(({ value }) => { progressVal.current = value; });
+    return () => progress.removeListener(id);
+  }, []);
 
   const open = useCallback(() => {
     setTouchable(true);
-    progress.value = withTiming(1, { duration: 250 });
-    rotation.value = withSpring(135, { damping: 14, stiffness: 150 });
+    Animated.timing(progress, { toValue: 1, duration: 250, useNativeDriver: true }).start();
+    Animated.spring(rotation, { toValue: 135, damping: 14, stiffness: 150, useNativeDriver: true }).start();
   }, []);
 
   const close = useCallback(() => {
-    progress.value = withTiming(0, { duration: 200 }, () => {
-      runOnJS(setTouchable)(false);
+    Animated.timing(progress, { toValue: 0, duration: 200, useNativeDriver: true }).start(() => {
+      setTouchable(false);
     });
-    rotation.value = withSpring(0, { damping: 14, stiffness: 150 });
+    Animated.spring(rotation, { toValue: 0, damping: 14, stiffness: 150, useNativeDriver: true }).start();
   }, []);
 
   const handleToggle = useCallback(() => {
-    fabScale.value = withSpring(0.92, { damping: 15 }, () => {
-      fabScale.value = withSpring(1, { damping: 12 });
+    Animated.spring(fabScale, { toValue: 0.92, damping: 15, useNativeDriver: true }).start(() => {
+      Animated.spring(fabScale, { toValue: 1, damping: 12, useNativeDriver: true }).start();
     });
-    if (progress.value > 0.5) {
+    if (progressVal.current > 0.5) {
       close();
     } else {
       open();
@@ -58,27 +57,27 @@ export default function Fab({ t, isDark }: FabProps) {
     guard(() => router.push(route as any), "投稿");
   }, [guard]);
 
-  const iconStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${rotation.value}deg` }],
-  }));
+  const iconStyle = {
+    transform: [{ rotate: rotation.interpolate({ inputRange: [0, 360], outputRange: ["0deg", "360deg"] }) }],
+  };
 
-  const fabScaleStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: fabScale.value }],
-  }));
+  const fabScaleStyle = {
+    transform: [{ scale: fabScale }],
+  };
 
-  const backdropStyle = useAnimatedStyle(() => ({
-    opacity: progress.value * 0.4,
-  }));
+  const backdropStyle = {
+    opacity: progress.interpolate({ inputRange: [0, 1], outputRange: [0, 0.4] }),
+  };
 
-  const menuItem1Style = useAnimatedStyle(() => ({
-    opacity: interpolate(progress.value, [0, 0.6, 1], [0, 0, 1]),
-    transform: [{ translateY: interpolate(progress.value, [0, 1], [30, 0]) }],
-  }));
+  const menuItem1Style = {
+    opacity: progress.interpolate({ inputRange: [0, 0.6, 1], outputRange: [0, 0, 1] }),
+    transform: [{ translateY: progress.interpolate({ inputRange: [0, 1], outputRange: [30, 0] }) }],
+  };
 
-  const menuItem2Style = useAnimatedStyle(() => ({
-    opacity: interpolate(progress.value, [0, 0.3, 0.8], [0, 0, 1]),
-    transform: [{ translateY: interpolate(progress.value, [0, 1], [40, 0]) }],
-  }));
+  const menuItem2Style = {
+    opacity: progress.interpolate({ inputRange: [0, 0.3, 0.8], outputRange: [0, 0, 1] }),
+    transform: [{ translateY: progress.interpolate({ inputRange: [0, 1], outputRange: [40, 0] }) }],
+  };
 
   return (
     <>

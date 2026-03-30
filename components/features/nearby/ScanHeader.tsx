@@ -1,14 +1,6 @@
-import { useEffect } from "react";
-import { View, Text } from "react-native";
+import { useEffect, useRef } from "react";
+import { View, Text, Animated, Easing } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withRepeat,
-  withSequence,
-  withTiming,
-  Easing,
-} from "react-native-reanimated";
 import { Radio, MapPin, Clock, Flame, Zap } from "@/lib/icons";
 import type { ThemeTokens } from "@/constants/theme";
 import { WEIGHT, SPACE, RADIUS, getScaledFontSize } from "@/lib/styles";
@@ -23,7 +15,6 @@ interface ScanHeaderProps {
   urgentCount?: number;
   dataUpdatedAt?: number;
   isWatching?: boolean;
-  /** 逆ジオコーディングで取得した地名 */
   placeName?: string | null;
   scoreBarAnimStyle?: any;
 }
@@ -45,27 +36,37 @@ function getScoreTier(score: number): ScoreTier {
   return { label: "静かなエリア", badge: null, bgOpacity: 0.03, pulsePeriod: 2000, icon: Radio };
 }
 
-// ─── 脈動 ──────────────────────────────────────────
+// ─── 脈動（RN Animated版） ──────────────────────────
 
 function usePulse(periodMs: number, intensity = 1.08) {
-  const half = periodMs / 2;
-  const pulse = useSharedValue(1);
+  const pulse = useRef(new Animated.Value(1)).current;
   useEffect(() => {
-    requestAnimationFrame(() => {
-      pulse.value = withRepeat(
-        withSequence(
-          withTiming(intensity, { duration: half, easing: Easing.inOut(Easing.ease) }),
-          withTiming(1.0, { duration: half, easing: Easing.inOut(Easing.ease) }),
-        ),
-        -1,
-        true,
-      );
-    });
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, {
+          toValue: intensity,
+          duration: periodMs / 2,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulse, {
+          toValue: 1.0,
+          duration: periodMs / 2,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    animation.start();
+    return () => animation.stop();
   }, [periodMs, intensity]);
-  return useAnimatedStyle(() => ({
-    transform: [{ scale: pulse.value }],
-    opacity: 0.85 + (pulse.value - 1.0) * 1.875,
-  }));
+
+  const opacity = pulse.interpolate({
+    inputRange: [1.0, intensity],
+    outputRange: [0.85, 1.0],
+  });
+
+  return { transform: [{ scale: pulse }], opacity };
 }
 
 // ─── Pulse スコア ──────────────────────────────────
@@ -83,11 +84,11 @@ function calcPulseScore(postCount: number, closeCount: number, recentCount: numb
 
 // ─── スコアバー ────────────────────────────────────
 
-function ScoreBar({ score, t, animStyle }: { score: number; t: ThemeTokens; animStyle?: any }) {
+function ScoreBar({ score, t }: { score: number; t: ThemeTokens }) {
   const barColor = score >= 80 ? "#FF6B35" : score >= 60 ? t.accent : score >= 30 ? t.accent + "80" : t.surface3;
   return (
     <View style={{ flex: 1, height: 4, borderRadius: 2, backgroundColor: t.surface3, overflow: "hidden" }}>
-      <Animated.View style={[{ width: `${score}%`, height: "100%", borderRadius: 2, backgroundColor: barColor }, animStyle]} />
+      <View style={{ width: `${score}%`, height: "100%", borderRadius: 2, backgroundColor: barColor }} />
     </View>
   );
 }
@@ -105,7 +106,6 @@ export default function ScanHeader({
   dataUpdatedAt,
   isWatching = false,
   placeName,
-  scoreBarAnimStyle,
 }: ScanHeaderProps) {
   const { scale } = useFontSizeStore();
   const fs = getScaledFontSize(scale);
@@ -190,7 +190,7 @@ export default function ScanHeader({
 
       {/* スコアバー */}
       <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.sm, marginTop: SPACE.sm }}>
-        <ScoreBar score={pulseScore} t={t} animStyle={scoreBarAnimStyle} />
+        <ScoreBar score={pulseScore} t={t} />
       </View>
     </>
   );

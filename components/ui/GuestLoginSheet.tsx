@@ -1,5 +1,4 @@
 import { View, Text, Pressable, Modal } from "react-native";
-import Animated, { FadeIn, FadeOut, SlideInDown, SlideOutDown } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { User } from "@/lib/icons";
@@ -24,16 +23,12 @@ export default function GuestLoginSheet() {
 
   return (
     <Modal visible={visible} transparent animationType="none" onRequestClose={hide}>
-      <Animated.View
-        entering={FadeIn.duration(200)}
-        exiting={FadeOut.duration(150)}
+      <View
         style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" }}
       >
         <Pressable style={{ flex: 1 }} onPress={hide} />
 
-        <Animated.View
-          entering={SlideInDown.duration(300).springify().damping(16)}
-          exiting={SlideOutDown.duration(200)}
+        <View
           style={{
             backgroundColor: t.surface,
             borderTopLeftRadius: RADIUS.xxl + 4,
@@ -105,8 +100,8 @@ export default function GuestLoginSheet() {
           <Pressable onPress={hide}>
             <Text style={{ fontSize: fs.sm, color: t.muted, textAlign: "center" }}>あとで</Text>
           </Pressable>
-        </Animated.View>
-      </Animated.View>
+        </View>
+      </View>
     </Modal>
   );
 }

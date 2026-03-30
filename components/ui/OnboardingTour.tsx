@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { View, Text, Pressable, Modal, useWindowDimensions } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import Animated, { FadeIn, FadeOut, SlideInRight, SlideOutLeft } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 import { Radio, MessageCircle, Sparkles } from "@/lib/icons";
 import type { ThemeTokens } from "@/constants/theme";
@@ -77,11 +76,9 @@ export default function OnboardingTour({ t }: OnboardingTourProps) {
 
   return (
     <Modal visible transparent animationType="none" onRequestClose={finish}>
-      <Animated.View entering={FadeIn.duration(300)} exiting={FadeOut.duration(200)} style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.7)", justifyContent: "center", alignItems: "center", padding: SPACE.xl }}>
-        <Animated.View
+      <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.7)", justifyContent: "center", alignItems: "center", padding: SPACE.xl }}>
+        <View
           key={step}
-          entering={SlideInRight.duration(350)}
-          exiting={SlideOutLeft.duration(200)}
           style={{
             width: width - SPACE.xl * 2,
             backgroundColor: t.surface,
@@ -157,8 +154,8 @@ export default function OnboardingTour({ t }: OnboardingTourProps) {
               </LinearGradient>
             </Pressable>
           </View>
-        </Animated.View>
-      </Animated.View>
+        </View>
+      </View>
     </Modal>
   );
 }

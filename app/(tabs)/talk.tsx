@@ -1,6 +1,5 @@
-import { FlatList, View, Text, RefreshControl, Pressable } from "react-native";
-import { useCallback, useEffect } from "react";
-import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withSequence, withTiming, Easing } from "react-native-reanimated";
+import { FlatList, View, Text, RefreshControl, Pressable, Animated, Easing } from "react-native";
+import { useCallback, useEffect, useRef } from "react";
 import { useIsFocused } from "@react-navigation/native";
 import { Radio, MapPin, MessageCircle } from "@/lib/icons";
 import { useTalks } from "@/hooks/useTalks";
@@ -117,25 +116,19 @@ export default function TalkScreen() {
 
 /** LIVE 脈動バッジ */
 function LiveBadge({ t }: { t: any }) {
-  const pulse = useSharedValue(1);
+  const pulse = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    pulse.value = withRepeat(
-      withSequence(
-        withTiming(1.06, { duration: 800, easing: Easing.inOut(Easing.ease) }),
-        withTiming(1.0, { duration: 800, easing: Easing.inOut(Easing.ease) }),
-      ),
-      -1,
-      true,
-    );
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, { toValue: 1.06, duration: 800, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 1.0, duration: 800, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      ]),
+    ).start();
   }, []);
 
-  const animStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: pulse.value }],
-  }));
-
   return (
-    <Animated.View style={[animStyle, {
+    <Animated.View style={[{ transform: [{ scale: pulse }] }, {
       flexDirection: "row",
       alignItems: "center",
       gap: 3,

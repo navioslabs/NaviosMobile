@@ -1,12 +1,5 @@
-import React, { useEffect } from "react";
-import { StyleSheet, View, ViewStyle } from "react-native";
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withRepeat,
-  withTiming,
-  Easing,
-} from "react-native-reanimated";
+import React, { useEffect, useRef } from "react";
+import { StyleSheet, View, ViewStyle, Animated, Easing } from "react-native";
 import type { ThemeTokens } from "@/constants/theme";
 import { SPACE, RADIUS } from "@/lib/styles";
 
@@ -24,23 +17,22 @@ interface SkeletonBoxProps {
 
 /** パルスアニメーションで点滅するスケルトンブロック */
 export function SkeletonBox({ width, height, borderRadius = RADIUS.sm, t, style }: SkeletonBoxProps) {
-  const opacity = useSharedValue(0.4);
+  const opacity = useRef(new Animated.Value(0.4)).current;
 
   useEffect(() => {
-    opacity.value = withRepeat(
-      withTiming(1, { duration: 800, easing: Easing.inOut(Easing.ease) }),
-      -1,
-      true,
-    );
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, { toValue: 1, duration: 800, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 0.4, duration: 800, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      ]),
+    ).start();
   }, []);
-
-  const animStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
 
   return (
     <Animated.View
       style={[
         { width, height, borderRadius, backgroundColor: t.surface3 },
-        animStyle,
+        { opacity },
         style,
       ]}
     />

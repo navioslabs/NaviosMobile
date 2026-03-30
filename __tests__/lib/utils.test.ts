@@ -62,10 +62,10 @@ describe("haversineDistance", () => {
     expect(haversineDistance(35.68, 139.76, 35.68, 139.76)).toBe(0);
   });
 
-  it("東京駅〜渋谷駅は約3.5〜4.5km", () => {
+  it("東京駅〜渋谷駅は約6〜7km", () => {
     const d = haversineDistance(35.6812, 139.7671, 35.6580, 139.7016);
-    expect(d).toBeGreaterThan(3500);
-    expect(d).toBeLessThan(4500);
+    expect(d).toBeGreaterThan(6000);
+    expect(d).toBeLessThan(7000);
   });
 
   it("越谷駅〜越谷レイクタウン駅は約2〜4km", () => {

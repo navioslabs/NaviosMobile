@@ -52,7 +52,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ],
   experiments: {
     typedRoutes: true,
-    reactCompiler: true,
   },
   extra: {
     SUPABASE_URL: process.env.SUPABASE_URL,

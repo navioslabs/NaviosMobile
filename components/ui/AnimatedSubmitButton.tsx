@@ -1,5 +1,5 @@
-import { Text, Pressable, ActivityIndicator } from "react-native";
-import Animated, { useSharedValue, useAnimatedStyle, withSpring } from "react-native-reanimated";
+import { useRef } from "react";
+import { Text, Pressable, ActivityIndicator, Animated } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 import type { ThemeTokens } from "@/constants/theme";
@@ -15,17 +15,17 @@ interface AnimatedSubmitButtonProps {
 
 /** タップ感のあるアニメーション付き投稿ボタン */
 export default function AnimatedSubmitButton({ onPress, disabled, isPending, canSubmit, t, fs }: AnimatedSubmitButtonProps) {
-  const btnScale = useSharedValue(1);
+  const btnScale = useRef(new Animated.Value(1)).current;
 
-  const animStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: btnScale.value }],
-  }));
+  const animStyle = {
+    transform: [{ scale: btnScale }],
+  };
 
   const handlePressIn = () => {
-    if (!disabled) btnScale.value = withSpring(0.95, { damping: 15, stiffness: 300 });
+    if (!disabled) Animated.spring(btnScale, { toValue: 0.95, damping: 15, stiffness: 300, useNativeDriver: true }).start();
   };
   const handlePressOut = () => {
-    btnScale.value = withSpring(1, { damping: 15, stiffness: 300 });
+    Animated.spring(btnScale, { toValue: 1, damping: 15, stiffness: 300, useNativeDriver: true }).start();
   };
 
   return (

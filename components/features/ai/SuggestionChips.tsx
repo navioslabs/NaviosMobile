@@ -1,5 +1,4 @@
 import { View, Text, Pressable } from "react-native";
-import Animated, { FadeInRight } from "react-native-reanimated";
 import type { ThemeTokens } from "@/constants/theme";
 import { WEIGHT, SPACE, RADIUS, getScaledFontSize } from "@/lib/styles";
 import { useFontSizeStore } from "@/stores/fontSizeStore";
@@ -28,7 +27,7 @@ export default function SuggestionChips({ t, onSelect, suggestions }: Suggestion
   return (
     <View style={{ flexDirection: "row", flexWrap: "wrap", gap: SPACE.sm, marginBottom: SPACE.lg }}>
       {items.map((s, i) => (
-        <Animated.View key={s} entering={FadeInRight.delay(i * 50).duration(300).springify().damping(14)}>
+        <View key={s}>
           <Pressable
             onPress={() => onSelect(s)}
             style={({ pressed }) => ({
@@ -43,7 +42,7 @@ export default function SuggestionChips({ t, onSelect, suggestions }: Suggestion
           >
             <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.medium, color: t.sub }}>{s}</Text>
           </Pressable>
-        </Animated.View>
+        </View>
       ))}
     </View>
   );

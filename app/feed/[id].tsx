@@ -1,6 +1,5 @@
-import { useState, useCallback } from "react";
-import Animated, { useSharedValue, useAnimatedStyle, withSequence, withSpring } from "react-native-reanimated";
-import { View, Text, ScrollView, TextInput, Pressable, StyleSheet, ActivityIndicator, RefreshControl, Alert, Share as RNShare } from "react-native";
+import { useState, useCallback, useRef } from "react";
+import { View, Text, ScrollView, TextInput, Pressable, StyleSheet, ActivityIndicator, RefreshControl, Alert, Share as RNShare, Animated } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { Image } from "expo-image";
 import {
@@ -70,17 +69,17 @@ export default function FeedDetailScreen() {
   const toast = useToastStore((s) => s.show);
   const isOwner = !!user && !!post && user.id === post.author_id;
 
-  const likeScale = useSharedValue(1);
-  const likeAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: likeScale.value }],
-  }));
+  const likeScale = useRef(new Animated.Value(1)).current;
+  const likeAnimatedStyle = {
+    transform: [{ scale: likeScale }],
+  };
 
   const handleLike = useCallback(() => {
     if (!id) return;
-    likeScale.value = withSequence(
-      withSpring(1.3, { damping: 4, stiffness: 300 }),
-      withSpring(1, { damping: 6, stiffness: 200 }),
-    );
+    Animated.sequence([
+      Animated.spring(likeScale, { toValue: 1.3, damping: 4, stiffness: 300, useNativeDriver: true }),
+      Animated.spring(likeScale, { toValue: 1, damping: 6, stiffness: 200, useNativeDriver: true }),
+    ]).start();
     guard(() => toggleLike.mutate({ targetType: "post", targetId: id }), "いいね");
   }, [id, guard, toggleLike, likeScale]);
 

@@ -1,6 +1,5 @@
 import { View, Text, Pressable } from "react-native";
 import { Image } from "expo-image";
-import Animated, { FadeInUp } from "react-native-reanimated";
 import { router } from "expo-router";
 import { Trophy, Heart } from "@/lib/icons";
 import { CAT_CONFIG } from "@/constants/categories";
@@ -37,7 +36,7 @@ export default function WeeklyRanking({ posts, t }: WeeklyRankingProps) {
       {posts.map((post, i) => {
         const rankColor = RANK_COLORS[i];
         return (
-          <Animated.View key={post.id} entering={FadeInUp.delay(Math.min(i * 60, 300)).duration(300)}>
+          <View key={post.id}>
             <Pressable
               onPress={() => router.push(`/feed/${post.id}` as any)}
               accessibilityLabel={`${i + 1}位: ${post.title}、いいね${post.likes_count}件`}
@@ -85,7 +84,7 @@ export default function WeeklyRanking({ posts, t }: WeeklyRankingProps) {
                 <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.bold, color: t.red }}>{post.likes_count}</Text>
               </View>
             </Pressable>
-          </Animated.View>
+          </View>
         );
       })}
     </View>

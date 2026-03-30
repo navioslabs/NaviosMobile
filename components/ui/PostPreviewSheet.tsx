@@ -1,7 +1,6 @@
 import { useCallback } from "react";
 import { View, Text, Pressable, Modal, ScrollView, useWindowDimensions } from "react-native";
 import { Image } from "expo-image";
-import Animated, { FadeIn, FadeOut, SlideInDown, SlideOutDown } from "react-native-reanimated";
 import { router } from "expo-router";
 import { Clock, Navigation, Heart, X } from "@/lib/icons";
 import { CAT_CONFIG } from "@/constants/categories";
@@ -42,17 +41,13 @@ export default function PostPreviewSheet({ post, visible, onClose, t, isDark }: 
   return (
     <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
       {/* 背景オーバーレイ */}
-      <Animated.View
-        entering={FadeIn.duration(200)}
-        exiting={FadeOut.duration(150)}
+      <View
         style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" }}
       >
         <Pressable style={{ flex: 1 }} onPress={onClose} />
 
         {/* シート本体 */}
-        <Animated.View
-          entering={SlideInDown.duration(300).springify().damping(16)}
-          exiting={SlideOutDown.duration(200)}
+        <View
           style={{
             maxHeight: screenHeight * 0.55,
             backgroundColor: t.surface,
@@ -169,8 +164,8 @@ export default function PostPreviewSheet({ post, visible, onClose, t, isDark }: 
               </Pressable>
             </View>
           </ScrollView>
-        </Animated.View>
-      </Animated.View>
+        </View>
+      </View>
     </Modal>
   );
 }

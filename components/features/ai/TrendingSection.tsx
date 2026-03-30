@@ -1,6 +1,5 @@
 import { View, Text, FlatList, Pressable } from "react-native";
 import { Image } from "expo-image";
-import Animated, { FadeInUp } from "react-native-reanimated";
 import { router } from "expo-router";
 import { TrendingUp, Heart, Clock } from "@/lib/icons";
 import { CAT_CONFIG } from "@/constants/categories";
@@ -23,7 +22,7 @@ function TrendingCard({ post, t, index }: { post: Post; t: ThemeTokens; index: n
   const catColor = CAT_CONFIG[post.category]?.color ?? t.accent;
 
   return (
-    <Animated.View entering={FadeInUp.delay(Math.min(index * 80, 320)).duration(350)}>
+    <View>
       <Pressable
         onPress={() => router.push(`/feed/${post.id}` as any)}
         accessibilityLabel={`${post.title}、いいね${post.likes_count}件`}
@@ -64,7 +63,7 @@ function TrendingCard({ post, t, index }: { post: Post; t: ThemeTokens; index: n
           </View>
         </View>
       </Pressable>
-    </Animated.View>
+    </View>
   );
 }
 

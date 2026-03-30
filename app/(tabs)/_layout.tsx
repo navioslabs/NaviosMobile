@@ -1,12 +1,6 @@
-import { useEffect } from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { useEffect, useRef } from "react";
+import { View, Text, StyleSheet, Animated } from "react-native";
 import { Tabs } from "expo-router";
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-} from "react-native-reanimated";
-import * as Haptics from "expo-haptics";
 import { MessageCircle, Sparkles, Radio, Settings } from "@/lib/icons";
 import { makeTokens } from "@/constants/theme";
 import { useThemeStore } from "@/stores/themeStore";
@@ -16,21 +10,23 @@ import Fab from "@/components/layout/Fab";
 
 /** 中央タブアイコン（スケール + グロー付き） */
 function AiTabIcon({ focused, t }: { focused: boolean; t: ReturnType<typeof makeTokens> }) {
-  const scale = useSharedValue(1);
+  const scale = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    scale.value = withSpring(focused ? 1.12 : 1, { damping: 14, stiffness: 150 });
+    Animated.spring(scale, {
+      toValue: focused ? 1.12 : 1,
+      damping: 14,
+      stiffness: 150,
+      useNativeDriver: true,
+      mass: 1,
+    }).start();
   }, [focused]);
-
-  const animStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
 
   return (
     <Animated.View
       style={[
         styles.centerIcon,
-        animStyle,
+        { transform: [{ scale }] },
         {
           backgroundColor: focused ? t.accent : t.surface2,
           borderColor: focused ? "transparent" : t.border,
@@ -72,9 +68,6 @@ export default function TabLayout() {
     <View style={{ flex: 1, backgroundColor: t.bg }}>
       <Header t={t} />
       <Tabs
-        screenListeners={{
-          tabPress: () => Haptics.selectionAsync(),
-        }}
         screenOptions={{
           headerShown: false,
           tabBarActiveTintColor: t.accent,

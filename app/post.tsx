@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, Pressable, ScrollView, Alert, Platform, KeyboardAvoidingView } from "react-native";
-import Animated, { FadeIn } from "react-native-reanimated";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { router } from "expo-router";
 import { usePreventRemove } from "@react-navigation/native";
@@ -159,12 +158,12 @@ export default function PostScreen() {
   if (submitted) {
     return (
       <View style={[s.screen, { flex: 1, justifyContent: "center", alignItems: "center" }]}>
-        <Animated.View entering={FadeIn.duration(300)} style={{ alignItems: "center", gap: SPACE.md }}>
+        <View style={{ alignItems: "center", gap: SPACE.md }}>
           <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: t.accent, alignItems: "center", justifyContent: "center" }}>
             <Check size={32} color="#000" />
           </View>
           <Text style={{ fontSize: fs.lg, fontWeight: WEIGHT.bold, color: t.text }}>近くの人へ届けました</Text>
-        </Animated.View>
+        </View>
       </View>
     );
   }

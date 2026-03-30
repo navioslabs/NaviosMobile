@@ -1,7 +1,5 @@
-import { memo, useCallback } from "react";
-import { View, Text, Pressable, StyleSheet } from "react-native";
-import Animated, { SlideInLeft, useSharedValue, useAnimatedStyle, withSequence, withSpring } from "react-native-reanimated";
-import * as Haptics from "expo-haptics";
+import { memo, useEffect, useRef } from "react";
+import { View, Text, Pressable, Animated } from "react-native";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { MapPin, MessageCircle, Heart, Navigation, User } from "@/lib/icons";
@@ -32,24 +30,22 @@ function TalkItem({ talk, t }: TalkItemProps) {
   const toggleLike = useToggleLike();
   const guard = useGuestGuard();
   const { data: topBadge } = useUserTopBadge(talk.author_id);
-  const heartScale = useSharedValue(1);
+
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(20)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, { toValue: 1, duration: 350, useNativeDriver: true }),
+      Animated.spring(slideAnim, { toValue: 0, damping: 18, stiffness: 120, useNativeDriver: true }),
+    ]).start();
+  }, []);
 
   if (!talk?.id) return null;
 
-  const handleLike = useCallback(() => {
-    guard(() => {
-      if (isLiked) {
-        Haptics.selectionAsync();
-      } else {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        heartScale.value = withSequence(
-          withSpring(1.35, { damping: 8, stiffness: 400 }),
-          withSpring(1, { damping: 10, stiffness: 200 }),
-        );
-      }
-      toggleLike.mutate({ targetType: "talk", targetId: talk.id });
-    }, "いいね");
-  }, [isLiked, talk.id]);
+  const handleLike = () => {
+    guard(() => toggleLike.mutate({ targetType: "talk", targetId: talk.id }), "いいね");
+  };
 
   const isHallOfFame = !!talk.is_hall_of_fame;
   const likesRemaining = HALL_OF_FAME_THRESHOLD - talk.likes_count;
@@ -62,7 +58,7 @@ function TalkItem({ talk, t }: TalkItemProps) {
   })();
 
   return (
-    <Animated.View entering={SlideInLeft.duration(400).damping(18).stiffness(120)}>
+    <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
       <Pressable
         onPress={() => router.push(`/talk-detail/${talk.id}` as any)}
         accessibilityLabel={`${talk.author?.display_name ?? "匿名"}のトーク: ${talk.message}`}
@@ -73,11 +69,11 @@ function TalkItem({ talk, t }: TalkItemProps) {
           opacity: pressed ? 0.85 : ghostOpacity,
         })}
       >
-        <View style={talkStyles.row}>
+        <View style={{ flexDirection: "row", gap: SPACE.sm }}>
           {/* アバター（小さめ） */}
           <Pressable
             onPress={() => router.push(`/profile/${talk.author_id}` as any)}
-            style={talkStyles.avatarWrap}
+            style={{ marginTop: 2 }}
           >
             {talk.author?.avatar_url ? (
               <Image
@@ -110,7 +106,7 @@ function TalkItem({ talk, t }: TalkItemProps) {
           {/* 吹き出しカード */}
           <View style={{ flex: 1 }}>
             {/* 名前 + バッジ行 */}
-            <View style={talkStyles.nameRow}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 5, marginBottom: 3 }}>
               <Text style={{ fontSize: fs.xs, fontWeight: WEIGHT.bold, color: t.text }}>
                 {talk.author?.display_name ?? "匿名"}
               </Text>
@@ -147,7 +143,7 @@ function TalkItem({ talk, t }: TalkItemProps) {
 
               {/* 画像 */}
               {talk.image_url && (
-                <View style={talkStyles.imageWrap}>
+                <View style={{ marginTop: SPACE.sm, borderRadius: RADIUS.md, overflow: "hidden" }}>
                   <Image source={{ uri: talk.image_url }} style={{ width: "100%", height: 160 }} contentFit="cover" />
                 </View>
               )}
@@ -160,14 +156,14 @@ function TalkItem({ talk, t }: TalkItemProps) {
               )}
             </View>
 
-            {/* メタ行: 距離 + ゴースト/殿堂 + アクション */}
-            <View style={talkStyles.metaRow}>
-              {/* 左: 位置 + ゴースト/殿堂 */}
-              <View style={talkStyles.metaLeft}>
+            {/* メタ行: 上段 位置+ゴースト/殿堂、下段 アクション */}
+            <View style={{ marginTop: SPACE.xs, paddingHorizontal: SPACE.xs, gap: 2 }}>
+              {/* 上段: 位置情報 + 残り時間 */}
+              <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: SPACE.sm }}>
                 {talk.location_text && (
-                  <View style={talkStyles.locationRow}>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
                     <MapPin size={10} color={t.accent} />
-                    <Text style={{ fontSize: fs.xxs, fontWeight: WEIGHT.semibold, color: t.accent }}>{talk.location_text}</Text>
+                    <Text style={{ fontSize: fs.xxs, fontWeight: WEIGHT.semibold, color: t.accent }} numberOfLines={1}>{talk.location_text}</Text>
                   </View>
                 )}
                 {isHallOfFame ? (
@@ -177,16 +173,16 @@ function TalkItem({ talk, t }: TalkItemProps) {
                 )}
               </View>
 
-              {/* 右: アクション（いいね + 返信） */}
-              <View style={talkStyles.actionGroup}>
+              {/* 下段: アクション（返信 + いいね） */}
+              <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.md }}>
                 <Pressable
                   onPress={() => router.push(`/talk-detail/${talk.id}` as any)}
                   accessibilityLabel={`返信 ${talk.replies_count || 0}件`}
                   accessibilityRole="button"
                   hitSlop={8}
-                  style={({ pressed }) => ({ flexDirection: "row" as const, alignItems: "center" as const, gap: 3, minHeight: 32, opacity: pressed ? 0.85 : 1, transform: [{ scale: pressed ? 0.9 : 1 }] })}
+                  style={({ pressed }) => ({ flexDirection: "row" as const, alignItems: "center" as const, gap: 3, minHeight: 28, opacity: pressed ? 0.6 : 1 })}
                 >
-                  <MessageCircle size={15} color={t.muted} />
+                  <MessageCircle size={14} color={t.muted} />
                   {(talk.replies_count ?? 0) > 0 && (
                     <Text style={{ fontSize: fs.xxs, color: t.muted }}>{talk.replies_count}</Text>
                   )}
@@ -197,11 +193,9 @@ function TalkItem({ talk, t }: TalkItemProps) {
                   accessibilityLabel={isLiked ? `いいね済み ${talk.likes_count}件` : `いいね ${talk.likes_count}件`}
                   accessibilityRole="button"
                   hitSlop={8}
-                  style={({ pressed }) => ({ flexDirection: "row" as const, alignItems: "center" as const, gap: 3, minHeight: 32, opacity: pressed ? 0.85 : 1, transform: [{ scale: pressed ? 0.9 : 1 }] })}
+                  style={({ pressed }) => ({ flexDirection: "row" as const, alignItems: "center" as const, gap: 3, minHeight: 28, opacity: pressed ? 0.6 : 1 })}
                 >
-                  <Animated.View style={useAnimatedStyle(() => ({ transform: [{ scale: heartScale.value }] }))}>
-                    <Heart size={15} fill={isLiked ? t.red : "none"} color={isLiked ? t.red : t.muted} />
-                  </Animated.View>
+                  <Heart size={14} fill={isLiked ? t.red : "none"} color={isLiked ? t.red : t.muted} />
                   {talk.likes_count > 0 && (
                     <Text style={{ fontSize: fs.xxs, color: isLiked ? t.red : t.muted }}>{talk.likes_count}</Text>
                   )}
@@ -214,16 +208,5 @@ function TalkItem({ talk, t }: TalkItemProps) {
     </Animated.View>
   );
 }
-
-const talkStyles = StyleSheet.create({
-  row: { flexDirection: "row", gap: SPACE.sm },
-  avatarWrap: { marginTop: 2 },
-  nameRow: { flexDirection: "row", alignItems: "center", gap: 5, marginBottom: 3 },
-  metaRow: { flexDirection: "row", alignItems: "center", marginTop: SPACE.xs, paddingHorizontal: SPACE.xs },
-  metaLeft: { flex: 1, flexDirection: "row", alignItems: "center", gap: SPACE.sm },
-  actionGroup: { flexDirection: "row", alignItems: "center", gap: SPACE.md },
-  locationRow: { flexDirection: "row", alignItems: "center", gap: 3 },
-  imageWrap: { marginTop: SPACE.sm, borderRadius: RADIUS.md, overflow: "hidden" },
-});
 
 export default memo(TalkItem);

@@ -60,5 +60,8 @@ export declare const MapPinOff: LucideIcon;
 export declare const RefreshCw: LucideIcon;
 export declare const Info: LucideIcon;
 export declare const ChevronDown: LucideIcon;
+export declare const FileText: LucideIcon;
+export declare const Mail: LucideIcon;
+export declare const ExternalLink: LucideIcon;
 
 export type { LucideIcon } from "lucide-react-native";

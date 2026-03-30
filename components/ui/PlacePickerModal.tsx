@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { View, Text, TextInput, Pressable, Modal, FlatList, ActivityIndicator, Platform } from "react-native";
-import Animated, { FadeIn, FadeOut, SlideInDown, SlideOutDown } from "react-native-reanimated";
 import { MapPin, Search, X, Navigation } from "@/lib/icons";
 import { searchPlaces, hasGoogleApiKey } from "@/lib/places";
 import type { PlacePrediction } from "@/lib/places";
@@ -76,10 +75,8 @@ export default function PlacePickerModal({
   if (!apiAvailable) {
     return (
       <Modal visible transparent animationType="none" onRequestClose={resetAndClose}>
-        <Animated.View entering={FadeIn.duration(200)} exiting={FadeOut.duration(150)} style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center", padding: SPACE.xl }}>
-          <Animated.View
-            entering={SlideInDown.duration(300)}
-            exiting={SlideOutDown.duration(200)}
+        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center", padding: SPACE.xl }}>
+          <View
             style={{ width: "100%", backgroundColor: t.surface, borderRadius: RADIUS.xxl, padding: SPACE.xl, alignItems: "center" }}
           >
             <MapPin size={32} color={t.muted} />
@@ -98,18 +95,16 @@ export default function PlacePickerModal({
             >
               <Text style={{ fontSize: fs.base, fontWeight: WEIGHT.bold, color: "#000" }}>閉じる</Text>
             </Pressable>
-          </Animated.View>
-        </Animated.View>
+          </View>
+        </View>
       </Modal>
     );
   }
 
   return (
     <Modal visible transparent animationType="none" onRequestClose={resetAndClose}>
-      <Animated.View entering={FadeIn.duration(200)} exiting={FadeOut.duration(150)} style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}>
-        <Animated.View
-          entering={SlideInDown.duration(300)}
-          exiting={SlideOutDown.duration(200)}
+      <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}>
+        <View
           style={{
             flex: 1,
             marginTop: Platform.OS === "ios" ? 60 : 40,
@@ -199,8 +194,8 @@ export default function PlacePickerModal({
               </Pressable>
             )}
           />
-        </Animated.View>
-      </Animated.View>
+        </View>
+      </View>
     </Modal>
   );
 }

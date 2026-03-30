@@ -1,7 +1,5 @@
-import { useEffect } from "react";
-import { Text, Pressable, useWindowDimensions } from "react-native";
-import Animated, { useSharedValue, useAnimatedStyle, withSpring, withDelay, withTiming, withSequence, runOnJS } from "react-native-reanimated";
-import * as Haptics from "expo-haptics";
+import { useEffect, useRef } from "react";
+import { Text, Pressable, useWindowDimensions, Animated } from "react-native";
 import { AlertCircle, Check, X } from "@/lib/icons";
 import { useToastStore } from "@/stores/toastStore";
 import { useAppStyles } from "@/hooks/useAppStyles";
@@ -12,42 +10,28 @@ export default function Toast() {
   const { message, type, visible, hide } = useToastStore();
   const { t, fs } = useAppStyles();
   const { width } = useWindowDimensions();
-  const translateX = useSharedValue(width);
-  const scale = useSharedValue(0.8);
+  const translateX = useRef(new Animated.Value(width)).current;
+  const scale = useRef(new Animated.Value(0.8)).current;
 
   useEffect(() => {
     if (visible) {
-      // エラー時はハプティクス、成功時は軽いフィードバック
-      if (type === "error") {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      } else {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      }
       // 右からスライドイン + バウンス
-      translateX.value = withSpring(0, { damping: 16, stiffness: 180 });
-      scale.value = withSequence(
-        withSpring(1.05, { damping: 12, stiffness: 200 }),
-        withSpring(1, { damping: 14, stiffness: 150 }),
-      );
+      Animated.spring(translateX, { toValue: 0, damping: 16, stiffness: 180, useNativeDriver: true }).start();
+      Animated.sequence([
+        Animated.spring(scale, { toValue: 1.05, damping: 12, stiffness: 200, useNativeDriver: true }),
+        Animated.spring(scale, { toValue: 1, damping: 14, stiffness: 150, useNativeDriver: true }),
+      ]).start();
       // 3秒後に右へスライドアウト
-      translateX.value = withDelay(
-        3000,
-        withTiming(width, { duration: 250 }, () => {
-          runOnJS(hide)();
-        }),
-      );
+      setTimeout(() => {
+        Animated.timing(translateX, { toValue: width, duration: 250, useNativeDriver: true }).start(() => {
+          hide();
+        });
+      }, 3000);
     } else {
-      translateX.value = width;
-      scale.value = 0.8;
+      translateX.setValue(width);
+      scale.setValue(0.8);
     }
   }, [visible, message]);
-
-  const animStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: translateX.value },
-      { scale: scale.value },
-    ],
-  }));
 
   if (!visible) return null;
 
@@ -60,7 +44,12 @@ export default function Toast() {
   return (
     <Animated.View
       style={[
-        animStyle,
+        {
+          transform: [
+            { translateX },
+            { scale },
+          ],
+        },
         {
           position: "absolute",
           top: 52,
@@ -90,7 +79,7 @@ export default function Toast() {
       </Text>
       <Pressable
         onPress={() => {
-          translateX.value = withTiming(width, { duration: 200 }, () => runOnJS(hide)());
+          Animated.timing(translateX, { toValue: width, duration: 200, useNativeDriver: true }).start(() => hide());
         }}
         hitSlop={8}
       >

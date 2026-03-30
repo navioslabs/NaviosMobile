@@ -1,6 +1,5 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { View, Text, TextInput, Pressable, ScrollView, ActivityIndicator, RefreshControl } from "react-native";
-import Animated, { FadeIn, FadeOut, FadeInUp } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import { Sparkles, Search, Zap, MessageCircle, MessageSquare, Trophy, Heart, Inbox } from "@/lib/icons";
@@ -9,22 +8,25 @@ import { useThemeStore } from "@/stores/themeStore";
 import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 import { useSearchPosts, usePosts } from "@/hooks/usePosts";
 import { useSearchTalks } from "@/hooks/useTalks";
+import { useLocation } from "@/hooks/useLocation";
 import { timeAgo } from "@/lib/adapters";
 import type { Talk } from "@/types";
 import PulseEventCard from "@/components/features/ai/PulseEventCard";
-import SuggestionChips from "@/components/features/ai/SuggestionChips";
 import TrendingSection from "@/components/features/ai/TrendingSection";
 import QuickActions from "@/components/features/ai/QuickActions";
 import WeeklyRanking from "@/components/features/ai/WeeklyRanking";
 import StateView from "@/components/ui/StateView";
 import { useSearchHistory } from "@/hooks/useSearchHistory";
+import { useTrendingTags } from "@/hooks/useTrendingTags";
 
 /** AI画面（さがす） */
 export default function AiScreen() {
   const { q } = useLocalSearchParams<{ q?: string }>();
   const { s, t, fs } = useAppStyles();
   const { isDark } = useThemeStore();
-  const { history, addHistory, clearHistory } = useSearchHistory();
+  const { addHistory } = useSearchHistory();
+  const { lat, lng } = useLocation();
+  const { data: trendingTags } = useTrendingTags(lat, lng, 10);
   const [query, setQuery] = useState(q ?? "");
   const [debouncedQuery, setDebouncedQuery] = useState(q ?? "");
   const [searchTab, setSearchTab] = useState<"posts" | "talks">("posts");
@@ -127,17 +129,6 @@ export default function AiScreen() {
       .slice(0, 3);
   }, [feedPosts]);
 
-  /** 動的サジェスト: 人気投稿タイトルからキーワード抽出 */
-  const dynamicSuggestions = useMemo(() => {
-    const posts = feedPosts ?? [];
-    const titles = posts
-      .sort((a, b) => b.likes_count - a.likes_count)
-      .slice(0, 10)
-      .map((p) => p.title);
-    const unique = [...new Set(titles)].slice(0, 5);
-    return unique.length >= 3 ? unique : undefined;
-  }, [feedPosts]);
-
   return (
     <ScrollView
       style={s.screen}
@@ -185,7 +176,7 @@ export default function AiScreen() {
           style={{ flex: 1, fontSize: fs.lg, color: t.text }}
         />
         {isSearching && (
-          <Animated.View entering={FadeIn.duration(200)} exiting={FadeOut.duration(150)} key="clear-btn">
+          <View key="clear-btn">
             <Pressable
               onPress={() => { setQuery(""); setDebouncedQuery(""); }}
               accessibilityLabel="検索をクリア"
@@ -198,7 +189,7 @@ export default function AiScreen() {
             >
               <Text style={{ fontSize: fs.lg, color: t.sub }}>✕</Text>
             </Pressable>
-          </Animated.View>
+          </View>
         )}
       </View>
 
@@ -273,22 +264,22 @@ export default function AiScreen() {
           )}
 
           {isLoading ? (
-            <Animated.View entering={FadeIn.duration(250)} exiting={FadeOut.duration(150)} style={{ alignItems: "center", paddingVertical: SPACE.xxxl }}>
+            <View style={{ alignItems: "center", paddingVertical: SPACE.xxxl }}>
               <ActivityIndicator size="large" color={t.accent} />
               <Text style={{ fontSize: fs.base, color: t.sub, marginTop: SPACE.lg }}>検索中...</Text>
-            </Animated.View>
+            </View>
           ) : searchTab === "posts" ? (
             /* 投稿検索結果 */
             postResults && postResults.length > 0 ? (
               <View>
-                <Animated.Text entering={FadeIn.duration(300)} style={{ fontSize: fs.sm, fontWeight: WEIGHT.semibold, color: t.accent, marginBottom: SPACE.lg }}>
+                <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.semibold, color: t.accent, marginBottom: SPACE.lg }}>
                   「{debouncedQuery}」の投稿 — {postCount}件
-                </Animated.Text>
+                </Text>
                 <View style={{ gap: SPACE.sm + 2 }}>
                   {postResults.map((ev, i) => (
-                    <Animated.View key={ev.id} entering={FadeInUp.delay(Math.min(i * 60, 400)).duration(350)}>
+                    <View key={ev.id}>
                       <PulseEventCard event={ev} t={t} />
-                    </Animated.View>
+                    </View>
                   ))}
                 </View>
               </View>
@@ -299,14 +290,14 @@ export default function AiScreen() {
             /* ひとこと検索結果 */
             talkResults && talkResults.length > 0 ? (
               <View>
-                <Animated.Text entering={FadeIn.duration(300)} style={{ fontSize: fs.sm, fontWeight: WEIGHT.semibold, color: t.blue, marginBottom: SPACE.lg }}>
+                <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.semibold, color: t.blue, marginBottom: SPACE.lg }}>
                   「{debouncedQuery}」のひとこと — {talkCount}件
-                </Animated.Text>
+                </Text>
                 <View style={{ gap: SPACE.sm }}>
                   {talkResults.map((talk, i) => (
-                    <Animated.View key={talk.id} entering={FadeInUp.delay(Math.min(i * 60, 400)).duration(350)}>
+                    <View key={talk.id}>
                       <TalkSearchCard talk={talk} t={t} fs={fs} />
-                    </Animated.View>
+                    </View>
                   ))}
                 </View>
               </View>
@@ -319,20 +310,15 @@ export default function AiScreen() {
         <>
           {/* 通常モード */}
 
-          {/* 検索履歴 */}
-          {history.length > 0 && (
+          {/* 最近話題のタグ */}
+          {trendingTags && trendingTags.length > 0 && (
             <View style={{ marginBottom: SPACE.lg }}>
-              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: SPACE.sm }}>
-                <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.semibold, color: t.sub }}>最近の検索</Text>
-                <Pressable onPress={clearHistory} hitSlop={8}>
-                  <Text style={{ fontSize: fs.xs, color: t.muted }}>クリア</Text>
-                </Pressable>
-              </View>
+              <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.semibold, color: t.sub, marginBottom: SPACE.sm }}>最近話題のタグ</Text>
               <View style={{ flexDirection: "row", flexWrap: "wrap", gap: SPACE.sm }}>
-                {history.map((h) => (
+                {trendingTags.map((item) => (
                   <Pressable
-                    key={h}
-                    onPress={() => handleQueryChange(h)}
+                    key={item.tag}
+                    onPress={() => handleQueryChange(item.tag)}
                     style={({ pressed }) => ({
                       flexDirection: "row",
                       alignItems: "center",
@@ -340,22 +326,20 @@ export default function AiScreen() {
                       paddingHorizontal: SPACE.md,
                       paddingVertical: SPACE.sm,
                       borderRadius: RADIUS.full,
-                      backgroundColor: t.surface2,
+                      backgroundColor: t.accent + "12",
                       borderWidth: 1,
-                      borderColor: t.border,
+                      borderColor: t.accent + "30",
                       opacity: pressed ? 0.7 : 1,
+                      transform: [{ scale: pressed ? 0.95 : 1 }],
                     })}
                   >
-                    <Search size={12} color={t.muted} />
-                    <Text style={{ fontSize: fs.sm, color: t.text }}>{h}</Text>
+                    <Text style={{ fontSize: fs.xs, fontWeight: WEIGHT.bold, color: t.accent }}>#</Text>
+                    <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.semibold, color: t.text }}>{item.tag}</Text>
                   </Pressable>
                 ))}
               </View>
             </View>
           )}
-
-          {/* サジェストチップ（S-2: 動的） */}
-          <SuggestionChips t={t} onSelect={handleQueryChange} suggestions={dynamicSuggestions} />
 
           {/* クイックアクション（S-3） */}
           <QuickActions t={t} isDark={isDark} onSelect={handleQueryChange} />
@@ -375,9 +359,9 @@ export default function AiScreen() {
               </View>
               <View style={{ gap: SPACE.sm + 2 }}>
                 {endingToday.map((ev, i) => (
-                  <Animated.View key={ev.id} entering={FadeInUp.delay(Math.min(i * 60, 300)).duration(350)}>
+                  <View key={ev.id}>
                     <PulseEventCard event={ev} t={t} />
-                  </Animated.View>
+                  </View>
                 ))}
               </View>
             </View>
@@ -397,9 +381,9 @@ export default function AiScreen() {
             </View>
             <View style={{ gap: SPACE.sm + 2 }}>
               {pulseEvents.map((ev, i) => (
-                <Animated.View key={ev.id} entering={FadeInUp.delay(Math.min(i * 60, 400)).duration(350)}>
+                <View key={ev.id}>
                   <PulseEventCard event={ev} t={t} />
-                </Animated.View>
+                </View>
               ))}
             </View>
           </View>
@@ -461,9 +445,6 @@ function EmptySearchView({ query, t, fs, onSuggest }: { query: string; t: any; f
       <Text style={{ fontSize: fs.sm, color: t.muted, textAlign: "center", marginTop: SPACE.sm }}>
         別のキーワードを試してみてください
       </Text>
-      <View style={{ marginTop: SPACE.xl }}>
-        <SuggestionChips t={t} onSelect={onSuggest} />
-      </View>
     </View>
   );
 }

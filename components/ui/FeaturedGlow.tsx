@@ -1,16 +1,5 @@
-import { useEffect } from "react";
-import { View, StyleSheet } from "react-native";
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withRepeat,
-  withTiming,
-  withSequence,
-  withDelay,
-  Easing,
-  interpolate,
-  interpolateColor,
-} from "react-native-reanimated";
+import { useEffect, useRef } from "react";
+import { View, StyleSheet, Animated, Easing } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import type { ReactNode } from "react";
 
@@ -24,7 +13,7 @@ interface FeaturedGlowProps {
 
 /**
  * HOT投稿用のグローアニメーション
- * 3層のグローが時差で脈動し、ボーダーが赤→アクセント→青で色変化する
+ * 脈動するボーダーとグロー（RN Animated版）
  */
 export default function FeaturedGlow({
   children,
@@ -33,79 +22,74 @@ export default function FeaturedGlow({
   blueColor = "#4A9EFF",
   isDark = true,
 }: FeaturedGlowProps) {
-  const pulse = useSharedValue(0);
-  const pulse2 = useSharedValue(0);
+  const pulse = useRef(new Animated.Value(0)).current;
+  const pulse2 = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // メインパルス: 速めのサイクルでインパクト
-    pulse.value = withRepeat(
-      withSequence(
-        withTiming(1, { duration: 1200, easing: Easing.inOut(Easing.ease) }),
-        withTiming(0, { duration: 1200, easing: Easing.inOut(Easing.ease) }),
-      ),
-      -1,
-      false,
+    const anim1 = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, { toValue: 1, duration: 1200, easing: Easing.inOut(Easing.ease), useNativeDriver: false }),
+        Animated.timing(pulse, { toValue: 0, duration: 1200, easing: Easing.inOut(Easing.ease), useNativeDriver: false }),
+      ]),
     );
-    // セカンドパルス: 少し遅れて波紋のように追従
-    pulse2.value = withDelay(
-      400,
-      withRepeat(
-        withSequence(
-          withTiming(1, { duration: 1400, easing: Easing.inOut(Easing.ease) }),
-          withTiming(0, { duration: 1400, easing: Easing.inOut(Easing.ease) }),
-        ),
-        -1,
-        false,
-      ),
-    );
-  }, [pulse, pulse2]);
+    anim1.start();
 
-  // ボーダーが赤→アクセント→青に色変化
-  const borderStyle = useAnimatedStyle(() => {
-    const color = interpolateColor(
-      pulse.value,
-      [0, 0.5, 1],
-      ["#F0425C", accentColor, blueColor],
-    );
-    const width = interpolate(pulse.value, [0, 1], [2, 3]);
-    return {
-      borderColor: color,
-      borderWidth: width,
+    const timer = setTimeout(() => {
+      const anim2 = Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulse2, { toValue: 1, duration: 1400, easing: Easing.inOut(Easing.ease), useNativeDriver: false }),
+          Animated.timing(pulse2, { toValue: 0, duration: 1400, easing: Easing.inOut(Easing.ease), useNativeDriver: false }),
+        ]),
+      );
+      anim2.start();
+    }, 400);
+
+    return () => {
+      anim1.stop();
+      clearTimeout(timer);
     };
+  }, []);
+
+  const borderColor = pulse.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: ["#F0425C", accentColor, blueColor],
   });
 
-  // 内側グロー: 強めの発光
-  const innerGlowStyle = useAnimatedStyle(() => {
-    const opacity = interpolate(pulse.value, [0, 1], [0.15, 0.5]);
-    return { opacity };
+  const borderWidth = pulse.interpolate({
+    inputRange: [0, 1],
+    outputRange: [2, 3],
   });
 
-  // 外側グロー（シャドウ代わり）: 時差で大きく広がる
-  const outerGlowStyle = useAnimatedStyle(() => {
-    const opacity = interpolate(pulse2.value, [0, 1], [0.1, 0.45]);
-    const scale = interpolate(pulse2.value, [0, 1], [1, 1.03]);
-    return {
-      opacity,
-      transform: [{ scale }],
-    };
+  const innerOpacity = pulse.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.15, 0.5],
+  });
+
+  const outerOpacity = pulse2.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.1, 0.45],
+  });
+
+  const outerScale = pulse2.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 1.03],
   });
 
   return (
     <View style={{ position: "relative" }}>
-      {/* 外側グロー（カードの外に広がる発光） */}
+      {/* 外側グロー */}
       <Animated.View
-        style={[
-          {
-            position: "absolute",
-            top: -6,
-            left: -6,
-            right: -6,
-            bottom: -6,
-            borderRadius: borderRadius + 6,
-            backgroundColor: "transparent",
-          },
-          outerGlowStyle,
-        ]}
+        style={{
+          position: "absolute",
+          top: -6,
+          left: -6,
+          right: -6,
+          bottom: -6,
+          borderRadius: borderRadius + 6,
+          backgroundColor: "transparent",
+          opacity: outerOpacity,
+          transform: [{ scale: outerScale }],
+        }}
       >
         <LinearGradient
           colors={["#F0425C80", accentColor + "70", blueColor + "60", "#8B6FC060"]}
@@ -116,13 +100,12 @@ export default function FeaturedGlow({
       </Animated.View>
 
       {/* メインカード */}
-      <Animated.View style={[{ borderRadius, overflow: "hidden" }, borderStyle]}>
-        {/* 内側グロー（上辺と下辺にグラデーション） */}
+      <Animated.View style={{ borderRadius, overflow: "hidden", borderColor, borderWidth }}>
+        {/* 内側グロー */}
         <Animated.View
           style={[
             StyleSheet.absoluteFill,
-            { borderRadius, overflow: "hidden", zIndex: 1, pointerEvents: "none" },
-            innerGlowStyle,
+            { borderRadius, overflow: "hidden", zIndex: 1, pointerEvents: "none", opacity: innerOpacity },
           ]}
         >
           <LinearGradient
