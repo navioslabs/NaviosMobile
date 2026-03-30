@@ -1,6 +1,7 @@
-import { memo } from "react";
+import { memo, useCallback } from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
-import Animated, { SlideInLeft } from "react-native-reanimated";
+import Animated, { SlideInLeft, useSharedValue, useAnimatedStyle, withSequence, withSpring } from "react-native-reanimated";
+import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { MapPin, MessageCircle, Heart, Navigation, User } from "@/lib/icons";
@@ -31,12 +32,24 @@ function TalkItem({ talk, t }: TalkItemProps) {
   const toggleLike = useToggleLike();
   const guard = useGuestGuard();
   const { data: topBadge } = useUserTopBadge(talk.author_id);
+  const heartScale = useSharedValue(1);
 
   if (!talk?.id) return null;
 
-  const handleLike = () => {
-    guard(() => toggleLike.mutate({ targetType: "talk", targetId: talk.id }), "いいね");
-  };
+  const handleLike = useCallback(() => {
+    guard(() => {
+      if (isLiked) {
+        Haptics.selectionAsync();
+      } else {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        heartScale.value = withSequence(
+          withSpring(1.35, { damping: 8, stiffness: 400 }),
+          withSpring(1, { damping: 10, stiffness: 200 }),
+        );
+      }
+      toggleLike.mutate({ targetType: "talk", targetId: talk.id });
+    }, "いいね");
+  }, [isLiked, talk.id]);
 
   const isHallOfFame = !!talk.is_hall_of_fame;
   const likesRemaining = HALL_OF_FAME_THRESHOLD - talk.likes_count;
@@ -171,7 +184,7 @@ function TalkItem({ talk, t }: TalkItemProps) {
                   accessibilityLabel={`返信 ${talk.replies_count || 0}件`}
                   accessibilityRole="button"
                   hitSlop={8}
-                  style={({ pressed }) => ({ flexDirection: "row" as const, alignItems: "center" as const, gap: 3, minHeight: 32, opacity: pressed ? 0.6 : 1 })}
+                  style={({ pressed }) => ({ flexDirection: "row" as const, alignItems: "center" as const, gap: 3, minHeight: 32, opacity: pressed ? 0.85 : 1, transform: [{ scale: pressed ? 0.9 : 1 }] })}
                 >
                   <MessageCircle size={15} color={t.muted} />
                   {(talk.replies_count ?? 0) > 0 && (
@@ -184,9 +197,11 @@ function TalkItem({ talk, t }: TalkItemProps) {
                   accessibilityLabel={isLiked ? `いいね済み ${talk.likes_count}件` : `いいね ${talk.likes_count}件`}
                   accessibilityRole="button"
                   hitSlop={8}
-                  style={({ pressed }) => ({ flexDirection: "row" as const, alignItems: "center" as const, gap: 3, minHeight: 32, opacity: pressed ? 0.6 : 1 })}
+                  style={({ pressed }) => ({ flexDirection: "row" as const, alignItems: "center" as const, gap: 3, minHeight: 32, opacity: pressed ? 0.85 : 1, transform: [{ scale: pressed ? 0.9 : 1 }] })}
                 >
-                  <Heart size={15} fill={isLiked ? t.red : "none"} color={isLiked ? t.red : t.muted} />
+                  <Animated.View style={useAnimatedStyle(() => ({ transform: [{ scale: heartScale.value }] }))}>
+                    <Heart size={15} fill={isLiked ? t.red : "none"} color={isLiked ? t.red : t.muted} />
+                  </Animated.View>
                   {talk.likes_count > 0 && (
                     <Text style={{ fontSize: fs.xxs, color: isLiked ? t.red : t.muted }}>{talk.likes_count}</Text>
                   )}

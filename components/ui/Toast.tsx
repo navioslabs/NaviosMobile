@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Text, Pressable, useWindowDimensions } from "react-native";
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, withDelay, withTiming, withSequence, runOnJS } from "react-native-reanimated";
+import * as Haptics from "expo-haptics";
 import { AlertCircle, Check, X } from "@/lib/icons";
 import { useToastStore } from "@/stores/toastStore";
 import { useAppStyles } from "@/hooks/useAppStyles";
@@ -16,6 +17,12 @@ export default function Toast() {
 
   useEffect(() => {
     if (visible) {
+      // エラー時はハプティクス、成功時は軽いフィードバック
+      if (type === "error") {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      } else {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
       // 右からスライドイン + バウンス
       translateX.value = withSpring(0, { damping: 16, stiffness: 180 });
       scale.value = withSequence(

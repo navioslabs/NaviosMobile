@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import { View, Text, Pressable } from "react-native";
 import { Image } from "expo-image";
-import { LinearGradient } from "expo-linear-gradient";
+import Svg, { Rect, Polygon, G } from "react-native-svg";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { useQueryClient } from "@tanstack/react-query";
@@ -38,15 +38,15 @@ export default function Header({ t }: HeaderProps) {
   return (
     <View style={[s.rowBetween, { paddingHorizontal: SPACE.xl, paddingBottom: SPACE.md, paddingTop: insets.top + SPACE.sm, backgroundColor: t.surface, borderBottomWidth: 1, borderBottomColor: t.border }]}>
       <Pressable onPress={handleLogoPress} style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: SPACE.sm, opacity: pressed ? 0.7 : 1 })}>
-        {/* ロゴマーク: グラデーション角丸に「n」 */}
-        <LinearGradient
-          colors={[t.accent, t.accent]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={{ width: 32, height: 32, borderRadius: 10, alignItems: "center", justifyContent: "center" }}
-        >
-          <Text style={{ fontSize: 20, fontWeight: "900", color: "#fff", marginTop: -1 }}>n</Text>
-        </LinearGradient>
+        {/* ロゴマーク: SVG */}
+        <Svg width={32} height={32} viewBox="0 0 640 640">
+          <Rect x={0} y={0} width={640} height={640} rx={160} fill={t.accent} />
+          <G transform="translate(320, 320)">
+            <Polygon points="-120,-160 -60,-160 -60,160 -120,160" fill="rgba(255,255,255,0.85)" />
+            <Polygon points="-60,-160 -120,-160 60,160 120,160" fill="rgba(255,255,255,0.6)" />
+            <Polygon points="60,-160 120,-160 120,160 60,160" fill="rgba(255,255,255,0.85)" />
+          </G>
+        </Svg>
         {/* ロゴテキスト */}
         <Text style={{ fontSize: 24, fontWeight: WEIGHT.extrabold, letterSpacing: -0.8, color: t.text }}>
           navi<Text style={{ color: t.accent }}>os</Text>

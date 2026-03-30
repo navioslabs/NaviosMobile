@@ -1,13 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="144" height="144" viewBox="0 0 144 144">
-  <rect width="144" height="144" rx="31.68" fill="#F6F5F1"/>
-  <ellipse cx="72.0" cy="72.0" rx="50.976" ry="22.786272" fill="none" stroke="#00B88A" stroke-width="0.36" opacity="0.22" transform="rotate(-30 72.0 72.0)"/>
-  <ellipse cx="72.0" cy="72.0" rx="50.976" ry="22.786272" fill="none" stroke="#00B88A" stroke-width="0.36" opacity="0.22" transform="rotate(30 72.0 72.0)"/>
-  <ellipse cx="72.0" cy="72.0" rx="50.976" ry="22.786272" fill="none" stroke="#00B88A" stroke-width="0.36" opacity="0.22" transform="rotate(90 72.0 72.0)"/>
-  <circle cx="72.0" cy="72.0" r="14.4" fill="#00D4A1"/>
-  <circle cx="46.0" cy="46.0" r="4.752000000000001" fill="#F0425C"/>
-  <circle cx="98.0" cy="46.0" r="4.752000000000001" fill="#F5A623"/>
-  <circle cx="98.0" cy="98.0" r="4.752000000000001" fill="#8B6FC0"/>
-  <circle cx="46.0" cy="98.0" r="4.752000000000001" fill="#4A9EFF"/>
-  <circle cx="72.0" cy="28.7" r="2.4480000000000004" fill="#00B88A" opacity="0.3"/>
-  <circle cx="72.0" cy="115.3" r="2.4480000000000004" fill="#00B88A" opacity="0.3"/>
+<svg width="640" height="640" viewBox="0 0 640 640" xmlns="http://www.w3.org/2000/svg">
+  <!-- 背景 -->
+  <rect x="0" y="0" width="640" height="640" rx="80" fill="#00E8B0"/>
+  
+  <!-- N の構成（半透明ホワイト） -->
+  <g transform="translate(320, 320)">
+    <!-- 左の縦棒 -->
+    <polygon points="-120,-160 -60,-160 -60,160 -120,160" fill="rgba(255,255,255,0.85)"/>
+    
+    <!-- 斜めの棒 -->
+    <polygon points="-60,-160 -120,-160 60,160 120,160" fill="rgba(255,255,255,0.6)"/>
+    
+    <!-- 右の縦棒 -->
+    <polygon points="60,-160 120,-160 120,160 60,160" fill="rgba(255,255,255,0.85)"/>
+  </g>
 </svg>

@@ -6,6 +6,7 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
 } from "react-native-reanimated";
+import * as Haptics from "expo-haptics";
 import { MessageCircle, Sparkles, Radio, Settings } from "@/lib/icons";
 import { makeTokens } from "@/constants/theme";
 import { useThemeStore } from "@/stores/themeStore";
@@ -71,6 +72,9 @@ export default function TabLayout() {
     <View style={{ flex: 1, backgroundColor: t.bg }}>
       <Header t={t} />
       <Tabs
+        screenListeners={{
+          tabPress: () => Haptics.selectionAsync(),
+        }}
         screenOptions={{
           headerShown: false,
           tabBarActiveTintColor: t.accent,
