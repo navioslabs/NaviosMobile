@@ -323,7 +323,7 @@ export default function PostScreen() {
             <DateTimePicker
               value={deadline ?? new Date()}
               mode="datetime"
-              display={Platform.OS === "ios" ? "spinner" : "default"}
+              display="spinner"
               minimumDate={new Date()}
               maximumDate={maxDeadline()}
               onChange={handleDateChange}
