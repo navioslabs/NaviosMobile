@@ -24,7 +24,8 @@ export async function searchPlaces(
   lat?: number,
   lng?: number,
 ): Promise<PlacePrediction[]> {
-  if (!API_KEY || !query.trim()) return [];
+  // 2文字未満はAPI呼び出ししない（課金削減）
+  if (!API_KEY || query.trim().length < 2) return [];
 
   const params = new URLSearchParams({
     input: query,

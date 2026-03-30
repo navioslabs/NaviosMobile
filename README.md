@@ -56,7 +56,7 @@ Navios は「検索」を前提にしません。位置情報と AI が、必要
 | データ取得 | React Query（`@tanstack/react-query`） |
 | フォーム | React Hook Form + Zod |
 | 状態管理 | Zustand（テーマ・フォントサイズ等の UI 状態のみ） |
-| アニメーション | React Native Reanimated |
+| アニメーション | React Native 組み込み Animated API |
 | ジェスチャー | React Native Gesture Handler |
 | UI | StyleSheet（style prop 統一、NativeWind 不使用） |
 
@@ -65,7 +65,7 @@ Navios は「検索」を前提にしません。位置情報と AI が、必要
 ## ディレクトリ構成
 
 ```
-NaviosMobileRelease/
+NaviosMobile/
 ├── app/                  # 画面・ルーティング
 │   ├── (auth)/           #   認証画面（ログイン, サインアップ）
 │   ├── (tabs)/           #   タブ画面（ちかく, タイムライン, さがす, フィード, 設定）
@@ -133,6 +133,7 @@ npm install
 ```
 SUPABASE_URL=your_supabase_url
 SUPABASE_ANON_KEY=your_supabase_anon_key
+GOOGLE_MAPS_API_KEY=your_google_maps_api_key
 ```
 
 ### 起動
@@ -159,13 +160,13 @@ Dark / Light 切替に対応。`useThemeStore` で管理し、デザイントー
 
 | ドキュメント | 場所 |
 |-------------|------|
-| データ設計（テーブル・RLS・Storage） | `docs/設計-仕様書/データ設計.md` |
-| 認証設計（Auth・ゲスト制限） | `docs/設計-仕様書/認証設計.md` |
-| API・lib 設計（クエリ関数・React Query） | `docs/設計-仕様書/API・lib設計.md` |
-| 画面仕様書（全 13 画面） | `docs/設計-仕様書/画面仕様書.md` |
-| バリデーション設計（Zod スキーマ） | `docs/設計-仕様書/バリデーション設計.md` |
-| スコアリング設計（Pulse・マッチスコア） | `docs/scoring-guide/スコアリング設計.md` |
-| 機能概要 | `docs/機能概要.md` |
+| アーキテクチャ | `docs/設計書/アーキテクチャ.md` |
+| データベース設計 | `docs/設計書/データベース設計.md` |
+| デザイントークン | `docs/設計書/デザイントークン.md` |
+| 画面一覧 | `docs/設計書/画面一覧.md` |
+| リリース前最終レビュー | `docs/チェック引継ぎ/リリース前最終レビュー.md` |
+| 開発環境セットアップ | `docs/運用ガイド/開発環境セットアップ.md` |
+| 次回タスク | `docs/運用ガイド/次回タスク.md` |
 
 ---
 
