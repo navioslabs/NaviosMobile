@@ -52,6 +52,7 @@ export async function fetchPostById(id: string): Promise<Post> {
 
   // PostGIS WKT "POINT(lng lat)" からlat/lngを抽出
   const post = data as Post & { location?: string };
+  if (__DEV__) console.log("fetchPostById location:", post.location);
   if (post.location) {
     const match = post.location.match(/POINT\(([-\d.]+)\s+([-\d.]+)\)/);
     if (match) {
@@ -59,6 +60,7 @@ export async function fetchPostById(id: string): Promise<Post> {
       (post as any).lat = parseFloat(match[2]);
     }
   }
+  if (__DEV__) console.log("fetchPostById coords:", { lat: (post as any).lat, lng: (post as any).lng });
   return post as Post;
 }
 
@@ -204,6 +206,7 @@ export async function updatePost(
 
 /** 投稿削除 */
 export async function deletePost(id: string): Promise<void> {
-  const { error } = await supabase.from("posts").delete().eq("id", id);
+  const { error, count } = await supabase.from("posts").delete().eq("id", id);
+  if (__DEV__) console.log("deletePost:", { id, error, count });
   if (error) throw error;
 }

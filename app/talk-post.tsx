@@ -71,7 +71,7 @@ export default function TalkPostScreen() {
         { text: "編集を続ける", style: "cancel" },
         { text: "破棄する", style: "destructive", onPress: () => {
           setSubmitted(true);
-          setTimeout(() => router.back(), 50);
+          setTimeout(() => router.canGoBack() ? router.back() : router.replace("/(tabs)/talk"), 50);
         }},
       ]
     );
@@ -97,7 +97,7 @@ export default function TalkPostScreen() {
       });
       setSubmitted(true);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      setTimeout(() => router.back(), 600);
+      setTimeout(() => router.canGoBack() ? router.back() : router.replace("/(tabs)/talk"), 600);
     } catch (e: unknown) {
       if (__DEV__) console.error("つぶやき投稿エラー詳細:", e);
       setSending(false);

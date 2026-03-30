@@ -154,21 +154,21 @@ export default function SettingsScreen() {
           icon={FileText}
           label="利用規約"
           t={t}
-          onPress={() => Linking.openURL("https://example.com/terms")}
+          onPress={() => Linking.openURL("https://navioslabs.com/terms/")}
           right={<ExternalLink size={16} color={t.muted} />}
         />
         <SettingsRow
           icon={Shield}
           label="プライバシーポリシー"
           t={t}
-          onPress={() => Linking.openURL("https://example.com/privacy")}
+          onPress={() => Linking.openURL("https://navioslabs.com/privacy/")}
           right={<ExternalLink size={16} color={t.muted} />}
         />
         <SettingsRow
           icon={Mail}
           label="お問い合わせ"
           t={t}
-          onPress={() => Linking.openURL("mailto:support@example.com")}
+          onPress={() => Linking.openURL("https://navioslabs.com/terms/#contact")}
           right={<ExternalLink size={16} color={t.muted} />}
           isLast
         />

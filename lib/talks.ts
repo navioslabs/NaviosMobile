@@ -88,7 +88,8 @@ export async function searchTalks(query: string): Promise<Talk[]> {
 
 /** ひとこと削除 */
 export async function deleteTalk(id: string): Promise<void> {
-  const { error } = await supabase.from("talks").delete().eq("id", id);
+  const { error, count } = await supabase.from("talks").delete().eq("id", id);
+  if (__DEV__) console.log("deleteTalk:", { id, error, count });
   if (error) throw error;
 }
 

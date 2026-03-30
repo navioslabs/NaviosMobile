@@ -59,6 +59,7 @@ export function useDeleteTalk() {
     mutationFn: deleteTalk,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["talks", "list"] });
+      useToastStore.getState().show("ひとことを削除しました", "success");
     },
     onError: (error) => {
       useToastStore.getState().show(getUserMessage(error), "error");

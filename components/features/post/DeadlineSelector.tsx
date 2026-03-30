@@ -1,5 +1,5 @@
 import { View, Text, Pressable, Platform } from "react-native";
-import DateTimePicker from "@react-native-community/datetimepicker";
+import DateTimePicker, { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
 import { Calendar, Clock } from "@/lib/icons";
 import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 import type { ThemeTokens } from "@/constants/theme";
@@ -129,7 +129,7 @@ export default function DeadlineSelector({
         </View>
       )}
       {error && <Text style={{ fontSize: fs.xxs, color: t.red, marginTop: SPACE.xs }}>{error}</Text>}
-      {showPicker && (
+      {showPicker && Platform.OS === "ios" && (
         <View
           style={{
             marginTop: SPACE.sm,

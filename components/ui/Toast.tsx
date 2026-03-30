@@ -36,8 +36,8 @@ export default function Toast() {
   if (!visible) return null;
 
   const isError = type === "error";
-  const bgColor = isError ? t.red + "15" : t.accent + "15";
-  const borderColor = isError ? t.red + "40" : t.accent + "40";
+  const bgColor = isError ? t.surface : t.surface;
+  const borderColor = isError ? t.red : t.accent;
   const iconColor = isError ? t.red : t.accent;
   const Icon = isError ? AlertCircle : Check;
 

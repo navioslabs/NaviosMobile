@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { View, Text, TextInput, Pressable, ScrollView, Alert, Platform, KeyboardAvoidingView } from "react-native";
-import { router } from "expo-router";
+import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
+import { router, useNavigation } from "expo-router";
 import { usePreventRemove } from "@react-navigation/native";
 import * as Haptics from "expo-haptics";
 import { useForm, Controller } from "react-hook-form";
@@ -59,7 +60,7 @@ export default function PostScreen() {
           style: "destructive",
           onPress: () => {
             setSubmitted(true);
-            setTimeout(() => router.back(), 50);
+            setTimeout(() => router.canGoBack() ? router.back() : router.replace("/(tabs)/feed"), 50);
           },
         },
       ]
@@ -90,12 +91,37 @@ export default function PostScreen() {
       });
       setSubmitted(true);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      setTimeout(() => router.back(), 800);
+      setTimeout(() => router.canGoBack() ? router.back() : router.replace("/(tabs)/feed"), 800);
     } catch (e: unknown) {
       if (__DEV__) console.error("投稿エラー詳細:", e);
       useToastStore.getState().show(getUserMessage(e), "error");
     }
   };
+
+  /** Android用: ネイティブ日時ダイアログを順に表示 */
+  const openAndroidPicker = useCallback(() => {
+    const now = deadline ?? new Date();
+    DateTimePickerAndroid.open({
+      value: now,
+      mode: "date",
+      minimumDate: new Date(),
+      maximumDate: (() => { const d = new Date(); d.setDate(d.getDate() + 14); d.setHours(23, 59, 0, 0); return d; })(),
+      onChange: (_, selectedDate) => {
+        if (!selectedDate) return;
+        DateTimePickerAndroid.open({
+          value: selectedDate,
+          mode: "time",
+          is24Hour: true,
+          onChange: (_, selectedTime) => {
+            if (selectedTime) {
+              setValue("deadline", selectedTime, { shouldValidate: true });
+              setSelectedChip("custom");
+            }
+          },
+        });
+      },
+    });
+  }, [deadline, setValue]);
 
   /** 投稿成功画面 */
   if (submitted) {
@@ -115,7 +141,11 @@ export default function PostScreen() {
   const handleChipPress = (id: QuickChipId) => {
     if (id === "custom") {
       setSelectedChip("custom");
-      setShowPicker(true);
+      if (Platform.OS === "android") {
+        openAndroidPicker();
+      } else {
+        setShowPicker(true);
+      }
       return;
     }
     setSelectedChip(id);
@@ -124,9 +154,8 @@ export default function PostScreen() {
     setShowPicker(false);
   };
 
-  /** DateTimePicker の変更ハンドラ */
+  /** DateTimePicker の変更ハンドラ（iOS用） */
   const handleDateChange = (_: any, selected?: Date) => {
-    if (Platform.OS === "android") setShowPicker(false);
     if (selected) {
       setValue("deadline", selected, { shouldValidate: true });
       setSelectedChip("custom");

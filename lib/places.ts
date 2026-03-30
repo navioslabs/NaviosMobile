@@ -1,7 +1,8 @@
 import Constants from "expo-constants";
+import { supabase } from "./supabase";
 
-const API_KEY = Constants.expoConfig?.extra?.GOOGLE_MAPS_API_KEY
-  ?? process.env.GOOGLE_MAPS_API_KEY
+const API_KEY = Constants.expoConfig?.extra?.GOOGLE_PLACES_API_KEY
+  ?? process.env.GOOGLE_PLACES_API_KEY
   ?? "";
 
 /** Places Autocomplete の候補 */
@@ -42,6 +43,13 @@ export async function searchPlaces(
     `https://maps.googleapis.com/maps/api/place/autocomplete/json?${params}`,
   );
   const json = await res.json();
+  const resultsCount = json.predictions?.length ?? 0;
+
+  // ログをSupabaseに非同期で記録（失敗しても検索結果に影響させない）
+  logApiCall(query.trim(), resultsCount, json.status).catch((e) => {
+    if (__DEV__) console.error("maps_api_logs insert failed:", e);
+  });
+
   if (json.status !== "OK" && json.status !== "ZERO_RESULTS") {
     if (__DEV__) console.error("Places Autocomplete error:", json.status, json.error_message);
     return [];
@@ -53,6 +61,18 @@ export async function searchPlaces(
     secondaryText: p.structured_formatting?.secondary_text ?? "",
     fullText: p.description,
   }));
+}
+
+/** API呼び出しをログに記録 */
+async function logApiCall(query: string, results: number, status: string) {
+  const { data: { user } } = await supabase.auth.getUser();
+  await supabase.from("maps_api_logs").insert({
+    user_id: user?.id ?? null,
+    api_type: "places_autocomplete",
+    query,
+    results,
+    status,
+  });
 }
 
 /** APIキーが設定されているか */

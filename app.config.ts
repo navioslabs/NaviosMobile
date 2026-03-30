@@ -15,6 +15,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     config: {
       googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY ?? "",
     },
+    privacyManifests: {
+      NSPrivacyAccessedAPITypes: [],
+    },
   },
   android: {
     config: {
@@ -57,6 +60,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     SUPABASE_URL: process.env.SUPABASE_URL,
     SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
     GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY,
+    GOOGLE_PLACES_API_KEY: process.env.GOOGLE_PLACES_API_KEY,
     SENTRY_DSN: process.env.SENTRY_DSN,
     router: {},
     eas: {

@@ -83,6 +83,7 @@ export function useDeletePost() {
     onSuccess: (_data, id) => {
       qc.invalidateQueries({ queryKey: ["posts", "list"] });
       qc.invalidateQueries({ queryKey: ["posts", "detail", id] });
+      useToastStore.getState().show("投稿を削除しました", "success");
     },
     onError: (error) => {
       useToastStore.getState().show(getUserMessage(error), "error");

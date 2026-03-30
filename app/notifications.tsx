@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import { View, Text, FlatList, Pressable, RefreshControl } from "react-native";
 import { router } from "expo-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ChevronLeft, Heart, MessageSquare, MessageCircle, Crown, Bell } from "@/lib/icons";
 import { useNotifications, useMarkAllAsRead, useUnreadCount } from "@/hooks/useNotifications";
@@ -96,14 +97,18 @@ export default function NotificationsScreen() {
   const { data: notifications, isLoading, isFetching, refetch } = useNotifications();
   const { data: unreadCount = 0 } = useUnreadCount();
   const { mutate: markAllRead } = useMarkAllAsRead();
+  const qc = useQueryClient();
 
   const handlePress = useCallback((item: AppNotification) => {
     if (item.target_type === "post") {
+      qc.invalidateQueries({ queryKey: ["posts", "detail", item.target_id] });
+      qc.invalidateQueries({ queryKey: ["comments", item.target_id] });
       router.push(`/feed/${item.target_id}` as any);
     } else if (item.target_type === "talk") {
+      qc.invalidateQueries({ queryKey: ["talks", "detail", item.target_id] });
       router.push(`/talk-detail/${item.target_id}` as any);
     }
-  }, []);
+  }, [qc]);
 
   const renderItem = useCallback(
     ({ item }: { item: AppNotification }) => (
