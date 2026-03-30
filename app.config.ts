@@ -12,6 +12,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   newArchEnabled: true,
   ios: {
     supportsTablet: true,
+    bundleIdentifier: "com.hagetaku.NaviosMobileRelease",
     config: {
       googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY ?? "",
     },
