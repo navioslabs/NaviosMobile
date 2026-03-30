@@ -4,7 +4,7 @@ import Svg, { Rect, Polygon, G } from "react-native-svg";
 import { Moon, Sun, Eye, LogOut, Shield, FileText, Mail, ExternalLink } from "@/lib/icons";
 import { useThemeStore } from "@/stores/themeStore";
 import { useFontSizeStore, FONT_SIZE_LABELS, FONT_SIZE_LEVELS } from "@/stores/fontSizeStore";
-import { WEIGHT, SPACE, RADIUS, getScaledFontSize } from "@/lib/styles";
+import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 import { useAppStyles } from "@/hooks/useAppStyles";
 import { useAuth } from "@/hooks/useAuth";
 import ProfileSection from "@/components/features/settings/ProfileSection";
@@ -132,7 +132,12 @@ export default function SettingsScreen() {
           label="テーマ"
           subtitle={isDark ? "ダーク" : "ライト"}
           t={t}
-          right={<AnimatedThemeToggle isDark={isDark} onToggle={toggle} t={t} />}
+          right={
+            <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.sm }}>
+              <AnimatedThemeToggle isDark={isDark} onToggle={toggle} t={t} />
+              <Text style={{ fontSize: fs.xs, fontWeight: WEIGHT.semibold, color: t.sub }}>{isDark ? "ダーク" : "ライト"}</Text>
+            </View>
+          }
         />
         <SettingsRow icon={Eye} label="文字サイズ" subtitle={FONT_SIZE_LABELS[level]} t={t} right={<View />} isLast />
         {FontSizeSelector}

@@ -38,7 +38,6 @@ export default function ProfileEditScreen() {
       bio: profile?.bio ?? "",
       locationText: profile?.location_text ?? "越谷市",
       isPublic: profile?.is_public ?? true,
-      showCheckins: profile?.show_checkins ?? false,
     },
     mode: "onChange",
   });
@@ -61,7 +60,7 @@ export default function ProfileEditScreen() {
         avatar_url,
         is_public: data.isPublic,
         show_location: true,
-        show_checkins: data.showCheckins,
+        show_checkins: false,
       });
       router.back();
     } catch (e: unknown) {
@@ -187,7 +186,10 @@ export default function ProfileEditScreen() {
 
           {/* 活動エリア */}
           <View>
-            <Text style={[s.textSectionLabel, { marginBottom: SPACE.sm }]}>活動エリア</Text>
+            <Text style={[s.textSectionLabel, { marginBottom: SPACE.xs }]}>活動エリア</Text>
+            <Text style={{ fontSize: fs.xs, color: t.muted, marginBottom: SPACE.sm }}>
+              普段よく過ごしている地域を入力してください
+            </Text>
             <View style={[s.card, { flexDirection: "row", alignItems: "center", gap: SPACE.sm + 2 }]}>
               <MapPin size={18} color={t.accent} />
               <Controller
@@ -213,7 +215,6 @@ export default function ProfileEditScreen() {
             <View style={{ gap: SPACE.sm }}>
               {([
                 { name: "isPublic" as const, label: "プロフィールを公開", desc: "他のユーザーからプロフィールが見えます" },
-                { name: "showCheckins" as const, label: "チェックイン履歴を公開", desc: "訪問履歴を他のユーザーに公開します" },
               ] as const).map((item) => (
                 <Controller
                   key={item.name}

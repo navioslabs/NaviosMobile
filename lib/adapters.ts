@@ -22,10 +22,21 @@ export function crowdLabel(crowd: string | null): string {
   return "";
 }
 
-/** 締切までの残り時間（分）。締切なしは9999、期限切れは負値 */
+/** 掲載期限までの残り時間（分）。期限なしは9999、期限切れは負値 */
 export function calcTimeLeft(deadline: string | null): number {
   if (!deadline) return 9999;
   return (new Date(deadline).getTime() - Date.now()) / 60000;
+}
+
+/** 残り時間を人間が読みやすい形式で表示 */
+export function formatTimeLeft(deadline: string | null): string {
+  const min = calcTimeLeft(deadline);
+  if (min <= 0) return "終了";
+  if (min >= 9999) return "";
+  if (min < 60) return `あと${Math.ceil(min)}分`;
+  const hours = min / 60;
+  if (hours < 24) return `あと${Math.floor(hours)}時間`;
+  return `あと${Math.floor(hours / 24)}日`;
 }
 
 /** 投稿が期限切れかどうか */

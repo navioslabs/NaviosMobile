@@ -74,7 +74,6 @@ export const updateProfileSchema = z.object({
     .or(z.literal("")),
   locationText: z.string().optional().or(z.literal("")),
   isPublic: z.boolean(),
-  showCheckins: z.boolean(),
 });
 export type UpdateProfileForm = z.infer<typeof updateProfileSchema>;
 

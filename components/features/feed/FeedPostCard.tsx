@@ -253,7 +253,7 @@ function FeedPostCard({ post, t, isDark, featured, expired, onLongPress }: FeedP
           {featured && (
             <View style={{ alignSelf: "flex-start", flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "rgba(0,0,0,0.5)", borderRadius: RADIUS.full, paddingHorizontal: SPACE.sm + 2, paddingVertical: 3, marginBottom: SPACE.xs }}>
               <Text style={{ fontSize: fs.xxs, fontWeight: WEIGHT.bold, color: t.accent }}>
-                {calcMatchScore(post.distance_m ?? 0) >= 85 ? "近くで話題" : calcTimeLeft(post.deadline) <= 60 ? "締切が近い" : "おすすめ"}
+                {calcMatchScore(post.distance_m ?? 0) >= 85 ? "近くで話題" : calcTimeLeft(post.deadline) <= 60 ? "まもなく終了" : "おすすめ"}
               </Text>
             </View>
           )}

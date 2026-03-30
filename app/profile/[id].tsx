@@ -170,10 +170,11 @@ export default function ProfileScreen() {
                     paddingVertical: SPACE.md,
                     borderBottomWidth: 2,
                     borderBottomColor: active ? t.accent : "transparent",
+                    backgroundColor: active ? t.accent + "15" : "transparent",
                   }}
                 >
                   <Icon size={16} color={active ? t.accent : t.muted} />
-                  <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.bold, color: active ? t.accent : t.muted }}>
+                  <Text style={{ fontSize: fs.sm, fontWeight: active ? "700" : WEIGHT.bold, color: active ? t.accent : t.muted }}>
                     {tab.label} {tab.count}
                   </Text>
                 </Pressable>

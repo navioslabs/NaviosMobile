@@ -7,7 +7,7 @@ interface MatchBadgeProps {
 
 /** マッチスコアバッジ */
 export default function MatchBadge({ score }: MatchBadgeProps) {
-  const color = score >= 80 ? "#00D4A1" : score >= 60 ? "#F5A623" : "#8887A0";
+  const color = score >= 80 ? "#F5A623" : score >= 60 ? "#00D4A1" : "#8887A0";
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 3, backgroundColor: "rgba(0,0,0,0.55)", borderRadius: 9999, paddingHorizontal: 8, paddingVertical: 3 }}>
       <Zap size={10} color={color} />

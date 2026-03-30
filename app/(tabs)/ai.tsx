@@ -1,21 +1,20 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { View, Text, TextInput, Pressable, ScrollView, ActivityIndicator, RefreshControl } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { router, useLocalSearchParams } from "expo-router";
-import { Sparkles, Search, Zap, MessageCircle, MessageSquare, Trophy, Heart, Inbox } from "@/lib/icons";
+import { useLocalSearchParams } from "expo-router";
+import { Sparkles, Search, Zap, MessageCircle, MessageSquare } from "@/lib/icons";
 import { useAppStyles } from "@/hooks/useAppStyles";
 import { useThemeStore } from "@/stores/themeStore";
 import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 import { useSearchPosts, usePosts } from "@/hooks/usePosts";
 import { useSearchTalks } from "@/hooks/useTalks";
 import { useLocation } from "@/hooks/useLocation";
-import { timeAgo } from "@/lib/adapters";
-import type { Talk } from "@/types";
 import PulseEventCard from "@/components/features/ai/PulseEventCard";
 import TrendingSection from "@/components/features/ai/TrendingSection";
 import QuickActions from "@/components/features/ai/QuickActions";
 import WeeklyRanking from "@/components/features/ai/WeeklyRanking";
-import StateView from "@/components/ui/StateView";
+import TalkSearchCard from "@/components/features/ai/TalkSearchCard";
+import EmptySearchView from "@/components/features/ai/EmptySearchView";
 import { useSearchHistory } from "@/hooks/useSearchHistory";
 import { useTrendingTags } from "@/hooks/useTrendingTags";
 
@@ -158,7 +157,7 @@ export default function AiScreen() {
         <Text style={[s.textSectionTitle, { color: t.text }]}>さがす</Text>
       </View>
 
-      {/* 検索バー（S-7） */}
+      {/* 検索バー */}
       <View style={[s.card, { flexDirection: "row", alignItems: "center", gap: SPACE.sm + 2, marginBottom: SPACE.sm }]}>
         {isDebouncing.current ? (
           <ActivityIndicator size={18} color={t.accent} />
@@ -196,7 +195,7 @@ export default function AiScreen() {
       {/* 検索モード */}
       {isSearching ? (
         <View style={{ marginTop: SPACE.sm }}>
-          {/* 投稿/ひとこと タブ（S-1） */}
+          {/* 投稿/ひとこと タブ */}
           <View style={{ flexDirection: "row", gap: SPACE.sm, marginBottom: SPACE.lg }}>
             <Pressable
               onPress={() => setSearchTab("posts")}
@@ -245,12 +244,9 @@ export default function AiScreen() {
                     key={c.label}
                     onPress={() => setSearchCategory(c.id)}
                     style={({ pressed }) => ({
-                      paddingHorizontal: SPACE.md,
-                      paddingVertical: SPACE.xs + 2,
-                      borderRadius: RADIUS.full,
+                      paddingHorizontal: SPACE.md, paddingVertical: SPACE.xs + 2, borderRadius: RADIUS.full,
                       backgroundColor: active ? t.accent + "20" : t.surface2,
-                      borderWidth: 1,
-                      borderColor: active ? t.accent : t.border,
+                      borderWidth: 1, borderColor: active ? t.accent : t.border,
                       opacity: pressed ? 0.7 : 1,
                     })}
                   >
@@ -269,14 +265,13 @@ export default function AiScreen() {
               <Text style={{ fontSize: fs.base, color: t.sub, marginTop: SPACE.lg }}>検索中...</Text>
             </View>
           ) : searchTab === "posts" ? (
-            /* 投稿検索結果 */
             postResults && postResults.length > 0 ? (
               <View>
                 <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.semibold, color: t.accent, marginBottom: SPACE.lg }}>
                   「{debouncedQuery}」の投稿 — {postCount}件
                 </Text>
                 <View style={{ gap: SPACE.sm + 2 }}>
-                  {postResults.map((ev, i) => (
+                  {postResults.map((ev) => (
                     <View key={ev.id}>
                       <PulseEventCard event={ev} t={t} />
                     </View>
@@ -287,14 +282,13 @@ export default function AiScreen() {
               <EmptySearchView query={debouncedQuery} t={t} fs={fs} onSuggest={handleQueryChange} />
             )
           ) : (
-            /* ひとこと検索結果 */
             talkResults && talkResults.length > 0 ? (
               <View>
                 <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.semibold, color: t.blue, marginBottom: SPACE.lg }}>
                   「{debouncedQuery}」のひとこと — {talkCount}件
                 </Text>
                 <View style={{ gap: SPACE.sm }}>
-                  {talkResults.map((talk, i) => (
+                  {talkResults.map((talk) => (
                     <View key={talk.id}>
                       <TalkSearchCard talk={talk} t={t} fs={fs} />
                     </View>
@@ -320,17 +314,10 @@ export default function AiScreen() {
                     key={item.tag}
                     onPress={() => handleQueryChange(item.tag)}
                     style={({ pressed }) => ({
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: 4,
-                      paddingHorizontal: SPACE.md,
-                      paddingVertical: SPACE.sm,
-                      borderRadius: RADIUS.full,
-                      backgroundColor: t.accent + "12",
-                      borderWidth: 1,
-                      borderColor: t.accent + "30",
-                      opacity: pressed ? 0.7 : 1,
-                      transform: [{ scale: pressed ? 0.95 : 1 }],
+                      flexDirection: "row", alignItems: "center", gap: 4,
+                      paddingHorizontal: SPACE.md, paddingVertical: SPACE.sm, borderRadius: RADIUS.full,
+                      backgroundColor: t.accent + "12", borderWidth: 1, borderColor: t.accent + "30",
+                      opacity: pressed ? 0.7 : 1, transform: [{ scale: pressed ? 0.95 : 1 }],
                     })}
                   >
                     <Text style={{ fontSize: fs.xs, fontWeight: WEIGHT.bold, color: t.accent }}>#</Text>
@@ -341,13 +328,10 @@ export default function AiScreen() {
             </View>
           )}
 
-          {/* クイックアクション（S-3） */}
           <QuickActions t={t} isDark={isDark} onSelect={handleQueryChange} />
-
-          {/* 急上昇セクション（S-8: 空状態対応） */}
           <TrendingSection posts={trendingPosts} t={t} />
 
-          {/* 今日終了（S-5: 情報密度） */}
+          {/* 今日終了 */}
           {endingToday.length > 0 && (
             <View style={{ marginBottom: SPACE.xl }}>
               <View style={[s.rowBetween, { marginBottom: SPACE.sm + 2 }]}>
@@ -358,7 +342,7 @@ export default function AiScreen() {
                 <Text style={[s.textCaption, { color: t.amber }]}>お見逃しなく</Text>
               </View>
               <View style={{ gap: SPACE.sm + 2 }}>
-                {endingToday.map((ev, i) => (
+                {endingToday.map((ev) => (
                   <View key={ev.id}>
                     <PulseEventCard event={ev} t={t} />
                   </View>
@@ -367,7 +351,6 @@ export default function AiScreen() {
             </View>
           )}
 
-          {/* 週間ランキング */}
           <WeeklyRanking posts={weeklyRanking} t={t} />
 
           {/* おすすめフィード */}
@@ -380,7 +363,7 @@ export default function AiScreen() {
               <Text style={[s.textCaption, { color: t.accent }]}>リアルタイム</Text>
             </View>
             <View style={{ gap: SPACE.sm + 2 }}>
-              {pulseEvents.map((ev, i) => (
+              {pulseEvents.map((ev) => (
                 <View key={ev.id}>
                   <PulseEventCard event={ev} t={t} />
                 </View>
@@ -390,61 +373,5 @@ export default function AiScreen() {
         </>
       )}
     </ScrollView>
-  );
-}
-
-/** ひとこと検索結果カード */
-function TalkSearchCard({ talk, t, fs }: { talk: Talk; t: any; fs: any }) {
-  return (
-    <Pressable
-      onPress={() => router.push(`/talk-detail/${talk.id}` as any)}
-      style={({ pressed }) => ({
-        flexDirection: "row", gap: SPACE.md, padding: SPACE.md,
-        borderRadius: RADIUS.lg, backgroundColor: t.surface,
-        borderWidth: 1, borderColor: t.border,
-        opacity: pressed ? 0.7 : 1,
-      })}
-    >
-      <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: t.blue + "15", alignItems: "center", justifyContent: "center" }}>
-        <MessageSquare size={18} color={t.blue} />
-      </View>
-      <View style={{ flex: 1 }}>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.xs, marginBottom: SPACE.xs }}>
-          <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.bold, color: t.text }} numberOfLines={1}>
-            {talk.author?.display_name ?? "ユーザー"}
-          </Text>
-          {talk.is_hall_of_fame && (
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 2, borderRadius: RADIUS.sm, paddingHorizontal: 4, paddingVertical: 1, backgroundColor: "#FFD700" + "20" }}>
-              <Trophy size={9} color="#FFD700" />
-            </View>
-          )}
-          <Text style={{ fontSize: fs.xxs, color: t.muted }}>{timeAgo(talk.created_at)}</Text>
-        </View>
-        <Text style={{ fontSize: fs.base, color: t.text, lineHeight: 20 }} numberOfLines={2}>
-          {talk.message}
-        </Text>
-        {talk.likes_count > 0 && (
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 3, marginTop: SPACE.xs }}>
-            <Heart size={12} color={t.muted} />
-            <Text style={{ fontSize: fs.xxs, color: t.muted }}>{talk.likes_count}</Text>
-          </View>
-        )}
-      </View>
-    </Pressable>
-  );
-}
-
-/** 検索結果なし表示 */
-function EmptySearchView({ query, t, fs, onSuggest }: { query: string; t: any; fs: any; onSuggest: (q: string) => void }) {
-  return (
-    <View style={{ paddingVertical: SPACE.xxxl, alignItems: "center" }}>
-      <Inbox size={40} color={t.muted} />
-      <Text style={{ fontSize: fs.base, fontWeight: WEIGHT.semibold, color: t.sub, marginTop: SPACE.md, textAlign: "center" }}>
-        「{query}」に一致する投稿が見つかりませんでした
-      </Text>
-      <Text style={{ fontSize: fs.sm, color: t.muted, textAlign: "center", marginTop: SPACE.sm }}>
-        別のキーワードを試してみてください
-      </Text>
-    </View>
   );
 }

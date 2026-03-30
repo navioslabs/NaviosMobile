@@ -14,6 +14,10 @@ interface StateViewProps {
   onRetry?: () => void;
   /** エラー種別（エラー時のリカバリーガイド切り替え） */
   errorKind?: ErrorKind;
+  /** 空状態CTAボタンのアクション */
+  emptyAction?: () => void;
+  /** 空状態CTAボタンのラベル（例: 「投稿する」） */
+  emptyActionLabel?: string;
 }
 
 /** エラー種別ごとの表示設定 */
@@ -67,7 +71,7 @@ export function detectErrorKind(error: unknown): ErrorKind {
 }
 
 /** 画面状態コンポーネント（ローディング・空・エラー） */
-export default function StateView({ t, type, message, onRetry, errorKind }: StateViewProps) {
+export default function StateView({ t, type, message, onRetry, errorKind, emptyAction, emptyActionLabel }: StateViewProps) {
   const { scale } = useFontSizeStore();
   const fs = getScaledFontSize(scale);
 
@@ -153,6 +157,25 @@ export default function StateView({ t, type, message, onRetry, errorKind }: Stat
       <Text style={{ fontSize: fs.md, color: t.sub, marginTop: SPACE.sm, textAlign: "center", lineHeight: 20 }}>
         {message || "近くの投稿が表示されます"}
       </Text>
+      {emptyAction && (
+        <Pressable
+          onPress={emptyAction}
+          accessibilityLabel={emptyActionLabel ?? "アクション"}
+          accessibilityRole="button"
+          style={({ pressed }) => ({
+            marginTop: SPACE.xl,
+            paddingHorizontal: SPACE.xl,
+            paddingVertical: SPACE.md,
+            borderRadius: RADIUS.full,
+            backgroundColor: t.accent,
+            opacity: pressed ? 0.85 : 1,
+          })}
+        >
+          <Text style={{ fontSize: fs.base, fontWeight: WEIGHT.bold, color: "#000" }}>
+            {emptyActionLabel ?? "投稿する"}
+          </Text>
+        </Pressable>
+      )}
     </View>
   );
 }

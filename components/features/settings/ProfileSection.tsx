@@ -2,7 +2,7 @@ import { View, Text, Pressable, Animated, Easing } from "react-native";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { User, Edit3, PenLine, MessageCircle, Heart, MessageSquare, Send } from "@/lib/icons";
+import { User, Edit3, PenLine, MessageCircle, Heart, MessageSquare } from "@/lib/icons";
 import type { ThemeTokens } from "@/constants/theme";
 import type { Profile } from "@/types";
 import { useAuth } from "@/hooks/useAuth";

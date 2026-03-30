@@ -37,7 +37,7 @@ export default function Header({ t }: HeaderProps) {
 
   return (
     <View style={[s.rowBetween, { paddingHorizontal: SPACE.xl, paddingBottom: SPACE.md, paddingTop: insets.top + SPACE.sm, backgroundColor: t.surface, borderBottomWidth: 1, borderBottomColor: t.border }]}>
-      <Pressable onPress={handleLogoPress} style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: SPACE.sm, opacity: pressed ? 0.7 : 1 })}>
+      <Pressable onPress={handleLogoPress} accessibilityLabel="ホームに戻る" accessibilityRole="button" style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: SPACE.sm, opacity: pressed ? 0.7 : 1 })}>
         {/* ロゴマーク: SVG */}
         <Svg width={32} height={32} viewBox="0 0 640 640">
           <Rect x={0} y={0} width={640} height={640} rx={160} fill={t.accent} />

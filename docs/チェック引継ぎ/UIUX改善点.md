@@ -105,12 +105,8 @@
 
 ## D. 技術的改善
 
-### D-1. Reanimated → RN Animated 移行
-**現状**: 27ファイルで Reanimated 使用。React Compiler と競合
-**対応**:
-- ホーム画面周辺は移行済み（ScanHeader, FeaturedGlow, NearbyPostItem）
-- 残り: FAB, Toast, Skeleton, SplashTransition, GuestLoginSheet, OnboardingTour 等
-- `entering` / `exiting` は削除して即時表示にするか、RN Animated で代替
+### ~~D-1. Reanimated → RN Animated 移行~~ ✅ 完了
+全22ファイルから Reanimated を削除し RN 組み込み Animated API に移行済み（2026-03-30）
 
 ### D-2. 画面ファイルの行数削減
 | ファイル | 現在 | 目標 |

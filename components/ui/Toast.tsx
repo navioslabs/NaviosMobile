@@ -43,6 +43,8 @@ export default function Toast() {
 
   return (
     <Animated.View
+      accessibilityRole="alert"
+      accessibilityLiveRegion="assertive"
       style={[
         {
           transform: [
@@ -81,6 +83,8 @@ export default function Toast() {
         onPress={() => {
           Animated.timing(translateX, { toValue: width, duration: 200, useNativeDriver: true }).start(() => hide());
         }}
+        accessibilityLabel="通知を閉じる"
+        accessibilityRole="button"
         hitSlop={8}
       >
         <X size={14} color={t.muted} />

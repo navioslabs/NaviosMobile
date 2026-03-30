@@ -38,8 +38,9 @@ export default function GhostCountdown({ createdAt, t }: GhostCountdownProps) {
     return () => clearInterval(id);
   }, [createdAt]);
 
-  const progress = remaining / GHOST_DURATION_MS;
-  const color = progress > 0.5 ? t.muted : progress > 0.2 ? t.amber : t.red;
+  const SIX_HOURS_MS = 6 * 3600000;
+  const ONE_HOUR_MS = 3600000;
+  const color = remaining > SIX_HOURS_MS ? t.muted : remaining > ONE_HOUR_MS ? t.amber : t.red;
 
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>

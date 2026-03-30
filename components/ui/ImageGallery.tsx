@@ -1,7 +1,8 @@
 import { useState, useCallback } from "react";
-import { View, ScrollView, useWindowDimensions, NativeSyntheticEvent, NativeScrollEvent } from "react-native";
+import { View, ScrollView, Pressable, useWindowDimensions, NativeSyntheticEvent, NativeScrollEvent } from "react-native";
 import { Image } from "expo-image";
 import type { ThemeTokens } from "@/constants/theme";
+import FullScreenImage from "./FullScreenImage";
 
 interface ImageGalleryProps {
   urls: string[];
@@ -13,6 +14,8 @@ interface ImageGalleryProps {
 export default function ImageGallery({ urls, height = 260, t }: ImageGalleryProps) {
   const { width } = useWindowDimensions();
   const [activeIndex, setActiveIndex] = useState(0);
+  const [fullScreenVisible, setFullScreenVisible] = useState(false);
+  const [fullScreenIndex, setFullScreenIndex] = useState(0);
 
   const handleScroll = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -21,6 +24,11 @@ export default function ImageGallery({ urls, height = 260, t }: ImageGalleryProp
     },
     [width],
   );
+
+  const handleImagePress = useCallback((index: number) => {
+    setFullScreenIndex(index);
+    setFullScreenVisible(true);
+  }, []);
 
   if (urls.length === 0) return null;
 
@@ -34,12 +42,18 @@ export default function ImageGallery({ urls, height = 260, t }: ImageGalleryProp
         scrollEventThrottle={16}
       >
         {urls.map((uri, i) => (
-          <Image
+          <Pressable
             key={uri + i}
-            source={{ uri }}
-            style={{ width, height }}
-            contentFit="cover"
-          />
+            onPress={() => handleImagePress(i)}
+            accessibilityLabel={`画像${i + 1}を全画面で表示`}
+            accessibilityRole="button"
+          >
+            <Image
+              source={{ uri }}
+              style={{ width, height }}
+              contentFit="cover"
+            />
+          </Pressable>
         ))}
       </ScrollView>
 
@@ -59,6 +73,13 @@ export default function ImageGallery({ urls, height = 260, t }: ImageGalleryProp
           ))}
         </View>
       )}
+
+      <FullScreenImage
+        images={urls}
+        initialIndex={fullScreenIndex}
+        visible={fullScreenVisible}
+        onClose={() => setFullScreenVisible(false)}
+      />
     </View>
   );
 }

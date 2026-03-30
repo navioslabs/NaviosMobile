@@ -1,11 +1,10 @@
-import { SectionList, View, Text, FlatList, RefreshControl, Pressable, ActivityIndicator, Platform } from "react-native";
-import { useMemo, useEffect, useRef, useState, useCallback } from "react";
+import { SectionList, View, Text, RefreshControl, Pressable } from "react-native";
+import { useMemo, useEffect, useRef, useState } from "react";
 import PostPreviewSheet from "@/components/ui/PostPreviewSheet";
 import { useIsFocused } from "@react-navigation/native";
 import { useQueryClient } from "@tanstack/react-query";
-import { MapPin, RefreshCw, Clock, Radio, PenLine, Inbox } from "@/lib/icons";
+import { MapPin, RefreshCw, Clock, Radio, PenLine } from "@/lib/icons";
 import { router } from "expo-router";
-import { LinearGradient } from "expo-linear-gradient";
 import { useNearbyPosts, usePosts } from "@/hooks/usePosts";
 import { useLocation } from "@/hooks/useLocation";
 import { haversineDistance } from "@/lib/utils";
@@ -16,11 +15,9 @@ import { SPACE, WEIGHT, RADIUS } from "@/lib/styles";
 import ScanHeader from "@/components/features/nearby/ScanHeader";
 import NearbyPostItem from "@/components/features/nearby/NearbyPostItem";
 import DistanceSectionHeader from "@/components/features/nearby/DistanceSectionHeader";
-import StateView from "@/components/ui/StateView";
 import { PostCardSkeleton } from "@/components/ui/Skeleton";
 import DatePicker from "@/components/features/feed/DatePicker";
-import CategoryChips from "@/components/features/feed/CategoryChips";
-import FeedPostCard from "@/components/features/feed/FeedPostCard";
+import FeedView from "@/components/features/feed/FeedView";
 import { REFETCH_THRESHOLD_M } from "@/constants/location";
 
 type ViewMode = "nearby" | "feed";
@@ -115,7 +112,11 @@ export default function HomeScreen() {
 
   const activePosts = useMemo(() => {
     const active = nearbyPosts.filter((p) => !isExpired(p.deadline));
-    const expired = nearbyPosts.filter((p) => isExpired(p.deadline));
+    const expired = nearbyPosts.filter((p) => {
+      if (!isExpired(p.deadline)) return false;
+      const expiredMs = Date.now() - new Date(p.deadline!).getTime();
+      return expiredMs <= 24 * 60 * 60 * 1000;
+    });
     return [...active, ...expired];
   }, [nearbyPosts]);
 
@@ -174,15 +175,6 @@ export default function HomeScreen() {
     return [...active, ...expired];
   }, [datePosts]);
 
-  const getPostCount = useCallback((offset: number) => offset === selDate ? datePosts.length : 0, [selDate, datePosts]);
-
-  const renderFeedItem = useCallback(
-    ({ item, index }: { item: Post; index: number }) => (
-      <FeedPostCard post={item} t={t} isDark={isDark} featured={index === 0 && !isExpired(item.deadline)} expired={isExpired(item.deadline)} onLongPress={() => setPreviewPost(item)} />
-    ),
-    [t, isDark],
-  );
-
   // ── 位置情報未許可時（ちかくモード） ──
   if (viewMode === "nearby" && !locationLoading && !granted) {
     return (
@@ -219,90 +211,30 @@ export default function HomeScreen() {
 
   // ── フィードモード ──
   if (viewMode === "feed") {
-    const FeedListHeader = (
-      <>
-        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: SPACE.xl, paddingTop: SPACE.sm, paddingBottom: SPACE.xs }}>
-          <Text style={{ fontSize: fs.sm, color: t.sub }}>{getDateLabel(selDate)}</Text>
-          <Text style={{ fontSize: fs.xs, fontWeight: WEIGHT.semibold, color: t.accent }}>{feedFiltered.length}件</Text>
-        </View>
-        <CategoryChips t={t} selected={selCat} onSelect={setSelCat} />
-      </>
-    );
-
     return (
       <View style={s.screen}>
         <ModeSwitch mode={viewMode} onChangeMode={setViewMode} t={t} fs={fs} />
-        <DatePicker t={t} selectedDate={selDate} onSelectDate={setSelDate} getPostCount={getPostCount} />
+        <DatePicker t={t} selectedDate={selDate} onSelectDate={setSelDate} getPostCount={(offset) => offset === selDate ? datePosts.length : 0} />
 
-        {feedFiltered.length === 0 ? (
-          <View style={{ flex: 1 }}>
-            {FeedListHeader}
-            <View style={{ paddingVertical: 60, paddingHorizontal: SPACE.xl, alignItems: "center" }}>
-              <Inbox size={40} color={t.muted} />
-              <Text style={[s.textSubheading, { marginTop: SPACE.md, color: t.text }]}>この日の投稿はまだありません</Text>
-              <Text style={[s.textLabel, { marginTop: SPACE.xs, color: t.sub }]}>他の日付を選ぶか、投稿してみましょう</Text>
-              <View style={{ flexDirection: "row", gap: SPACE.md, marginTop: SPACE.xl }}>
-                <Pressable
-                  onPress={() => setSelDate(0)}
-                  style={({ pressed }) => ({ paddingHorizontal: SPACE.xl, paddingVertical: SPACE.md, borderRadius: RADIUS.full, backgroundColor: t.surface2, borderWidth: 1, borderColor: t.border, opacity: pressed ? 0.7 : 1 })}
-                >
-                  <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.bold, color: t.text }}>今日を見る</Text>
-                </Pressable>
-                <Pressable
-                  onPress={() => router.push("/post")}
-                  style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}
-                >
-                  <LinearGradient
-                    colors={[t.accent, t.blue]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={{ paddingHorizontal: SPACE.xl, paddingVertical: SPACE.md, borderRadius: RADIUS.full }}
-                  >
-                    <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.bold, color: "#000" }}>投稿する</Text>
-                  </LinearGradient>
-                </Pressable>
-              </View>
-            </View>
-          </View>
-        ) : (
-          <FlatList
-            data={feedFiltered}
-            renderItem={renderFeedItem}
-            keyExtractor={(item) => item.id.toString()}
-            showsVerticalScrollIndicator={false}
-            ListHeaderComponent={FeedListHeader}
-            contentContainerStyle={{ paddingBottom: 90 }}
-            onEndReached={() => {
-              if (hasNextPage && !isFetchingNextPage) fetchNextPage();
-            }}
-            onEndReachedThreshold={0.5}
-            ListFooterComponent={
-              isFetchingNextPage ? (
-                <View style={{ paddingVertical: SPACE.xl, alignItems: "center" }}>
-                  <ActivityIndicator size="small" color={t.accent} />
-                </View>
-              ) : null
-            }
-            refreshControl={
-              <RefreshControl
-                refreshing={feedFetching && !feedQueryLoading && !isFetchingNextPage}
-                onRefresh={() => feedRefetch()}
-                tintColor="transparent"
-                colors={["transparent"]}
-                progressBackgroundColor="transparent"
-                style={Platform.OS === "android" ? { height: 0 } : undefined}
-              />
-            }
-          />
-        )}
-
-        <PostPreviewSheet
-          post={previewPost}
-          visible={!!previewPost}
-          onClose={() => setPreviewPost(null)}
+        <FeedView
+          posts={feedFiltered}
+          dateLabel={getDateLabel(selDate)}
+          selCat={selCat}
+          onSelectCat={setSelCat}
+          onSelectDate={setSelDate}
+          onLongPressPost={setPreviewPost}
           t={t}
+          fs={fs}
           isDark={isDark}
+          isFetching={feedFetching}
+          isLoading={feedQueryLoading}
+          isFetchingNextPage={isFetchingNextPage}
+          hasNextPage={hasNextPage}
+          fetchNextPage={fetchNextPage}
+          refetch={feedRefetch}
         />
+
+        <PostPreviewSheet post={previewPost} visible={!!previewPost} onClose={() => setPreviewPost(null)} t={t} isDark={isDark} />
       </View>
     );
   }
@@ -328,17 +260,9 @@ export default function HomeScreen() {
         <Pressable
           onPress={() => router.push("/street-history")}
           style={({ pressed }) => ({
-            flex: 1,
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: SPACE.sm,
-            paddingVertical: SPACE.sm,
-            borderRadius: RADIUS.lg,
-            backgroundColor: t.surface,
-            borderWidth: 1,
-            borderColor: t.border,
-            opacity: pressed ? 0.7 : 1,
+            flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center",
+            gap: SPACE.sm, paddingVertical: SPACE.sm, borderRadius: RADIUS.lg,
+            backgroundColor: t.surface, borderWidth: 1, borderColor: t.border, opacity: pressed ? 0.7 : 1,
           })}
         >
           <Clock size={14} color={t.accent} />
@@ -347,17 +271,10 @@ export default function HomeScreen() {
         <Pressable
           onPress={() => nearbyRefetch()}
           style={({ pressed }) => ({
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: SPACE.xs,
-            paddingVertical: SPACE.sm,
-            paddingHorizontal: SPACE.lg,
-            borderRadius: RADIUS.lg,
-            backgroundColor: nearbyFetching ? t.accent + "20" : t.surface,
-            borderWidth: 1,
-            borderColor: nearbyFetching ? t.accent + "40" : t.border,
-            opacity: pressed ? 0.7 : 1,
+            flexDirection: "row", alignItems: "center", justifyContent: "center",
+            gap: SPACE.xs, paddingVertical: SPACE.sm, paddingHorizontal: SPACE.lg,
+            borderRadius: RADIUS.lg, backgroundColor: nearbyFetching ? t.accent + "20" : t.surface,
+            borderWidth: 1, borderColor: nearbyFetching ? t.accent + "40" : t.border, opacity: pressed ? 0.7 : 1,
           })}
         >
           <RefreshCw size={14} color={t.accent} />
@@ -391,23 +308,11 @@ export default function HomeScreen() {
         contentContainerStyle={{ paddingBottom: 100 }}
         stickySectionHeadersEnabled={false}
         refreshControl={
-          <RefreshControl
-            refreshing={nearbyFetching}
-            onRefresh={() => nearbyRefetch()}
-            tintColor={t.accent}
-            colors={[t.accent]}
-            progressBackgroundColor={t.surface}
-          />
+          <RefreshControl refreshing={nearbyFetching} onRefresh={() => nearbyRefetch()} tintColor={t.accent} colors={[t.accent]} progressBackgroundColor={t.surface} />
         }
       />
 
-      <PostPreviewSheet
-        post={previewPost}
-        visible={!!previewPost}
-        onClose={() => setPreviewPost(null)}
-        t={t}
-        isDark={isDark}
-      />
+      <PostPreviewSheet post={previewPost} visible={!!previewPost} onClose={() => setPreviewPost(null)} t={t} isDark={isDark} />
     </View>
   );
 }

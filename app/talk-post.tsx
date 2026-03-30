@@ -146,7 +146,7 @@ export default function TalkPostScreen() {
         />
       </View>
       {errors.message && <Text style={{ fontSize: fs.xxs, color: t.red }}>{errors.message.message}</Text>}
-      <Text style={{ fontSize: fs.xxs, color: t.muted }}>#ハッシュタグ を使うと検索で見つけてもらいやすくなります</Text>
+      <Text style={{ fontSize: fs.xs, color: t.sub }}>#ハッシュタグ を使うと検索で見つけてもらいやすくなります</Text>
 
       {/* コンパクト位置情報（インライン1行） */}
       <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.xs }}>

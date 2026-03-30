@@ -9,7 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Name**: NaviOs — 地域情報共有モバイルアプリ
 - **Stack**: Expo ~54 + React Native 0.81 + TypeScript 5.9
 - **Backend**: Supabase (Auth, Postgres, PostGIS, Storage)
-- **UI**: StyleSheet（style prop統一）+ React Native Reanimated (アニメーション) + React Native Gesture Handler (ジェスチャー) + React Hook Form + Zod
+- **UI**: StyleSheet（style prop統一）+ RN 組み込み Animated API (アニメーション) + React Native Gesture Handler (ジェスチャー) + React Hook Form + Zod
 - **データ取得 / キャッシュ**: React Query（`@tanstack/react-query`）を採用
 - **テーマ**: Dark / Light 切替（`useThemeStore()` + `useAppStyles()`）
 - **対応言語**: 日本語のみ
@@ -52,6 +52,33 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **コメントは「なぜ」だけ書く**
 - **不要な import / 変数は即削除**
 - **関数・コンポーネントには JSDoc を付ける**
+
+## アニメーション方針
+
+- **`react-native-reanimated` は使用禁止** — React Compiler との競合により削除済み。再導入しないこと
+- **RN 組み込み `Animated` API のみ使用する**（`import { Animated } from "react-native"`）
+- **`useNativeDriver: true`** を transform / opacity に使用（60fps）
+- **`useNativeDriver: false`** は backgroundColor / borderColor 等に限定
+
+### 現在使用中のアニメーションパターン
+
+| コンポーネント | アニメーション | 手法 |
+|---|---|---|
+| `Fab.tsx` | FAB回転 + メニュー展開 | `Animated.timing` + `interpolate` |
+| `Toast.tsx` | 右からスライドイン + バウンス | `Animated.spring` + `Animated.sequence` |
+| `ScanHeader.tsx` | LIVE/HOTバッジ脈動 | `Animated.loop` + `Animated.sequence` |
+| `FeaturedGlow.tsx` | HOT投稿のボーダー発光 + 色変化 | `Animated.loop` + `interpolate` |
+| `Skeleton.tsx` | ローディングパルス | `Animated.loop` |
+| `SplashTransition.tsx` | スプラッシュ→ホーム遷移（ロゴ縮小+移動） | `Animated.timing` + `setTimeout` |
+| `AnimatedSubmitButton.tsx` | 投稿ボタンのスケール | `Animated.spring` |
+| `TalkItem.tsx` | 新着フェードイン + スライド | `Animated.parallel` + `Animated.spring` |
+| `FeedPostCard.tsx` | カードタップ時のスケール | `Animated.spring` |
+| `(tabs)/_layout.tsx` | さがすタブアイコンのスケール | `Animated.spring` |
+| `settings.tsx` | テーマトグルアニメーション | `Animated.spring` + `interpolate` |
+| `talk.tsx` | LIVEバッジ脈動 | `Animated.loop` |
+| `feed/[id].tsx` | いいねバウンス | `Animated.sequence` + `Animated.spring` |
+| `ProfileSection.tsx` | アバターグロー | `Animated.loop` |
+| `PulseRefresh.tsx` | パルスリング | `Animated.loop` + `interpolate` |
 
 ## データ取得方針
 
