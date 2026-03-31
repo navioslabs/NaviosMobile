@@ -63,5 +63,6 @@ export declare const ChevronDown: LucideIcon;
 export declare const FileText: LucideIcon;
 export declare const Mail: LucideIcon;
 export declare const ExternalLink: LucideIcon;
+export declare const ThumbsUp: LucideIcon;
 
 export type { LucideIcon } from "lucide-react-native";

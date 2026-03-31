@@ -5,16 +5,19 @@ import {
   fetchNearbyPosts,
   searchPosts,
   createPost,
+  updatePost,
   deletePost,
 } from "@/lib/posts";
 import { refreshBadges } from "@/lib/badges";
 import { getUserMessage } from "@/lib/appError";
 import { useToastStore } from "@/stores/toastStore";
 
-/** フィード一覧（ページネーション対応） */
-export function usePosts(filters?: { category?: string; limit?: number; createdAfter?: string; createdBefore?: string }) {
+/** フィード一覧（ページネーション対応・距離付き） */
+export function usePosts(filters?: { category?: string; limit?: number; createdAfter?: string; createdBefore?: string; userLat?: number; userLng?: number }) {
+  // queryKey から座標を除外（位置移動で不要な再フェッチを防ぐ）
+  const { userLat, userLng, ...keyFilters } = filters ?? {};
   return useInfiniteQuery({
-    queryKey: ["posts", "list", filters],
+    queryKey: ["posts", "list", keyFilters],
     queryFn: ({ pageParam = 0 }) => fetchPosts({ ...filters, page: pageParam }),
     initialPageParam: 0,
     getNextPageParam: (lastPage, _allPages, lastPageParam) =>
@@ -22,18 +25,17 @@ export function usePosts(filters?: { category?: string; limit?: number; createdA
     select: (data) => ({
       pages: data.pages,
       pageParams: data.pageParams,
-      // フラット化したデータ（既存コードとの互換性）
       flat: data.pages.flat(),
     }),
   });
 }
 
-/** 投稿詳細 */
-export function usePost(id: string) {
+/** 投稿詳細（距離・座標付き） */
+export function usePost(id: string, userLat = 0, userLng = 0, locationReady = false) {
   return useQuery({
-    queryKey: ["posts", "detail", id],
-    queryFn: () => fetchPostById(id),
-    enabled: !!id,
+    queryKey: ["posts", "detail", id, userLat, userLng],
+    queryFn: () => fetchPostById(id, userLat, userLng),
+    enabled: !!id && locationReady,
   });
 }
 
@@ -68,6 +70,23 @@ export function useCreatePost() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["posts", "list"] });
       refreshBadges().then(() => qc.invalidateQueries({ queryKey: ["badges"] }));
+    },
+    onError: (error) => {
+      useToastStore.getState().show(getUserMessage(error), "error");
+    },
+  });
+}
+
+/** 投稿更新 */
+export function useUpdatePost() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, input }: { id: string; input: Parameters<typeof updatePost>[1] }) =>
+      updatePost(id, input),
+    onSuccess: (_data, { id }) => {
+      qc.invalidateQueries({ queryKey: ["posts", "detail"] });
+      qc.invalidateQueries({ queryKey: ["posts", "list"] });
+      useToastStore.getState().show("投稿を更新しました", "success");
     },
     onError: (error) => {
       useToastStore.getState().show(getUserMessage(error), "error");

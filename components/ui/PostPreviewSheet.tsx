@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import { View, Text, Pressable, Modal, ScrollView, useWindowDimensions } from "react-native";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import { Clock, Navigation, Heart, X } from "@/lib/icons";
+import { Clock, Navigation, ThumbsUp, X } from "@/lib/icons";
 import { CAT_CONFIG } from "@/constants/categories";
 import type { ThemeTokens } from "@/constants/theme";
 import type { Post } from "@/types";
@@ -140,7 +140,7 @@ export default function PostPreviewSheet({ post, visible, onClose, t, isDark }: 
                   {post.author?.display_name ?? "匿名"}
                 </Text>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 3, marginLeft: "auto" }}>
-                  <Heart size={14} color={t.muted} />
+                  <ThumbsUp size={14} color={t.muted} />
                   <Text style={{ fontSize: fs.sm, color: t.muted }}>{post.likes_count}</Text>
                 </View>
               </View>

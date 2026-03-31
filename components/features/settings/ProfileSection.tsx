@@ -2,7 +2,7 @@ import { View, Text, Pressable, Animated, Easing } from "react-native";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { User, Edit3, PenLine, MessageCircle, Heart, MessageSquare } from "@/lib/icons";
+import { User, Edit3, PenLine, MessageCircle, ThumbsUp, MessageSquare } from "@/lib/icons";
 import type { ThemeTokens } from "@/constants/theme";
 import type { Profile } from "@/types";
 import { useAuth } from "@/hooks/useAuth";
@@ -89,7 +89,7 @@ export default function ProfileSection({ t, isGuest, profile }: ProfileSectionPr
           <View style={{ width: "100%", gap: SPACE.sm, marginBottom: SPACE.xl }}>
             {[
               { icon: PenLine, text: "地域の情報を投稿できる", color: t.accent },
-              { icon: Heart, text: "気になる投稿にいいねできる", color: t.red },
+              { icon: ThumbsUp, text: "気になる投稿にGoodできる", color: t.accent },
               { icon: MessageSquare, text: "コメントで交流できる", color: t.blue },
             ].map((item) => (
               <View key={item.text} style={{ flexDirection: "row", alignItems: "center", gap: SPACE.md, paddingHorizontal: SPACE.md }}>

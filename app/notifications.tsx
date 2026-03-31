@@ -3,7 +3,7 @@ import { View, Text, FlatList, Pressable, RefreshControl } from "react-native";
 import { router } from "expo-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ChevronLeft, Heart, MessageSquare, MessageCircle, Crown, Bell } from "@/lib/icons";
+import { ChevronLeft, ThumbsUp, MessageSquare, MessageCircle, Crown, Bell } from "@/lib/icons";
 import { useNotifications, useMarkAllAsRead, useUnreadCount } from "@/hooks/useNotifications";
 import { useAppStyles } from "@/hooks/useAppStyles";
 import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
@@ -13,7 +13,7 @@ import type { AppNotification } from "@/lib/notifications";
 function getNotificationMeta(type: AppNotification["type"], accent: string, red: string, amber: string, purple: string) {
   switch (type) {
     case "like":
-      return { icon: Heart, color: red, label: "いいね" };
+      return { icon: ThumbsUp, color: accent, label: "Good" };
     case "comment":
       return { icon: MessageSquare, color: accent, label: "コメント" };
     case "reply":
@@ -21,7 +21,7 @@ function getNotificationMeta(type: AppNotification["type"], accent: string, red:
     case "hall_of_fame":
       return { icon: Crown, color: amber, label: "殿堂入り" };
     default:
-      return { icon: Heart, color: accent, label: "通知" };
+      return { icon: ThumbsUp, color: accent, label: "通知" };
   }
 }
 

@@ -69,8 +69,24 @@ export default function PostScreen() {
 
   const canSubmit = isValid && !createPostMutation.isPending;
 
-  const onSubmit = async (data: CreatePostForm) => {
+  /** 確認ダイアログを表示してから投稿を実行 */
+  const onSubmit = (data: CreatePostForm) => {
     if (createPostMutation.isPending) return;
+    Alert.alert(
+      "この内容で投稿しますか？",
+      `${data.title.trim()}`,
+      [
+        { text: "キャンセル", style: "cancel" },
+        {
+          text: "投稿する",
+          onPress: () => executePost(data),
+        },
+      ],
+    );
+  };
+
+  /** 実際の投稿処理 */
+  const executePost = async (data: CreatePostForm) => {
     try {
       let image_url: string | undefined;
       let image_urls: string[] | undefined;
@@ -91,7 +107,6 @@ export default function PostScreen() {
       });
       setSubmitted(true);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      setTimeout(() => router.canGoBack() ? router.back() : router.replace("/(tabs)/feed"), 800);
     } catch (e: unknown) {
       if (__DEV__) console.error("投稿エラー詳細:", e);
       useToastStore.getState().show(getUserMessage(e), "error");
@@ -126,12 +141,26 @@ export default function PostScreen() {
   /** 投稿成功画面 */
   if (submitted) {
     return (
-      <View style={[s.screen, { flex: 1, justifyContent: "center", alignItems: "center" }]}>
-        <View style={{ alignItems: "center", gap: SPACE.md }}>
-          <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: t.accent, alignItems: "center", justifyContent: "center" }}>
-            <Check size={32} color="#000" />
+      <View style={[s.screen, { flex: 1, justifyContent: "center", alignItems: "center", padding: SPACE.xl }]}>
+        <View style={{ alignItems: "center", gap: SPACE.lg }}>
+          <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: t.accent, alignItems: "center", justifyContent: "center" }}>
+            <Check size={36} color="#000" />
           </View>
-          <Text style={{ fontSize: fs.lg, fontWeight: WEIGHT.bold, color: t.text }}>近くの人へ届けました</Text>
+          <Text style={{ fontSize: fs.xl, fontWeight: WEIGHT.extrabold, color: t.text }}>投稿しました！</Text>
+          <Text style={{ fontSize: fs.sm, color: t.sub, textAlign: "center" }}>近くの人に届けられました</Text>
+          <Pressable
+            onPress={() => router.canGoBack() ? router.back() : router.replace("/(tabs)/feed")}
+            style={({ pressed }) => ({
+              marginTop: SPACE.lg,
+              paddingVertical: SPACE.md,
+              paddingHorizontal: SPACE.xxl,
+              borderRadius: 12,
+              backgroundColor: t.accent,
+              opacity: pressed ? 0.8 : 1,
+            })}
+          >
+            <Text style={{ fontSize: fs.base, fontWeight: WEIGHT.bold, color: "#000" }}>閉じる</Text>
+          </Pressable>
         </View>
       </View>
     );

@@ -46,22 +46,22 @@ export default function ProfileEditScreen() {
   const bio = watch("bio") ?? "";
   const isSaving = updateMutation.isPending;
 
-  /** プロフィール保存 */
+  /** プロフィール保存（画像アップロードがあれば並列で準備） */
   const onSubmit = async (data: UpdateProfileForm) => {
     try {
-      let avatar_url: string | undefined;
-      if (avatarUri) {
-        avatar_url = await uploadImage("avatars", avatarUri);
-      }
-      await updateMutation.mutateAsync({
+      const profileData = {
         display_name: data.displayName.trim(),
         bio: data.bio?.trim() || undefined,
         location_text: data.locationText?.trim() || undefined,
-        avatar_url,
+        avatar_url: undefined as string | undefined,
         is_public: data.isPublic,
         show_location: true,
         show_checkins: false,
-      });
+      };
+      if (avatarUri) {
+        profileData.avatar_url = await uploadImage("avatars", avatarUri);
+      }
+      await updateMutation.mutateAsync(profileData);
       router.back();
     } catch (e: unknown) {
       useToastStore.getState().show(getUserMessage(e), "error");

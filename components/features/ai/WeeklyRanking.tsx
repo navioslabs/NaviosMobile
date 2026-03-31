@@ -1,7 +1,7 @@
 import { View, Text, Pressable } from "react-native";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import { Trophy, Heart } from "@/lib/icons";
+import { Trophy, ThumbsUp } from "@/lib/icons";
 import { CAT_CONFIG } from "@/constants/categories";
 import type { ThemeTokens } from "@/constants/theme";
 import type { Post } from "@/types";
@@ -80,7 +80,7 @@ export default function WeeklyRanking({ posts, t }: WeeklyRankingProps) {
 
               {/* いいね数 */}
               <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
-                <Heart size={14} color={t.red} fill={t.red} />
+                <ThumbsUp size={14} color={t.accent} fill={t.accent} />
                 <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.bold, color: t.red }}>{post.likes_count}</Text>
               </View>
             </Pressable>

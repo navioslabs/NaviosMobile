@@ -1,6 +1,6 @@
 import { View, Text, Pressable } from "react-native";
 import { router } from "expo-router";
-import { MessageSquare, Trophy, Heart } from "@/lib/icons";
+import { MessageSquare, Trophy, ThumbsUp } from "@/lib/icons";
 import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 import { timeAgo } from "@/lib/adapters";
 import type { Talk } from "@/types";
@@ -67,7 +67,7 @@ export default function TalkSearchCard({ talk, t, fs }: Props) {
         </Text>
         {talk.likes_count > 0 && (
           <View style={{ flexDirection: "row", alignItems: "center", gap: 3, marginTop: SPACE.xs }}>
-            <Heart size={12} color={t.muted} />
+            <ThumbsUp size={12} color={t.muted} />
             <Text style={{ fontSize: fs.xxs, color: t.muted }}>{talk.likes_count}</Text>
           </View>
         )}

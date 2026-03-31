@@ -1,21 +1,80 @@
 import { supabase } from "@/lib/supabase";
 import type { Post } from "@/types";
 import { DEFAULT_RADIUS } from "@/constants/location";
-import { extractTags } from "@/lib/utils";
+import { extractTags, haversineDistance } from "@/lib/utils";
 
 const PAGE_SIZE = 20;
 
-/** フィード一覧取得（サーバーサイド日付フィルタ + 期限切れ除外 + ページネーション） */
+/** RPC のフラット行を Post 型に正規化する */
+function rowToPost(row: any): Post {
+  return {
+    id: row.id,
+    author_id: row.author_id,
+    category: row.category,
+    title: row.title,
+    content: row.content,
+    image_url: row.image_url,
+    image_urls: row.image_urls ?? [],
+    location_text: row.location_text,
+    deadline: row.deadline,
+    crowd: row.crowd,
+    is_featured: row.is_featured,
+    likes_count: row.likes_count,
+    comments_count: row.comments_count,
+    tags: row.tags ?? [],
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+    distance_m: row.distance_m ?? undefined,
+    lat: row.lat ?? undefined,
+    lng: row.lng ?? undefined,
+    author: {
+      id: row.author_id,
+      display_name: row.author_display_name,
+      avatar_url: row.author_avatar_url,
+      is_verified: row.author_is_verified,
+      bio: null,
+      location_text: null,
+      is_public: true,
+      show_location: true,
+      show_checkins: false,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+    },
+  } as Post;
+}
+
+/** フィード一覧取得（RPC優先、フォールバックあり） */
 export async function fetchPosts(filters?: {
   category?: string;
   limit?: number;
   createdAfter?: string;
   createdBefore?: string;
   page?: number;
+  userLat?: number;
+  userLng?: number;
 }): Promise<Post[]> {
-  const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
   const page = filters?.page ?? 0;
   const limit = filters?.limit ?? PAGE_SIZE;
+  const uLat = filters?.userLat ?? 0;
+  const uLng = filters?.userLng ?? 0;
+
+  // RPC を試行
+  const { data: rpcData, error: rpcError } = await supabase.rpc("get_feed_posts", {
+    user_lat: uLat,
+    user_lng: uLng,
+    category_filter: filters?.category && filters.category !== "all" ? filters.category : null,
+    created_after: filters?.createdAfter ?? null,
+    created_before: filters?.createdBefore ?? null,
+    page_offset: page * limit,
+    page_limit: limit,
+  });
+
+  if (!rpcError && rpcData) {
+    return rpcData.map(rowToPost);
+  }
+
+  // RPC未デプロイ時のフォールバック: 従来クエリ + クライアント距離計算
+  const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
   const from = page * limit;
   const to = from + limit - 1;
 
@@ -29,39 +88,50 @@ export async function fetchPosts(filters?: {
   if (filters?.category && filters.category !== "all") {
     query = query.eq("category", filters.category);
   }
-  if (filters?.createdAfter) {
-    query = query.gte("created_at", filters.createdAfter);
-  }
-  if (filters?.createdBefore) {
-    query = query.lte("created_at", filters.createdBefore);
-  }
 
   const { data, error } = await query;
   if (error) throw error;
-  return data as Post[];
+
+  return (data ?? []).map((row: any) => {
+    const post = row as Post;
+    if (post.lat != null && post.lng != null && uLat !== 0 && uLng !== 0) {
+      (post as any).distance_m = haversineDistance(uLat, uLng, post.lat, post.lng);
+    }
+    return post;
+  });
 }
 
-/** 投稿詳細取得（座標付き） */
-export async function fetchPostById(id: string): Promise<Post> {
+/** 投稿詳細取得（RPC優先、フォールバックあり） */
+export async function fetchPostById(
+  id: string,
+  userLat = 0,
+  userLng = 0,
+): Promise<Post> {
+  // RPC を試行
+  const { data: rpcData, error: rpcError } = await supabase.rpc("get_post_detail", {
+    post_id: id,
+    user_lat: userLat,
+    user_lng: userLng,
+  });
+
+  if (!rpcError && rpcData && rpcData.length > 0) {
+    return rowToPost(rpcData[0]);
+  }
+
+  // RPC未デプロイ時のフォールバック
   const { data, error } = await supabase
     .from("posts")
-    .select("*, author:profiles(*), location::text")
+    .select("*, author:profiles(*)")
     .eq("id", id)
     .single();
   if (error) throw error;
 
-  // PostGIS WKT "POINT(lng lat)" からlat/lngを抽出
-  const post = data as Post & { location?: string };
-  if (__DEV__) console.log("fetchPostById location:", post.location);
-  if (post.location) {
-    const match = post.location.match(/POINT\(([-\d.]+)\s+([-\d.]+)\)/);
-    if (match) {
-      (post as any).lng = parseFloat(match[1]);
-      (post as any).lat = parseFloat(match[2]);
-    }
+  const post = data as Post;
+  // クライアント距離計算（座標がある場合）
+  if (post.lat != null && post.lng != null && userLat !== 0 && userLng !== 0) {
+    (post as any).distance_m = haversineDistance(userLat, userLng, post.lat, post.lng);
   }
-  if (__DEV__) console.log("fetchPostById coords:", { lat: (post as any).lat, lng: (post as any).lng });
-  return post as Post;
+  return post;
 }
 
 /** ちかく一覧（PostGIS距離計算） */
@@ -76,38 +146,7 @@ export async function fetchNearbyPosts(
     radius_m: radius,
   });
   if (error) throw error;
-
-  // RPC のフラット結果を Post 型に正規化
-  return (data ?? []).map((row: any) => ({
-    id: row.id,
-    author_id: row.author_id,
-    category: row.category,
-    title: row.title,
-    content: row.content,
-    image_url: row.image_url,
-    location_text: row.location_text,
-    deadline: row.deadline,
-    crowd: row.crowd,
-    is_featured: row.is_featured,
-    likes_count: row.likes_count,
-    comments_count: row.comments_count,
-    created_at: row.created_at,
-    updated_at: row.updated_at,
-    distance_m: row.distance_m,
-    author: {
-      id: row.author_id,
-      display_name: row.author_display_name,
-      avatar_url: row.author_avatar_url,
-      is_verified: row.author_is_verified,
-      bio: null,
-      location_text: null,
-      is_public: true,
-      show_location: true,
-      show_checkins: false,
-      created_at: row.created_at,
-      updated_at: row.updated_at,
-    },
-  })) as Post[];
+  return (data ?? []).map(rowToPost);
 }
 
 /** 全文検索（pg_trgm トリグラム類似度 + ILIKE フォールバック） */
@@ -117,41 +156,8 @@ export async function searchPosts(query: string, category?: string): Promise<Pos
     category_filter: category ?? null,
     result_limit: 30,
   });
-
   if (error) throw error;
-
-  // RPC のフラット結果を Post 型に正規化
-  return (data ?? []).map((row: any) => ({
-    id: row.id,
-    author_id: row.author_id,
-    category: row.category,
-    title: row.title,
-    content: row.content,
-    image_url: row.image_url,
-    image_urls: row.image_urls,
-    location_text: row.location_text,
-    deadline: row.deadline,
-    crowd: row.crowd,
-    is_featured: row.is_featured,
-    likes_count: row.likes_count,
-    comments_count: row.comments_count,
-    created_at: row.created_at,
-    updated_at: row.updated_at,
-    distance_m: row.distance_m,
-    author: {
-      id: row.author_id,
-      display_name: row.author_display_name,
-      avatar_url: row.author_avatar_url,
-      is_verified: row.author_is_verified,
-      bio: null,
-      location_text: null,
-      is_public: true,
-      show_location: true,
-      show_checkins: false,
-      created_at: row.created_at,
-      updated_at: row.updated_at,
-    },
-  })) as Post[];
+  return (data ?? []).map(rowToPost);
 }
 
 /** 投稿作成 */
@@ -192,11 +198,19 @@ export async function createPost(input: {
 /** 投稿更新 */
 export async function updatePost(
   id: string,
-  input: Partial<{ title: string; content: string; image_url: string; location_text: string }>
+  input: Partial<{
+    title: string;
+    content: string;
+    image_url: string;
+    image_urls: string[];
+    location_text: string;
+    deadline: string;
+  }>,
 ): Promise<Post> {
+  const tags = extractTags(`${input.title ?? ""} ${input.content ?? ""}`);
   const { data, error } = await supabase
     .from("posts")
-    .update(input)
+    .update({ ...input, tags })
     .eq("id", id)
     .select("*, author:profiles(*)")
     .single();

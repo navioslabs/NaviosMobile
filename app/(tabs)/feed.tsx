@@ -9,6 +9,7 @@ import PostPreviewSheet from "@/components/ui/PostPreviewSheet";
 import { useAppStyles } from "@/hooks/useAppStyles";
 import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 import { usePosts } from "@/hooks/usePosts";
+import { useLocation } from "@/hooks/useLocation";
 import DatePicker from "@/components/features/feed/DatePicker";
 import FeedSummary from "@/components/features/feed/FeedSummary";
 import CategoryChips from "@/components/features/feed/CategoryChips";
@@ -17,7 +18,7 @@ import FeedPostCard from "@/components/features/feed/FeedPostCard";
 type FilterType = "top" | "nearby" | "urgent" | null;
 
 const getDateLabel = (offset: number): string => {
-  if (offset === 0) return "📍 今日 • 越谷市";
+  if (offset === 0) return "📍 今日";
   if (offset === 1) return "📅 明日";
   const d = new Date();
   d.setDate(d.getDate() + offset);
@@ -27,61 +28,80 @@ const getDateLabel = (offset: number): string => {
 /** Feed画面 */
 export default function FeedScreen() {
   const { s, t, fs, isDark } = useAppStyles();
+  const { lat: userLat, lng: userLng } = useLocation();
 
   const [selDate, setSelDate] = useState(0);
   const [selCat, setSelCat] = useState("all");
   const [summaryFilter, setSummaryFilter] = useState<FilterType>(null);
   const [previewPost, setPreviewPost] = useState<Post | null>(null);
 
-  /** 日付オフセットからサーバーサイドフィルタ用のレンジを算出 */
+  /** 今日は全アクティブ投稿を取得、未来日は締切日でクライアントフィルタ */
   const dateRange = useMemo(() => {
-    const now = new Date();
-    if (selDate === 0) {
-      const after = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
-      return { createdAfter: after };
-    }
-    if (selDate === 1) {
-      const after = new Date(now.getTime() - 48 * 60 * 60 * 1000).toISOString();
-      const before = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
-      return { createdAfter: after, createdBefore: before };
-    }
-    // 2日以上前
-    const after = new Date(now.getTime() - (selDate + 1) * 24 * 60 * 60 * 1000).toISOString();
-    const before = new Date(now.getTime() - selDate * 24 * 60 * 60 * 1000).toISOString();
-    return { createdAfter: after, createdBefore: before };
-  }, [selDate]);
+    // 全日程で直近投稿を取得（RPC側で期限切れ除外済み）
+    return {};
+  }, []);
 
   const { data, isLoading: queryLoading, isFetching, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = usePosts({
     category: selCat === "all" ? undefined : selCat,
+    userLat,
+    userLng,
     ...dateRange,
   });
 
   const datePosts: Post[] = data?.flat ?? [];
 
+  /** 選択日の日付範囲（0時〜翌0時） */
+  const dayRange = useMemo(() => {
+    const start = new Date();
+    start.setDate(start.getDate() + selDate);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(start);
+    end.setDate(end.getDate() + 1);
+    return { start: start.getTime(), end: end.getTime() };
+  }, [selDate]);
+
   const filtered = useMemo(() => {
     let posts = datePosts;
+
+    // 日付フィルタ: 今日は全アクティブ投稿、未来日は締切がその日に該当する投稿
+    if (selDate === 0) {
+      posts = posts.filter((p) => !isExpired(p.deadline));
+    } else {
+      posts = posts.filter((p) => {
+        if (!p.deadline) return false;
+        const dl = new Date(p.deadline).getTime();
+        return dl >= dayRange.start && dl < dayRange.end;
+      });
+    }
 
     if (summaryFilter === "top") {
       posts = [...posts].sort((a, b) => b.likes_count - a.likes_count);
     } else if (summaryFilter === "nearby") {
       posts = posts.filter((p) => (p.distance_m ?? Infinity) <= 200);
     } else if (summaryFilter === "urgent") {
-      posts = [...posts]
-        .filter((p) => !isExpired(p.deadline))
-        .sort((a, b) => {
-          const aTime = a.deadline ? new Date(a.deadline).getTime() : Infinity;
-          const bTime = b.deadline ? new Date(b.deadline).getTime() : Infinity;
-          return aTime - bTime;
-        });
+      posts = [...posts].sort((a, b) => {
+        const aTime = a.deadline ? new Date(a.deadline).getTime() : Infinity;
+        const bTime = b.deadline ? new Date(b.deadline).getTime() : Infinity;
+        return aTime - bTime;
+      });
     }
 
-    // 期限切れ投稿をリスト末尾に回す
-    const active = posts.filter((p) => !isExpired(p.deadline));
-    const expired = posts.filter((p) => isExpired(p.deadline));
-    return [...active, ...expired];
-  }, [datePosts, selCat, summaryFilter]);
+    return posts;
+  }, [datePosts, selDate, dayRange, summaryFilter]);
 
-  const getPostCount = useCallback((offset: number) => offset === selDate ? datePosts.length : 0, [selDate, datePosts]);
+  const getPostCount = useCallback((offset: number) => {
+    if (offset === 0) return datePosts.filter((p) => !isExpired(p.deadline)).length;
+    const start = new Date();
+    start.setDate(start.getDate() + offset);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(start);
+    end.setDate(end.getDate() + 1);
+    return datePosts.filter((p) => {
+      if (!p.deadline) return false;
+      const dl = new Date(p.deadline).getTime();
+      return dl >= start.getTime() && dl < end.getTime();
+    }).length;
+  }, [datePosts]);
   const renderItem = useCallback(
     ({ item, index }: { item: Post; index: number }) => (
       <FeedPostCard post={item} t={t} isDark={isDark} featured={index === 0 && !isExpired(item.deadline)} expired={isExpired(item.deadline)} onLongPress={() => setPreviewPost(item)} />

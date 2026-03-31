@@ -4,7 +4,7 @@ import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
-import { Navigation, Flame, Clock, Heart, MessageSquare, User } from "@/lib/icons";
+import { Navigation, Flame, Clock, ThumbsUp, MessageSquare, User } from "@/lib/icons";
 import { CAT_CONFIG } from "@/constants/categories";
 import type { ThemeTokens } from "@/constants/theme";
 import type { Post } from "@/types";
@@ -80,13 +80,12 @@ function CompactCard({ post, t, isDark, expired, onLongPress }: { post: Post; t:
         {/* カテゴリプレースホルダー（アイコン+グラデーション） */}
         <View style={cardStyles.imageHeader}>
           <CatPlaceholder category={post.category} size="md" />
-          {/* 距離バッジ */}
-          <View style={{ position: "absolute", right: SPACE.sm, top: SPACE.sm, flexDirection: "row", alignItems: "center", gap: 3, backgroundColor: "rgba(0,0,0,0.35)", borderRadius: RADIUS.full, paddingHorizontal: SPACE.sm, paddingVertical: 3 }}>
-            <Navigation size={10} color="#fff" />
-            <Text style={{ fontSize: fs.xxs, fontWeight: WEIGHT.bold, color: "#fff" }}>
-              {distLabel(post.distance_m ?? 0)}
-            </Text>
-          </View>
+          {post.distance_m != null && (
+            <View style={{ position: "absolute", right: SPACE.sm, top: SPACE.sm, flexDirection: "row", alignItems: "center", gap: 3, backgroundColor: "rgba(0,0,0,0.45)", borderRadius: RADIUS.full, paddingHorizontal: SPACE.sm, paddingVertical: 3 }}>
+              <Navigation size={10} color="#fff" />
+              <Text style={{ fontSize: fs.xxs, fontWeight: WEIGHT.bold, color: "#fff" }}>{distLabel(post.distance_m)}</Text>
+            </View>
+          )}
           {expired && (
             <View style={{ position: "absolute", left: SPACE.sm, top: SPACE.sm, backgroundColor: "#8887A0CC", borderRadius: RADIUS.full, paddingHorizontal: 6, paddingVertical: 2 }}>
               <Text style={{ fontSize: fs.xxs, fontWeight: WEIGHT.bold, color: "#fff" }}>終了</Text>
@@ -135,7 +134,7 @@ function CompactCard({ post, t, isDark, expired, onLongPress }: { post: Post; t:
             </View>
             <View style={cardStyles.actionGroup}>
               <View style={cardStyles.iconText}>
-                <Heart size={14} color={t.muted} />
+                <ThumbsUp size={14} color={t.muted} />
                 <Text style={{ fontSize: fs.xs, color: t.muted }}>{post.likes_count}</Text>
               </View>
               <View style={cardStyles.iconText}>
@@ -229,6 +228,14 @@ function FeedPostCard({ post, t, isDark, featured, expired, onLongPress }: FeedP
 
         <CardHeader post={post} t={t} />
 
+        {/* 距離バッジ（画像右中央） */}
+        {post.distance_m != null && (
+          <View style={{ position: "absolute", right: SPACE.lg, top: "50%", transform: [{ translateY: -12 }], flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "rgba(0,0,0,0.55)", borderRadius: RADIUS.full, paddingHorizontal: SPACE.sm + 2, paddingVertical: SPACE.xs }}>
+            <Navigation size={11} color={catColor} />
+            <Text style={{ fontSize: fs.xs, fontWeight: WEIGHT.bold, color: "#fff" }}>{distLabel(post.distance_m)}</Text>
+          </View>
+        )}
+
         {/* Featured / 終了 badge */}
         {expired ? (
           <View style={{ position: "absolute", top: SPACE.lg, right: SPACE.lg, flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "rgba(100,100,120,0.9)", borderRadius: RADIUS.full, paddingHorizontal: SPACE.sm + 2, paddingVertical: SPACE.xs }}>
@@ -242,11 +249,6 @@ function FeedPostCard({ post, t, isDark, featured, expired, onLongPress }: FeedP
           </View>
         ) : null}
 
-        {/* Distance badge */}
-        <View style={{ position: "absolute", right: SPACE.lg, top: "50%", transform: [{ translateY: -14 }], flexDirection: "row", alignItems: "center", gap: SPACE.xs, backgroundColor: "rgba(0,0,0,0.5)", borderRadius: RADIUS.full, paddingHorizontal: SPACE.md, paddingVertical: 6 }}>
-          <Navigation size={13} color={catColor} />
-          <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.bold, color: "#fff" }}>{distLabel(post.distance_m ?? 0)}</Text>
-        </View>
 
         {/* Bottom */}
         <View style={cardStyles.bottomOverlay}>

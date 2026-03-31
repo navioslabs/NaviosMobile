@@ -11,21 +11,31 @@ interface AnimatedSubmitButtonProps {
   canSubmit: boolean;
   t: ThemeTokens;
   fs: { lg: number };
+  label?: string;
 }
 
 /** タップ感のあるアニメーション付き投稿ボタン */
-export default function AnimatedSubmitButton({ onPress, disabled, isPending, canSubmit, t, fs }: AnimatedSubmitButtonProps) {
+export default function AnimatedSubmitButton({ onPress, disabled, isPending, canSubmit, t, fs, label = "投稿する" }: AnimatedSubmitButtonProps) {
   const btnScale = useRef(new Animated.Value(1)).current;
+  const btnOpacity = useRef(new Animated.Value(1)).current;
 
   const animStyle = {
     transform: [{ scale: btnScale }],
+    opacity: btnOpacity,
   };
 
   const handlePressIn = () => {
-    if (!disabled) Animated.spring(btnScale, { toValue: 0.95, damping: 15, stiffness: 300, useNativeDriver: true }).start();
+    if (disabled) return;
+    Animated.parallel([
+      Animated.spring(btnScale, { toValue: 0.88, damping: 20, stiffness: 400, useNativeDriver: true }),
+      Animated.timing(btnOpacity, { toValue: 0.7, duration: 80, useNativeDriver: true }),
+    ]).start();
   };
   const handlePressOut = () => {
-    Animated.spring(btnScale, { toValue: 1, damping: 15, stiffness: 300, useNativeDriver: true }).start();
+    Animated.parallel([
+      Animated.spring(btnScale, { toValue: 1, damping: 12, stiffness: 350, useNativeDriver: true }),
+      Animated.timing(btnOpacity, { toValue: 1, duration: 150, useNativeDriver: true }),
+    ]).start();
   };
 
   return (
@@ -45,7 +55,7 @@ export default function AnimatedSubmitButton({ onPress, disabled, isPending, can
           {isPending ? (
             <ActivityIndicator color="#000" />
           ) : (
-            <Text style={{ color: canSubmit ? "#000" : t.muted, fontWeight: WEIGHT.extrabold, fontSize: fs.lg + 1 }}>投稿する</Text>
+            <Text style={{ color: canSubmit ? "#000" : t.muted, fontWeight: WEIGHT.extrabold, fontSize: fs.lg + 1 }}>{label}</Text>
           )}
         </LinearGradient>
       </Pressable>

@@ -1,5 +1,5 @@
-import { SectionList, View, Text, RefreshControl, Pressable } from "react-native";
-import { useMemo, useEffect, useRef, useState } from "react";
+import { SectionList, View, Text, RefreshControl, Pressable, Animated } from "react-native";
+import { useMemo, useEffect, useRef, useState, useCallback } from "react";
 import PostPreviewSheet from "@/components/ui/PostPreviewSheet";
 import { useIsFocused } from "@react-navigation/native";
 import { useQueryClient } from "@tanstack/react-query";
@@ -12,10 +12,10 @@ import { isExpired, calcMatchScore } from "@/lib/adapters";
 import type { Post } from "@/types";
 import { useAppStyles } from "@/hooks/useAppStyles";
 import { SPACE, WEIGHT, RADIUS } from "@/lib/styles";
-import ScanHeader from "@/components/features/nearby/ScanHeader";
 import NearbyPostItem from "@/components/features/nearby/NearbyPostItem";
 import DistanceSectionHeader from "@/components/features/nearby/DistanceSectionHeader";
 import { PostCardSkeleton } from "@/components/ui/Skeleton";
+import DailyDigestCard, { DigestMiniBar } from "@/components/features/digest/DailyDigestCard";
 import DatePicker from "@/components/features/feed/DatePicker";
 import FeedView from "@/components/features/feed/FeedView";
 import { REFETCH_THRESHOLD_M } from "@/constants/location";
@@ -142,6 +142,42 @@ export default function HomeScreen() {
     return left > 0 && left <= 60;
   }).length;
 
+  const pulseScore = useMemo(() => {
+    const n = activePosts.length;
+    if (n === 0) return 0;
+    return Math.min(100, Math.round(
+      (Math.min(n, 20) / 20) * 30 +
+      (closeCount / n) * 25 +
+      (recentCount / n) * 25 +
+      (urgentCount / n) * 20
+    ));
+  }, [activePosts.length, closeCount, recentCount, urgentCount]);
+
+  // ── ミニバーアニメーション（hooks はトップレベルで呼ぶ） ──
+  const miniBarAnim = useRef(new Animated.Value(0)).current;
+  const miniBarVisible = useRef(false);
+  const MINIBAR_THRESHOLD = 160;
+
+  const handleScroll = useCallback((e: any) => {
+    const y = e.nativeEvent.contentOffset.y;
+    const shouldShow = y > MINIBAR_THRESHOLD;
+    if (shouldShow !== miniBarVisible.current) {
+      miniBarVisible.current = shouldShow;
+      Animated.spring(miniBarAnim, {
+        toValue: shouldShow ? 1 : 0,
+        damping: 20,
+        stiffness: 300,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, []);
+
+  const scrollToTop = useCallback(() => {
+    if (sections.length > 0) {
+      listRef.current?.scrollToLocation({ sectionIndex: 0, itemIndex: 0, viewOffset: 400, animated: true });
+    }
+  }, [sections]);
+
   // ── フィードモード用 ──
   const [selDate, setSelDate] = useState(0);
   const [selCat, setSelCat] = useState("all");
@@ -180,7 +216,7 @@ export default function HomeScreen() {
     return (
       <View style={s.screen}>
         <ModeSwitch mode={viewMode} onChangeMode={setViewMode} t={t} fs={fs} />
-        <ScanHeader t={t} isDark={isDark} postCount={0} placeName={placeName} />
+        <DailyDigestCard t={t} fs={fs} isDark={isDark} placeName={placeName} pulseScore={0} postCount={0} />
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: SPACE.xl }}>
           <MapPin size={48} color={t.muted} />
           <Text style={{ fontSize: fs.lg, fontWeight: WEIGHT.bold, color: t.text, marginTop: SPACE.lg, textAlign: "center" }}>
@@ -199,7 +235,7 @@ export default function HomeScreen() {
     return (
       <View style={s.screen}>
         <ModeSwitch mode={viewMode} onChangeMode={setViewMode} t={t} fs={fs} />
-        <ScanHeader t={t} isDark={isDark} postCount={0} isWatching={isWatching} placeName={placeName} />
+        <DailyDigestCard t={t} fs={fs} isDark={isDark} placeName={placeName} pulseScore={0} postCount={0} isWatching={isWatching} />
         <View style={{ padding: SPACE.md, gap: SPACE.sm }}>
           <PostCardSkeleton t={t} />
           <PostCardSkeleton t={t} />
@@ -243,51 +279,69 @@ export default function HomeScreen() {
   return (
     <View style={s.screen}>
       <ModeSwitch mode={viewMode} onChangeMode={setViewMode} t={t} fs={fs} />
-      <ScanHeader
-        t={t}
-        isDark={isDark}
-        postCount={activePosts.length}
-        closeCount={closeCount}
-        recentCount={recentCount}
-        urgentCount={urgentCount}
-        dataUpdatedAt={dataUpdatedAt}
-        isWatching={isWatching}
-        placeName={placeName}
-      />
 
-      {/* アクションボタン行 */}
-      <View style={{ flexDirection: "row", gap: SPACE.sm, marginHorizontal: SPACE.xl, marginTop: SPACE.sm }}>
-        <Pressable
-          onPress={() => router.push("/street-history")}
-          style={({ pressed }) => ({
-            flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center",
-            gap: SPACE.sm, paddingVertical: SPACE.sm, borderRadius: RADIUS.lg,
-            backgroundColor: t.surface, borderWidth: 1, borderColor: t.border, opacity: pressed ? 0.7 : 1,
-          })}
-        >
-          <Clock size={14} color={t.accent} />
-          <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.semibold, color: t.accent }}>記憶を見る</Text>
-        </Pressable>
-        <Pressable
-          onPress={() => nearbyRefetch()}
-          style={({ pressed }) => ({
-            flexDirection: "row", alignItems: "center", justifyContent: "center",
-            gap: SPACE.xs, paddingVertical: SPACE.sm, paddingHorizontal: SPACE.lg,
-            borderRadius: RADIUS.lg, backgroundColor: nearbyFetching ? t.accent + "20" : t.surface,
-            borderWidth: 1, borderColor: nearbyFetching ? t.accent + "40" : t.border, opacity: pressed ? 0.7 : 1,
-          })}
-        >
-          <RefreshCw size={14} color={t.accent} />
-          <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.semibold, color: t.accent }}>
-            {nearbyFetching ? "更新中" : "更新"}
-          </Text>
-        </Pressable>
-      </View>
+      {/* Stickyミニバー（スクロールで出現） */}
+      <DigestMiniBar
+        t={t}
+        fs={fs}
+        isDark={isDark}
+        placeName={placeName}
+        pulseScore={pulseScore}
+        postCount={activePosts.length}
+        animValue={miniBarAnim}
+        onPress={scrollToTop}
+      />
 
       <SectionList
         ref={listRef}
         sections={sections}
         keyExtractor={(item) => item.id}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+        ListHeaderComponent={
+          <>
+            {/* ダイジェストカード */}
+            <DailyDigestCard
+              t={t}
+              fs={fs}
+              isDark={isDark}
+              placeName={placeName}
+              pulseScore={pulseScore}
+              postCount={activePosts.length}
+              isWatching={isWatching}
+              dataUpdatedAt={dataUpdatedAt}
+            />
+
+            {/* アクションボタン行 */}
+            <View style={{ flexDirection: "row", gap: SPACE.sm, marginHorizontal: SPACE.xl, marginTop: SPACE.sm, marginBottom: SPACE.xs }}>
+              <Pressable
+                onPress={() => router.push("/street-history")}
+                style={({ pressed }) => ({
+                  flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center",
+                  gap: SPACE.sm, paddingVertical: SPACE.sm, borderRadius: RADIUS.lg,
+                  backgroundColor: t.surface, borderWidth: 1, borderColor: t.border, opacity: pressed ? 0.7 : 1,
+                })}
+              >
+                <Clock size={14} color={t.accent} />
+                <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.semibold, color: t.accent }}>記憶を見る</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => nearbyRefetch()}
+                style={({ pressed }) => ({
+                  flexDirection: "row", alignItems: "center", justifyContent: "center",
+                  gap: SPACE.xs, paddingVertical: SPACE.sm, paddingHorizontal: SPACE.lg,
+                  borderRadius: RADIUS.lg, backgroundColor: nearbyFetching ? t.accent + "20" : t.surface,
+                  borderWidth: 1, borderColor: nearbyFetching ? t.accent + "40" : t.border, opacity: pressed ? 0.7 : 1,
+                })}
+              >
+                <RefreshCw size={14} color={t.accent} />
+                <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.semibold, color: t.accent }}>
+                  {nearbyFetching ? "更新中" : "更新"}
+                </Text>
+              </Pressable>
+            </View>
+          </>
+        }
         renderItem={({ item, index, section }) => {
           const isFeatured = section === sections[0] && index === 0 && !isExpired(item.deadline);
           return <NearbyPostItem post={item} t={t} featured={isFeatured} expired={isExpired(item.deadline)} isDark={isDark} onLongPress={() => setPreviewPost(item)} />;

@@ -5,7 +5,7 @@ import { Image } from "expo-image";
 import { getUserMessage } from "@/lib/appError";
 import {
   ChevronLeft,
-  Heart,
+  ThumbsUp,
   MessageCircle,
   Share,
   MapPin,
@@ -196,7 +196,7 @@ export default function TalkDetailScreen() {
               onPress={handleLike}
               style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: SPACE.sm, opacity: pressed ? 0.7 : 1 })}
             >
-              <Heart size={20} fill={isLiked ? t.red : "none"} color={isLiked ? t.red : t.sub} />
+              <ThumbsUp size={20} fill={isLiked ? t.accent : "none"} color={isLiked ? t.accent : t.sub} />
               <Text style={{ fontSize: fs.base, fontWeight: WEIGHT.semibold, color: isLiked ? t.red : t.sub }}>
                 {talk.likes_count}
               </Text>
@@ -236,7 +236,7 @@ export default function TalkDetailScreen() {
                 <Pressable
                   style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: SPACE.xs, marginTop: SPACE.sm, opacity: pressed ? 0.7 : 1 })}
                 >
-                  <Heart size={14} color={t.muted} />
+                  <ThumbsUp size={14} color={t.muted} />
                   <Text style={{ fontSize: fs.xs, color: t.muted }}>{reply.likes_count}</Text>
                 </Pressable>
               </View>

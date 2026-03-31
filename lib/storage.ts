@@ -19,26 +19,27 @@ async function resizeImage(uri: string, maxSize: number): Promise<string> {
   const result = await manipulateAsync(
     uri,
     [{ resize: { width: maxSize } }],
-    { compress: 0.8, format: SaveFormat.JPEG }
+    { compress: 0.7, format: SaveFormat.JPEG }
   );
   return result.uri;
 }
 
 /**
  * 画像をSupabase Storageにアップロードする
- * アップロード前に自動リサイズ（長辺 maxSize 以下、JPEG 0.8圧縮）
+ * アップロード前に自動リサイズ（長辺 maxSize 以下、JPEG 0.7圧縮）
  * @returns 公開URL
  */
 export async function uploadImage(
   bucket: "avatars" | "post-images" | "talk-images",
   uri: string
 ): Promise<string> {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error("ログインが必要です");
-
-  // リサイズ
+  // 認証取得とリサイズを並列実行
   const maxSize = MAX_SIZE[bucket] ?? 1200;
-  const resizedUri = await resizeImage(uri, maxSize);
+  const [{ data: { user } }, resizedUri] = await Promise.all([
+    supabase.auth.getUser(),
+    resizeImage(uri, maxSize),
+  ]);
+  if (!user) throw new Error("ログインが必要です");
 
   const fileName = `${user.id}/${uuidv4()}.jpg`;
 

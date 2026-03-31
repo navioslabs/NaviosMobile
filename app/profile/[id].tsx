@@ -9,7 +9,7 @@ import {
   UserCheck,
   Award,
   MessageCircle,
-  Heart,
+  ThumbsUp,
   PenLine,
   User,
 } from "@/lib/icons";
@@ -214,7 +214,7 @@ export default function ProfileScreen() {
                     </Text>
                     <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.lg, marginTop: SPACE.xs }}>
                       <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.xs }}>
-                        <Heart size={12} color={t.muted} />
+                        <ThumbsUp size={12} color={t.muted} />
                         <Text style={{ fontSize: fs.xs, color: t.muted }}>{post.likes_count}</Text>
                       </View>
                       <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.xs }}>
@@ -255,7 +255,7 @@ export default function ProfileScreen() {
                   <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.lg, marginTop: SPACE.sm }}>
                     <Text style={{ fontSize: fs.xxs, color: t.muted }}>{timeAgo(talk.created_at)}</Text>
                     <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.xs }}>
-                      <Heart size={12} color={t.muted} />
+                      <ThumbsUp size={12} color={t.muted} />
                       <Text style={{ fontSize: fs.xxs, color: t.muted }}>{talk.likes_count}</Text>
                     </View>
                     <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.xs }}>

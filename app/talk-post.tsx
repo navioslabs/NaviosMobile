@@ -7,7 +7,7 @@ import { Image } from "expo-image";
 import * as Haptics from "expo-haptics";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { User, MapPin, Camera, ImageIcon, Send } from "@/lib/icons";
+import { User, MapPin, Camera, ImageIcon, Send, Check } from "@/lib/icons";
 import { createTalkSchema, type CreateTalkForm } from "@/lib/validations";
 import { useCreateTalk } from "@/hooks/useTalks";
 import { useImagePicker } from "@/hooks/useImagePicker";
@@ -77,8 +77,21 @@ export default function TalkPostScreen() {
     );
   });
 
-  const onSubmit = useCallback(async (data: CreateTalkForm) => {
+  /** 確認ダイアログを表示 */
+  const onSubmit = useCallback((data: CreateTalkForm) => {
     if (sending) return;
+    Alert.alert(
+      "この内容で投稿しますか？",
+      data.message.trim().length > 40 ? data.message.trim().slice(0, 40) + "…" : data.message.trim(),
+      [
+        { text: "キャンセル", style: "cancel" },
+        { text: "投稿する", onPress: () => executePost(data) },
+      ],
+    );
+  }, [sending, images, granted, lat, lng, placeName, createTalkMutation]);
+
+  /** 実際の投稿処理 */
+  const executePost = useCallback(async (data: CreateTalkForm) => {
     setSending(true);
     try {
       let image_url: string | undefined;
@@ -97,19 +110,46 @@ export default function TalkPostScreen() {
       });
       setSubmitted(true);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      setTimeout(() => router.canGoBack() ? router.back() : router.replace("/(tabs)/talk"), 600);
     } catch (e: unknown) {
       if (__DEV__) console.error("つぶやき投稿エラー詳細:", e);
       setSending(false);
       useToastStore.getState().show(getUserMessage(e), "error");
     }
-  }, [sending, images, granted, lat, lng, placeName, createTalkMutation]);
+  }, [images, granted, lat, lng, placeName, createTalkMutation]);
 
   /** 文字数カウントの色を決定 */
   const countColor = remaining < 0 ? t.red : remaining <= 20 ? t.amber : t.muted;
 
   /** 文字数表示テキスト */
   const countText = remaining >= 0 ? `あと ${remaining}文字` : `${Math.abs(remaining)}文字オーバー`;
+
+  /** 投稿成功画面 */
+  if (submitted) {
+    return (
+      <View style={[s.screen, { flex: 1, justifyContent: "center", alignItems: "center", padding: SPACE.xl }]}>
+        <View style={{ alignItems: "center", gap: SPACE.lg }}>
+          <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: t.accent, alignItems: "center", justifyContent: "center" }}>
+            <Check size={36} color="#000" />
+          </View>
+          <Text style={{ fontSize: fs.xl, fontWeight: WEIGHT.extrabold, color: t.text }}>投稿しました！</Text>
+          <Text style={{ fontSize: fs.sm, color: t.sub, textAlign: "center" }}>つぶやきが近くの人に届けられました</Text>
+          <Pressable
+            onPress={() => router.canGoBack() ? router.back() : router.replace("/(tabs)/talk")}
+            style={({ pressed }) => ({
+              marginTop: SPACE.lg,
+              paddingVertical: SPACE.md,
+              paddingHorizontal: SPACE.xxl,
+              borderRadius: 12,
+              backgroundColor: t.accent,
+              opacity: pressed ? 0.8 : 1,
+            })}
+          >
+            <Text style={{ fontSize: fs.base, fontWeight: WEIGHT.bold, color: "#000" }}>閉じる</Text>
+          </Pressable>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined} keyboardVerticalOffset={Platform.OS === "ios" ? 88 : 0}>
@@ -200,14 +240,14 @@ export default function TalkPostScreen() {
       {/* 文字数カウント + 送信ボタン */}
       <View style={s.rowBetween}>
         <Text style={{ fontSize: fs.sm, fontWeight: remaining < 0 ? WEIGHT.bold : WEIGHT.normal, color: countColor }}>
-          {submitted ? "投稿しました！" : countText}
+          {countText}
         </Text>
         <Pressable
           onPress={handleSubmit(onSubmit)}
-          disabled={!isValid || sending || submitted}
+          disabled={!isValid || sending}
         >
           <LinearGradient
-            colors={submitted ? ["#4CAF50", "#66BB6A"] : [t.accent, t.blue]}
+            colors={[t.accent, t.blue]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={{
@@ -217,18 +257,16 @@ export default function TalkPostScreen() {
               borderRadius: RADIUS.lg,
               paddingHorizontal: SPACE.xxl + 4,
               paddingVertical: SPACE.md,
-              opacity: (isValid && !sending && !submitted) || submitted ? 1 : 0.3,
+              opacity: isValid && !sending ? 1 : 0.3,
             }}
           >
             {sending ? (
               <ActivityIndicator size="small" color="#000" />
-            ) : submitted ? (
-              <Text style={{ fontSize: 15 }}>✓</Text>
             ) : (
               <Send size={15} color={isValid ? "#000" : t.muted} />
             )}
-            <Text style={{ fontWeight: WEIGHT.extrabold, fontSize: fs.lg, color: submitted ? "#fff" : isValid ? "#000" : t.muted }}>
-              {submitted ? "投稿完了" : sending ? "投稿中..." : "投稿する"}
+            <Text style={{ fontWeight: WEIGHT.extrabold, fontSize: fs.lg, color: isValid ? "#000" : t.muted }}>
+              {sending ? "投稿中..." : "投稿する"}
             </Text>
           </LinearGradient>
         </Pressable>

@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { Platform, StatusBar } from "react-native";
 import * as ImagePicker from "expo-image-picker";
+import { useThemeStore } from "@/stores/themeStore";
 
 const DEFAULT_MAX = 3;
 
@@ -31,6 +33,22 @@ export function useImagePicker(max = DEFAULT_MAX): ImagePickerState {
 
   const isFull = images.length >= max;
 
+  /** Android: 切り抜き画面のヘッダーが見えるようステータスバーを一時的にライトに変更 */
+  const setLightStatusBar = () => {
+    if (Platform.OS !== "android") return;
+    StatusBar.setBarStyle("dark-content");
+    StatusBar.setBackgroundColor("#ffffff");
+  };
+
+  /** Android: ステータスバーをアプリのテーマに合わせて復元 */
+  const restoreStatusBar = () => {
+    if (Platform.OS !== "android") return;
+    const isDark = useThemeStore.getState().isDark;
+    StatusBar.setBarStyle(isDark ? "light-content" : "dark-content");
+    StatusBar.setBackgroundColor("transparent");
+    StatusBar.setTranslucent(true);
+  };
+
   const pickImage = async () => {
     if (isFull) return;
     setIsPicking(true);
@@ -38,16 +56,18 @@ export function useImagePicker(max = DEFAULT_MAX): ImagePickerState {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== "granted") return;
 
+      setLightStatusBar();
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ["images"],
         allowsEditing: true,
-        quality: 0.7,
+        quality: 1,
       });
 
       if (!result.canceled && result.assets[0]) {
         setImages((prev) => [...prev, result.assets[0].uri].slice(0, max));
       }
     } finally {
+      restoreStatusBar();
       setIsPicking(false);
     }
   };
@@ -59,15 +79,17 @@ export function useImagePicker(max = DEFAULT_MAX): ImagePickerState {
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
       if (status !== "granted") return;
 
+      setLightStatusBar();
       const result = await ImagePicker.launchCameraAsync({
         allowsEditing: true,
-        quality: 0.7,
+        quality: 1,
       });
 
       if (!result.canceled && result.assets[0]) {
         setImages((prev) => [...prev, result.assets[0].uri].slice(0, max));
       }
     } finally {
+      restoreStatusBar();
       setIsPicking(false);
     }
   };

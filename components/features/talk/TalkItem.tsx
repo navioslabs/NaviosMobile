@@ -2,7 +2,7 @@ import { memo, useEffect, useRef } from "react";
 import { View, Text, Pressable, Animated } from "react-native";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import { MapPin, MessageCircle, Heart, Navigation, User } from "@/lib/icons";
+import { MapPin, MessageCircle, ThumbsUp, Navigation, User } from "@/lib/icons";
 import type { ThemeTokens } from "@/constants/theme";
 import type { Talk } from "@/types";
 import { timeAgo } from "@/lib/adapters";
@@ -195,9 +195,9 @@ function TalkItem({ talk, t }: TalkItemProps) {
                   hitSlop={8}
                   style={({ pressed }) => ({ flexDirection: "row" as const, alignItems: "center" as const, gap: 3, minHeight: 28, opacity: pressed ? 0.6 : 1 })}
                 >
-                  <Heart size={14} fill={isLiked ? t.red : "none"} color={isLiked ? t.red : t.muted} />
+                  <ThumbsUp size={14} fill={isLiked ? t.accent : "none"} color={isLiked ? t.accent : t.muted} />
                   {talk.likes_count > 0 && (
-                    <Text style={{ fontSize: fs.xxs, color: isLiked ? t.red : t.muted }}>{talk.likes_count}</Text>
+                    <Text style={{ fontSize: fs.xxs, color: isLiked ? t.accent : t.muted }}>{talk.likes_count}</Text>
                   )}
                 </Pressable>
               </View>

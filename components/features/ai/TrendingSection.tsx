@@ -1,7 +1,7 @@
 import { View, Text, FlatList, Pressable } from "react-native";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import { TrendingUp, Heart, Clock } from "@/lib/icons";
+import { TrendingUp, ThumbsUp, Clock } from "@/lib/icons";
 import { CAT_CONFIG } from "@/constants/categories";
 import type { ThemeTokens } from "@/constants/theme";
 import type { Post } from "@/types";
@@ -53,7 +53,7 @@ function TrendingCard({ post, t, index }: { post: Post; t: ThemeTokens; index: n
           </Text>
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: SPACE.sm }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
-              <Heart size={12} color={t.red} fill={t.red} />
+              <ThumbsUp size={12} color={t.accent} fill={t.accent} />
               <Text style={{ fontSize: fs.xxs, fontWeight: WEIGHT.bold, color: t.red }}>{post.likes_count}</Text>
             </View>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>

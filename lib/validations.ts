@@ -49,6 +49,22 @@ export const createPostSchema = z.object({
 });
 export type CreatePostForm = z.infer<typeof createPostSchema>;
 
+// ─── 投稿編集 ─────────────────────────────────────────
+
+export const editPostSchema = z.object({
+  title: z
+    .string()
+    .min(1, "タイトルを入力してください")
+    .max(100, "100文字以内で入力してください"),
+  content: z
+    .string()
+    .max(2000, "2000文字以内で入力してください")
+    .optional()
+    .or(z.literal("")),
+  deadline: z.date({ error: "期限を選択してください" }),
+});
+export type EditPostForm = z.infer<typeof editPostSchema>;
+
 // ─── ひとこと投稿 ───────────────────────────────────
 
 export const createTalkSchema = z.object({

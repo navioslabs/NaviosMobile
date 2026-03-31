@@ -1,7 +1,7 @@
 import { View, Text, Pressable } from "react-native";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import { Heart, MessageSquare, Radio, Trophy, User } from "@/lib/icons";
+import { ThumbsUp, MessageSquare, Radio, Trophy, User } from "@/lib/icons";
 import type { ThemeTokens } from "@/constants/theme";
 import type { StreetHistoryItem } from "@/types";
 import { CAT_CONFIG } from "@/constants/categories";
@@ -88,7 +88,7 @@ export default function StreetHistoryCard({ item, t, isDark }: StreetHistoryCard
         {/* フッター */}
         <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.lg, marginTop: SPACE.sm }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
-            <Heart size={13} color={t.muted} />
+            <ThumbsUp size={13} color={t.muted} />
             <Text style={{ fontSize: fs.xs, color: t.muted }}>{item.likes_count}</Text>
           </View>
 
