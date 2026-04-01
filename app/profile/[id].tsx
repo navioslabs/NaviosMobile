@@ -15,6 +15,8 @@ import {
 } from "@/lib/icons";
 import { useProfile, useUserPosts, useUserTalks } from "@/hooks/useProfile";
 import { useUserBadges } from "@/hooks/useBadges";
+import { useIsFollowing, useToggleFollow, useFollowCounts } from "@/hooks/useFollow";
+import { useAuth } from "@/hooks/useAuth";
 import { timeAgo } from "@/lib/adapters";
 import { useAppStyles } from "@/hooks/useAppStyles";
 import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
@@ -29,11 +31,16 @@ export default function ProfileScreen() {
   const { s, t, fs } = useAppStyles();
   const [activeTab, setActiveTab] = useState<ProfileTab>("posts");
 
+  const { user } = useAuth();
   const userId = id ?? "";
+  const isOwnProfile = user?.id === userId;
   const { data: remoteProfile, isLoading: profileLoading, isFetching: profileFetching, refetch: refetchProfile } = useProfile(userId);
   const { data: userPosts } = useUserPosts(userId);
   const { data: userTalks } = useUserTalks(userId);
   const { data: badges } = useUserBadges(userId);
+  const { data: isFollowing } = useIsFollowing(isOwnProfile ? undefined : userId);
+  const { data: followCounts } = useFollowCounts(userId);
+  const { mutate: toggleFollow, isPending: followPending } = useToggleFollow();
 
   const posts = userPosts ?? [];
   const talks = userTalks ?? [];
@@ -129,11 +136,39 @@ export default function ProfileScreen() {
               </View>
             </View>
 
-            {/* フォローボタン — follows テーブル実装後に復活 */}
+            {/* フォローボタン */}
+            {!isOwnProfile && user && (
+              <Pressable
+                onPress={() => toggleFollow(userId)}
+                disabled={followPending}
+                style={({ pressed }) => ({
+                  marginTop: SPACE.md,
+                  paddingHorizontal: SPACE.xxl,
+                  paddingVertical: SPACE.sm,
+                  borderRadius: RADIUS.xxl,
+                  backgroundColor: isFollowing ? t.surface : t.accent,
+                  borderWidth: 1,
+                  borderColor: isFollowing ? t.border : t.accent,
+                  opacity: pressed || followPending ? 0.7 : 1,
+                })}
+              >
+                <Text style={{ fontSize: fs.base, fontWeight: WEIGHT.bold, color: isFollowing ? t.text : "#fff" }}>
+                  {isFollowing ? "フォロー中" : "フォローする"}
+                </Text>
+              </Pressable>
+            )}
           </View>
 
           {/* 統計 */}
           <View style={{ flexDirection: "row", justifyContent: "space-around", paddingVertical: SPACE.lg, backgroundColor: t.surface, borderTopWidth: 1, borderTopColor: t.border, borderBottomWidth: 1, borderBottomColor: t.border }}>
+            <Pressable onPress={() => router.push(`/follow-list/${userId}?tab=followers` as any)} style={{ alignItems: "center" }}>
+              <Text style={{ fontSize: fs.xxl, fontWeight: WEIGHT.extrabold, color: t.accent }}>{followCounts?.followers_count ?? 0}</Text>
+              <Text style={{ fontSize: fs.xs, color: t.muted }}>フォロワー</Text>
+            </Pressable>
+            <Pressable onPress={() => router.push(`/follow-list/${userId}?tab=following` as any)} style={{ alignItems: "center" }}>
+              <Text style={{ fontSize: fs.xxl, fontWeight: WEIGHT.extrabold, color: t.accent }}>{followCounts?.following_count ?? 0}</Text>
+              <Text style={{ fontSize: fs.xs, color: t.muted }}>フォロー中</Text>
+            </Pressable>
             <View style={{ alignItems: "center" }}>
               <Text style={{ fontSize: fs.xxl, fontWeight: WEIGHT.extrabold, color: t.accent }}>{posts.length}</Text>
               <Text style={{ fontSize: fs.xs, color: t.muted }}>投稿</Text>

@@ -6,6 +6,8 @@ export type {
   Comment,
   TalkReply,
   Like,
+  Follow,
+  FollowCounts,
   Profile,
   Report,
   ReportReasonId,

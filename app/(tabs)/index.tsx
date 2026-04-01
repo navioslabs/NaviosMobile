@@ -3,7 +3,7 @@ import { useMemo, useEffect, useRef, useState, useCallback } from "react";
 import PostPreviewSheet from "@/components/ui/PostPreviewSheet";
 import { useIsFocused } from "@react-navigation/native";
 import { useQueryClient } from "@tanstack/react-query";
-import { MapPin, RefreshCw, Clock, Radio, PenLine } from "@/lib/icons";
+import { MapPin, Radio, PenLine } from "@/lib/icons";
 import { router } from "expo-router";
 import { useNearbyPosts, usePosts } from "@/hooks/usePosts";
 import { useLocation } from "@/hooks/useLocation";
@@ -310,36 +310,10 @@ export default function HomeScreen() {
               postCount={activePosts.length}
               isWatching={isWatching}
               dataUpdatedAt={dataUpdatedAt}
+              onHistoryPress={() => router.push("/street-history")}
+              onRefresh={() => nearbyRefetch()}
+              isRefreshing={nearbyFetching}
             />
-
-            {/* アクションボタン行 */}
-            <View style={{ flexDirection: "row", gap: SPACE.sm, marginHorizontal: SPACE.xl, marginTop: SPACE.sm, marginBottom: SPACE.xs }}>
-              <Pressable
-                onPress={() => router.push("/street-history")}
-                style={({ pressed }) => ({
-                  flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center",
-                  gap: SPACE.sm, paddingVertical: SPACE.sm, borderRadius: RADIUS.lg,
-                  backgroundColor: t.surface, borderWidth: 1, borderColor: t.border, opacity: pressed ? 0.7 : 1,
-                })}
-              >
-                <Clock size={14} color={t.accent} />
-                <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.semibold, color: t.accent }}>記憶を見る</Text>
-              </Pressable>
-              <Pressable
-                onPress={() => nearbyRefetch()}
-                style={({ pressed }) => ({
-                  flexDirection: "row", alignItems: "center", justifyContent: "center",
-                  gap: SPACE.xs, paddingVertical: SPACE.sm, paddingHorizontal: SPACE.lg,
-                  borderRadius: RADIUS.lg, backgroundColor: nearbyFetching ? t.accent + "20" : t.surface,
-                  borderWidth: 1, borderColor: nearbyFetching ? t.accent + "40" : t.border, opacity: pressed ? 0.7 : 1,
-                })}
-              >
-                <RefreshCw size={14} color={t.accent} />
-                <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.semibold, color: t.accent }}>
-                  {nearbyFetching ? "更新中" : "更新"}
-                </Text>
-              </Pressable>
-            </View>
           </>
         }
         renderItem={({ item, index, section }) => {

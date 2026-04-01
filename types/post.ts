@@ -144,6 +144,25 @@ export interface StreetHistoryItem {
   author_is_verified: boolean;
 }
 
+// ─── フォロー ───────────────────────────────────────
+
+/** follows テーブルの行 */
+export interface Follow {
+  id: string;
+  follower_id: string;
+  following_id: string;
+  created_at: string;
+  /** JOIN で取得するプロフィール */
+  follower?: Profile;
+  following?: Profile;
+}
+
+/** フォロー数 */
+export interface FollowCounts {
+  followers_count: number;
+  following_count: number;
+}
+
 // ─── いいね ─────────────────────────────────────────
 
 /** likes テーブルの行 */

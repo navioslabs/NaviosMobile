@@ -3,7 +3,7 @@ import { View, Text, Pressable, Animated, Easing, ScrollView, StyleSheet } from 
 import { router } from "expo-router";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import { MapPin, ThumbsUp, MessageCircle, TrendingUp, Radio, Flame, Zap } from "@/lib/icons";
+import { MapPin, ThumbsUp, MessageCircle, TrendingUp, Radio, Flame, Zap, Clock, RefreshCw } from "@/lib/icons";
 import { useDigest } from "@/hooks/useDigest";
 import { CAT_CONFIG, type CategoryId } from "@/constants/categories";
 import type { ThemeTokens } from "@/constants/theme";
@@ -20,6 +20,12 @@ interface DailyDigestCardProps {
   postCount: number;
   isWatching?: boolean;
   dataUpdatedAt?: number;
+  /** 「記憶を見る」押下時 */
+  onHistoryPress?: () => void;
+  /** 「更新」押下時 */
+  onRefresh?: () => void;
+  /** 更新中フラグ */
+  isRefreshing?: boolean;
 }
 
 // ─── スコア帯 ──────────────────────────────────────
@@ -170,7 +176,7 @@ function HighlightCard({ item, t, fs, isDark }: { item: DigestHighlight; t: Them
 // ─── メインコンポーネント ──────────────────────────
 
 /** デイリーダイジェスト + PULSEエリア統合ヘッダー */
-export default function DailyDigestCard({ t, fs, isDark, placeName, pulseScore, postCount, isWatching = false, dataUpdatedAt }: DailyDigestCardProps) {
+export default function DailyDigestCard({ t, fs, isDark, placeName, pulseScore, postCount, isWatching = false, dataUpdatedAt, onHistoryPress, onRefresh, isRefreshing = false }: DailyDigestCardProps) {
   const { data } = useDigest();
   const tier = getScoreTier(pulseScore);
   const TierIcon = tier.icon;
@@ -213,13 +219,51 @@ export default function DailyDigestCard({ t, fs, isDark, placeName, pulseScore, 
               {areaName}のきょう
             </Text>
           </View>
-          {/* LIVEインジケーター */}
-          {isWatching && (
-            <Animated.View style={{ flexDirection: "row", alignItems: "center", gap: 4, opacity: liveOpacity }}>
-              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: tier.color }} />
-              <Text style={{ fontSize: 10, fontWeight: WEIGHT.extrabold, color: tier.color, letterSpacing: 1 }}>LIVE</Text>
-            </Animated.View>
-          )}
+          {/* アクションボタン + LIVE */}
+          <View style={{ alignItems: "flex-end", gap: SPACE.xs }}>
+            {/* LIVEインジケーター */}
+            {isWatching && (
+              <Animated.View style={{ flexDirection: "row", alignItems: "center", gap: 4, opacity: liveOpacity }}>
+                <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: tier.color }} />
+                <Text style={{ fontSize: 10, fontWeight: WEIGHT.extrabold, color: tier.color, letterSpacing: 1 }}>LIVE</Text>
+              </Animated.View>
+            )}
+            {/* コンパクトアクションボタン */}
+            <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.xs }}>
+              {onHistoryPress && (
+                <Pressable
+                  onPress={onHistoryPress}
+                  style={({ pressed }) => ({
+                    flexDirection: "row", alignItems: "center", gap: 4,
+                    paddingVertical: SPACE.xs, paddingHorizontal: SPACE.sm + 2,
+                    borderRadius: RADIUS.full, backgroundColor: t.surface,
+                    borderWidth: 1, borderColor: t.border, opacity: pressed ? 0.7 : 1,
+                  })}
+                >
+                  <Clock size={12} color={t.accent} />
+                  <Text style={{ fontSize: fs.xxs, fontWeight: WEIGHT.semibold, color: t.accent }}>記憶を見る</Text>
+                </Pressable>
+              )}
+              {onRefresh && (
+                <Pressable
+                  onPress={onRefresh}
+                  style={({ pressed }) => ({
+                    flexDirection: "row", alignItems: "center", gap: 3,
+                    paddingVertical: SPACE.xs, paddingHorizontal: SPACE.sm,
+                    borderRadius: RADIUS.full,
+                    backgroundColor: isRefreshing ? tier.color + "18" : t.surface,
+                    borderWidth: 1, borderColor: isRefreshing ? tier.color + "40" : t.border,
+                    opacity: pressed ? 0.7 : 1,
+                  })}
+                >
+                  <RefreshCw size={12} color={isRefreshing ? tier.color : t.accent} />
+                  <Text style={{ fontSize: fs.xxs, fontWeight: WEIGHT.semibold, color: isRefreshing ? tier.color : t.accent }}>
+                    {isRefreshing ? "更新中" : "更新"}
+                  </Text>
+                </Pressable>
+              )}
+            </View>
+          </View>
         </View>
 
         {/* ── 2行目: PULSEスコア + ステータス ── */}

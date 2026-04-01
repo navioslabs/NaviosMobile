@@ -11,7 +11,7 @@ import { useFontSizeStore } from "@/stores/fontSizeStore";
 import { useToggleLike, useIsLiked } from "@/hooks/useLikes";
 import { useGuestGuard } from "@/hooks/useGuestGuard";
 import { useUserTopBadge } from "@/hooks/useBadges";
-import { HALL_OF_FAME_THRESHOLD } from "@/constants/ghost";
+import { HALL_OF_FAME_THRESHOLD, GHOST_DURATION_MS } from "@/constants/ghost";
 import GhostCountdown from "./GhostCountdown";
 import HallOfFameBadge from "./HallOfFameBadge";
 import BadgePill from "@/components/features/badges/BadgePill";
@@ -33,6 +33,11 @@ function TalkItem({ talk, t }: TalkItemProps) {
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
+  const likeScale = useRef(new Animated.Value(1)).current;
+  const shakeAnim = useRef(new Animated.Value(0)).current;
+
+  // 残り1時間以下かどうか
+  const isExpiring = !talk.is_hall_of_fame && (Date.now() - new Date(talk.created_at).getTime()) > (GHOST_DURATION_MS - 3600000);
 
   useEffect(() => {
     Animated.parallel([
@@ -41,10 +46,32 @@ function TalkItem({ talk, t }: TalkItemProps) {
     ]).start();
   }, []);
 
+  /** 消えかけ投稿の左右微振動 */
+  useEffect(() => {
+    if (!isExpiring) return;
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(shakeAnim, { toValue: 1.5, duration: 80, useNativeDriver: true }),
+        Animated.timing(shakeAnim, { toValue: -1.5, duration: 80, useNativeDriver: true }),
+        Animated.timing(shakeAnim, { toValue: 1, duration: 60, useNativeDriver: true }),
+        Animated.timing(shakeAnim, { toValue: 0, duration: 60, useNativeDriver: true }),
+        Animated.timing(shakeAnim, { toValue: 0, duration: 3000, useNativeDriver: true }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [isExpiring]);
+
   if (!talk?.id) return null;
 
   const handleLike = () => {
-    guard(() => toggleLike.mutate({ targetType: "talk", targetId: talk.id }), "いいね");
+    guard(() => {
+      Animated.sequence([
+        Animated.spring(likeScale, { toValue: 1.5, useNativeDriver: true, speed: 50, bounciness: 12 }),
+        Animated.spring(likeScale, { toValue: 1, useNativeDriver: true, speed: 50, bounciness: 8 }),
+      ]).start();
+      toggleLike.mutate({ targetType: "talk", targetId: talk.id });
+    }, "いいね");
   };
 
   const isHallOfFame = !!talk.is_hall_of_fame;
@@ -58,7 +85,7 @@ function TalkItem({ talk, t }: TalkItemProps) {
   })();
 
   return (
-    <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+    <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }, { translateX: shakeAnim }] }}>
       <Pressable
         onPress={() => router.push(`/talk-detail/${talk.id}` as any)}
         accessibilityLabel={`${talk.author?.display_name ?? "匿名"}のトーク: ${talk.message}`}
@@ -148,10 +175,32 @@ function TalkItem({ talk, t }: TalkItemProps) {
                 </View>
               )}
 
-              {/* 殿堂入りヒント */}
-              {showHint && (
-                <Text style={{ fontSize: fs.xxs, color: "#FFD700", marginTop: SPACE.sm, fontWeight: WEIGHT.semibold }}>
-                  あと{likesRemaining}いいねで殿堂入り
+              {/* 殿堂ゲージ: 未殿堂入りで1いいね以上のとき表示 */}
+              {!isHallOfFame && talk.likes_count > 0 && (
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: SPACE.sm }}>
+                  <View style={{ flexDirection: "row", gap: 3 }}>
+                    {Array.from({ length: HALL_OF_FAME_THRESHOLD }).map((_, i) => (
+                      <View
+                        key={i}
+                        style={{
+                          width: 6,
+                          height: 6,
+                          borderRadius: 3,
+                          backgroundColor: i < talk.likes_count ? "#FFD700" : t.border,
+                        }}
+                      />
+                    ))}
+                  </View>
+                  <Text style={{ fontSize: fs.xxs, color: "#FFD700", fontWeight: WEIGHT.semibold }}>
+                    {likesRemaining > 0 ? `あと${likesRemaining}` : "殿堂入り!"}
+                  </Text>
+                </View>
+              )}
+
+              {/* 消えかけヒント: 残り1時間以下 */}
+              {isExpiring && (
+                <Text style={{ fontSize: fs.xxs, color: t.red, marginTop: SPACE.xs, fontWeight: WEIGHT.semibold }}>
+                  まもなく消えます — いいねで殿堂入りに残せます
                 </Text>
               )}
             </View>
@@ -195,7 +244,9 @@ function TalkItem({ talk, t }: TalkItemProps) {
                   hitSlop={8}
                   style={({ pressed }) => ({ flexDirection: "row" as const, alignItems: "center" as const, gap: 3, minHeight: 28, opacity: pressed ? 0.6 : 1 })}
                 >
-                  <ThumbsUp size={14} fill={isLiked ? t.accent : "none"} color={isLiked ? t.accent : t.muted} />
+                  <Animated.View style={{ transform: [{ scale: likeScale }] }}>
+                    <ThumbsUp size={14} fill={isLiked ? t.accent : "none"} color={isLiked ? t.accent : t.muted} />
+                  </Animated.View>
                   {talk.likes_count > 0 && (
                     <Text style={{ fontSize: fs.xxs, color: isLiked ? t.accent : t.muted }}>{talk.likes_count}</Text>
                   )}

@@ -36,12 +36,21 @@ export default function DatePicker({ t, selectedDate, onSelectDate, getPostCount
     };
   });
 
+  const firstDay = dateDays[0]!;
+  const lastDay = dateDays[dateDays.length - 1]!;
+  const rangeLabel = firstDay.month === lastDay.month
+    ? `${firstDay.month}/${firstDay.day}〜${lastDay.day}`
+    : `${firstDay.month}/${firstDay.day}〜${lastDay.month}/${lastDay.day}`;
+
   return (
     <View style={{ backgroundColor: t.surface, borderBottomColor: t.border, borderBottomWidth: 1 }}>
-      <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.xs, paddingTop: SPACE.sm, paddingLeft: SPACE.lg, paddingBottom: SPACE.xs }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.sm, paddingTop: SPACE.sm, paddingLeft: SPACE.lg, paddingBottom: SPACE.xs }}>
         <Calendar size={14} color={t.accent} />
-        <Text style={{ fontSize: fs.md, fontWeight: WEIGHT.bold, color: t.text }}>
-          {dateDays.find((dd) => dd.offset === selectedDate)?.month}月
+        <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.bold, color: t.text }}>
+          イベント日で探す
+        </Text>
+        <Text style={{ fontSize: fs.xxs, color: t.muted }}>
+          {rangeLabel}
         </Text>
       </View>
       <ScrollView

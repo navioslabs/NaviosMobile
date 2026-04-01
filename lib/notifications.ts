@@ -3,10 +3,10 @@ import { supabase } from "@/lib/supabase";
 export interface AppNotification {
   id: string;
   user_id: string;
-  type: "like" | "comment" | "reply" | "hall_of_fame";
+  type: "like" | "comment" | "reply" | "hall_of_fame" | "follow";
   title: string;
   body: string;
-  target_type: "post" | "talk" | "comment";
+  target_type: "post" | "talk" | "comment" | "profile";
   target_id: string;
   actor_id: string | null;
   is_read: boolean;

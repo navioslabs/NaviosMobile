@@ -63,16 +63,13 @@ export default function FeedScreen() {
   const filtered = useMemo(() => {
     let posts = datePosts;
 
-    // 日付フィルタ: 今日は全アクティブ投稿、未来日は締切がその日に該当する投稿
-    if (selDate === 0) {
-      posts = posts.filter((p) => !isExpired(p.deadline));
-    } else {
-      posts = posts.filter((p) => {
-        if (!p.deadline) return false;
-        const dl = new Date(p.deadline).getTime();
-        return dl >= dayRange.start && dl < dayRange.end;
-      });
-    }
+    // 日付フィルタ: イベント日（deadline）が選択日に該当する投稿のみ表示
+    posts = posts.filter((p) => {
+      if (!p.deadline) return selDate === 0; // 期限なし → 今日のみ表示
+      const dl = new Date(p.deadline).getTime();
+      if (dl < Date.now()) return false; // 期限切れ除外
+      return dl >= dayRange.start && dl < dayRange.end;
+    });
 
     if (summaryFilter === "top") {
       posts = [...posts].sort((a, b) => b.likes_count - a.likes_count);
@@ -90,15 +87,15 @@ export default function FeedScreen() {
   }, [datePosts, selDate, dayRange, summaryFilter]);
 
   const getPostCount = useCallback((offset: number) => {
-    if (offset === 0) return datePosts.filter((p) => !isExpired(p.deadline)).length;
     const start = new Date();
     start.setDate(start.getDate() + offset);
     start.setHours(0, 0, 0, 0);
     const end = new Date(start);
     end.setDate(end.getDate() + 1);
     return datePosts.filter((p) => {
-      if (!p.deadline) return false;
+      if (!p.deadline) return offset === 0;
       const dl = new Date(p.deadline).getTime();
+      if (dl < Date.now()) return false;
       return dl >= start.getTime() && dl < end.getTime();
     }).length;
   }, [datePosts]);
