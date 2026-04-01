@@ -123,6 +123,13 @@ export default function TalkPostScreen() {
   /** 文字数表示テキスト */
   const countText = remaining >= 0 ? `あと ${remaining}文字` : `${Math.abs(remaining)}文字オーバー`;
 
+  /** 自動遷移（2秒後にタイムラインへ） */
+  useEffect(() => {
+    if (!submitted) return;
+    const timer = setTimeout(() => router.replace("/(tabs)/talk"), 2000);
+    return () => clearTimeout(timer);
+  }, [submitted]);
+
   /** 投稿成功画面 */
   if (submitted) {
     return (
@@ -133,19 +140,6 @@ export default function TalkPostScreen() {
           </View>
           <Text style={{ fontSize: fs.xl, fontWeight: WEIGHT.extrabold, color: t.text }}>投稿しました！</Text>
           <Text style={{ fontSize: fs.sm, color: t.sub, textAlign: "center" }}>つぶやきが近くの人に届けられました</Text>
-          <Pressable
-            onPress={() => router.canGoBack() ? router.back() : router.replace("/(tabs)/talk")}
-            style={({ pressed }) => ({
-              marginTop: SPACE.lg,
-              paddingVertical: SPACE.md,
-              paddingHorizontal: SPACE.xxl,
-              borderRadius: 12,
-              backgroundColor: t.accent,
-              opacity: pressed ? 0.8 : 1,
-            })}
-          >
-            <Text style={{ fontSize: fs.base, fontWeight: WEIGHT.bold, color: "#000" }}>閉じる</Text>
-          </Pressable>
         </View>
       </View>
     );

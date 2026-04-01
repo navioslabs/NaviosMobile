@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { View, Text, TextInput, Pressable, ScrollView, Alert, Platform, KeyboardAvoidingView } from "react-native";
 import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
 import { router, useNavigation } from "expo-router";
@@ -138,6 +138,13 @@ export default function PostScreen() {
     });
   }, [deadline, setValue]);
 
+  /** 自動遷移（2秒後にホームへ） */
+  useEffect(() => {
+    if (!submitted) return;
+    const timer = setTimeout(() => router.replace("/(tabs)"), 2000);
+    return () => clearTimeout(timer);
+  }, [submitted]);
+
   /** 投稿成功画面 */
   if (submitted) {
     return (
@@ -148,19 +155,6 @@ export default function PostScreen() {
           </View>
           <Text style={{ fontSize: fs.xl, fontWeight: WEIGHT.extrabold, color: t.text }}>投稿しました！</Text>
           <Text style={{ fontSize: fs.sm, color: t.sub, textAlign: "center" }}>近くの人に届けられました</Text>
-          <Pressable
-            onPress={() => router.canGoBack() ? router.back() : router.replace("/(tabs)/feed")}
-            style={({ pressed }) => ({
-              marginTop: SPACE.lg,
-              paddingVertical: SPACE.md,
-              paddingHorizontal: SPACE.xxl,
-              borderRadius: 12,
-              backgroundColor: t.accent,
-              opacity: pressed ? 0.8 : 1,
-            })}
-          >
-            <Text style={{ fontSize: fs.base, fontWeight: WEIGHT.bold, color: "#000" }}>閉じる</Text>
-          </Pressable>
         </View>
       </View>
     );
