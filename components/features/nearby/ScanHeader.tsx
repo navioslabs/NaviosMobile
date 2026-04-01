@@ -185,6 +185,7 @@ export default function ScanHeader({
             {pulseScore}
           </Text>
           <Text style={{ fontSize: 8, fontWeight: WEIGHT.bold, color: t.muted }}>PULSE</Text>
+          <Text style={{ fontSize: 7, color: t.muted, marginTop: 1 }}>エリア活性度</Text>
         </View>
       </View>
 

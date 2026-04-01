@@ -10,10 +10,10 @@ import { WEIGHT, SPACE, RADIUS } from "@/lib/styles";
 import type { AppNotification } from "@/lib/notifications";
 
 /** 通知タイプに応じたアイコン・色を返す */
-function getNotificationMeta(type: AppNotification["type"], accent: string, red: string, amber: string, purple: string) {
+function getNotificationMeta(type: AppNotification["type"], accent: string, red: string, amber: string, purple: string, like: string) {
   switch (type) {
     case "like":
-      return { icon: ThumbsUp, color: accent, label: "Good" };
+      return { icon: ThumbsUp, color: like, label: "Good" };
     case "comment":
       return { icon: MessageSquare, color: accent, label: "コメント" };
     case "reply":
@@ -41,7 +41,7 @@ function timeAgo(dateStr: string): string {
 
 /** 通知アイテム */
 function NotificationItem({ item, t, fs, onPress }: { item: AppNotification; t: any; fs: any; onPress: () => void }) {
-  const meta = getNotificationMeta(item.type, t.accent, t.red, t.amber, t.purple);
+  const meta = getNotificationMeta(item.type, t.accent, t.red, t.amber, t.purple, t.like);
   const Icon = meta.icon;
 
   return (

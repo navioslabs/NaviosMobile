@@ -50,9 +50,9 @@ export default function CardActions({ likes, t, targetType, targetId }: CardActi
     <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.xl, marginTop: SPACE.md, paddingTop: SPACE.md, borderTopWidth: 1, borderTopColor: "rgba(255,255,255,0.12)" }}>
       <Pressable onPress={handleLike} accessibilityLabel={isLiked ? "いいね済み" : "いいね"} accessibilityRole="button" style={({ pressed }) => ({ flexDirection: "row" as const, alignItems: "center" as const, gap: 6, padding: SPACE.xs, opacity: pressed ? 0.7 : 1 })}>
         <Animated.View style={{ transform: [{ scale: thumbScale }, { rotate: thumbRotate.interpolate({ inputRange: [-15, 0], outputRange: ["-15deg", "0deg"] }) }] }}>
-          <ThumbsUp size={22} fill={isLiked ? t.accent : "none"} color={isLiked ? t.accent : "rgba(255,255,255,.7)"} />
+          <ThumbsUp size={22} fill={isLiked ? t.like : "none"} color={isLiked ? t.like : "rgba(255,255,255,.7)"} />
         </Animated.View>
-        <Text style={{ fontSize: fs.base, fontWeight: WEIGHT.semibold, color: isLiked ? t.accent : "rgba(255,255,255,.7)" }}>
+        <Text style={{ fontSize: fs.base, fontWeight: WEIGHT.semibold, color: isLiked ? t.like : "rgba(255,255,255,.7)" }}>
           {likes}
         </Text>
       </Pressable>

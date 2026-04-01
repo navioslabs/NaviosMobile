@@ -88,7 +88,7 @@ function CompactCard({ post, t, isDark, expired, onLongPress }: { post: Post; t:
           )}
           {expired && (
             <View style={{ position: "absolute", left: SPACE.sm, top: SPACE.sm, backgroundColor: "#8887A0CC", borderRadius: RADIUS.full, paddingHorizontal: 6, paddingVertical: 2 }}>
-              <Text style={{ fontSize: fs.xxs, fontWeight: WEIGHT.bold, color: "#fff" }}>終了</Text>
+              <Text style={{ fontSize: fs.xxs, fontWeight: WEIGHT.bold, color: "#fff" }}>掲載終了</Text>
             </View>
           )}
         </View>
@@ -240,7 +240,7 @@ function FeedPostCard({ post, t, isDark, featured, expired, onLongPress }: FeedP
         {expired ? (
           <View style={{ position: "absolute", top: SPACE.lg, right: SPACE.lg, flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "rgba(100,100,120,0.9)", borderRadius: RADIUS.full, paddingHorizontal: SPACE.sm + 2, paddingVertical: SPACE.xs }}>
             <Clock size={12} color="#fff" />
-            <Text style={{ fontSize: fs.xxs, fontWeight: WEIGHT.extrabold, color: "#fff" }}>終了</Text>
+            <Text style={{ fontSize: fs.xxs, fontWeight: WEIGHT.extrabold, color: "#fff" }}>掲載終了</Text>
           </View>
         ) : featured ? (
           <View style={{ position: "absolute", top: SPACE.lg, right: SPACE.lg, flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "rgba(240,66,92,0.9)", borderRadius: RADIUS.full, paddingHorizontal: SPACE.sm + 2, paddingVertical: SPACE.xs }}>
@@ -261,7 +261,7 @@ function FeedPostCard({ post, t, isDark, featured, expired, onLongPress }: FeedP
           )}
           <HashtagText style={{ fontSize: fs.lg + 1, fontWeight: WEIGHT.bold, color: "#fff", lineHeight: 24 }} t={t}>{post.title + (post.content ? "\n" + post.content : "")}</HashtagText>
           <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.sm, marginTop: SPACE.sm }}>
-            <UrgencyBar timeLeft={calcTimeLeft(post.deadline)} subColor={t.sub} />
+            <UrgencyBar timeLeft={calcTimeLeft(post.deadline)} subColor={t.sub} category={post.category} />
             {post.crowd ? <CrowdTag crowd={crowdLabel(post.crowd)} /> : null}
           </View>
           <CardActions likes={post.likes_count} t={t} targetType="post" targetId={post.id} />

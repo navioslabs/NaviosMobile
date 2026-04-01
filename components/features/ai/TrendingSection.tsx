@@ -53,7 +53,7 @@ function TrendingCard({ post, t, index }: { post: Post; t: ThemeTokens; index: n
           </Text>
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: SPACE.sm }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
-              <ThumbsUp size={12} color={t.accent} fill={t.accent} />
+              <ThumbsUp size={12} color={t.like} fill={t.like} />
               <Text style={{ fontSize: fs.xxs, fontWeight: WEIGHT.bold, color: t.red }}>{post.likes_count}</Text>
             </View>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>

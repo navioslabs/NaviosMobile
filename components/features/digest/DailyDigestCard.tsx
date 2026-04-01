@@ -158,7 +158,7 @@ function HighlightCard({ item, t, fs, isDark }: { item: DigestHighlight; t: Them
       {/* メタ情報 */}
       <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.sm, paddingHorizontal: SPACE.sm, paddingVertical: SPACE.xs + 2, backgroundColor: t.surface, borderWidth: 1, borderTopWidth: 0, borderColor: t.border, borderBottomLeftRadius: RADIUS.xl, borderBottomRightRadius: RADIUS.xl }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
-          <ThumbsUp size={11} color={t.accent} />
+          <ThumbsUp size={11} color={t.like} />
           <Text style={{ fontSize: fs.xxs, color: t.sub, fontWeight: WEIGHT.semibold }}>{item.likes_count}</Text>
         </View>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
@@ -275,6 +275,7 @@ export default function DailyDigestCard({ t, fs, isDark, placeName, pulseScore, 
             <View style={{ position: "absolute", alignItems: "center" }}>
               <AnimatedScore value={scoreAnim} color={tier.color} fs={fs} />
               <Text style={{ fontSize: 7, fontWeight: WEIGHT.bold, color: t.muted, letterSpacing: 1.5, marginTop: -1 }}>PULSE</Text>
+              <Text style={{ fontSize: 7, color: t.muted, marginTop: 1 }}>エリア活性度</Text>
             </View>
           </View>
 
@@ -383,7 +384,7 @@ export default function DailyDigestCard({ t, fs, isDark, placeName, pulseScore, 
           }}>
             <Text style={{ fontSize: fs.xxs, color: t.muted, fontWeight: WEIGHT.semibold, letterSpacing: 0.5 }}>MY 7DAYS</Text>
             <Stat icon={<MapPin size={10} color={t.sub} />} value={`${data.my_stats.post_count}`} t={t} fs={fs} />
-            <Stat icon={<ThumbsUp size={10} color={t.accent} />} value={`${data.my_stats.total_likes}`} t={t} fs={fs} />
+            <Stat icon={<ThumbsUp size={10} color={t.like} />} value={`${data.my_stats.total_likes}`} t={t} fs={fs} />
             <Stat icon={<MessageCircle size={10} color={t.blue} />} value={`${data.my_stats.total_comments}`} t={t} fs={fs} />
           </View>
         )}

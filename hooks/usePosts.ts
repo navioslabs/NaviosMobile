@@ -30,12 +30,12 @@ export function usePosts(filters?: { category?: string; limit?: number; createdA
   });
 }
 
-/** 投稿詳細（距離・座標付き） */
+/** 投稿詳細（距離・座標付き。位置情報を待たずに即取得開始） */
 export function usePost(id: string, userLat = 0, userLng = 0, locationReady = false) {
   return useQuery({
-    queryKey: ["posts", "detail", id, userLat, userLng],
-    queryFn: () => fetchPostById(id, userLat, userLng),
-    enabled: !!id && locationReady,
+    queryKey: ["posts", "detail", id, locationReady ? userLat : 0, locationReady ? userLng : 0],
+    queryFn: () => fetchPostById(id, locationReady ? userLat : 0, locationReady ? userLng : 0),
+    enabled: !!id,
   });
 }
 

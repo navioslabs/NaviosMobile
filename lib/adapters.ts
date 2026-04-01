@@ -29,14 +29,15 @@ export function calcTimeLeft(deadline: string | null): number {
 }
 
 /** 残り時間を人間が読みやすい形式で表示 */
-export function formatTimeLeft(deadline: string | null): string {
+export function formatTimeLeft(deadline: string | null, category?: string): string {
   const min = calcTimeLeft(deadline);
-  if (min <= 0) return "終了";
+  const prefix = category === "event" ? "開催まで" : "掲載終了まで";
+  if (min <= 0) return "掲載終了";
   if (min >= 9999) return "";
-  if (min < 60) return `あと${Math.ceil(min)}分`;
+  if (min < 60) return `${prefix}あと${Math.ceil(min)}分`;
   const hours = min / 60;
-  if (hours < 24) return `あと${Math.floor(hours)}時間`;
-  return `あと${Math.floor(hours / 24)}日`;
+  if (hours < 24) return `${prefix}あと${Math.floor(hours)}時間`;
+  return `${prefix}あと${Math.floor(hours / 24)}日`;
 }
 
 /** 投稿が期限切れかどうか */

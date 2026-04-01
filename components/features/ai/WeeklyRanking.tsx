@@ -80,7 +80,7 @@ export default function WeeklyRanking({ posts, t }: WeeklyRankingProps) {
 
               {/* いいね数 */}
               <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
-                <ThumbsUp size={14} color={t.accent} fill={t.accent} />
+                <ThumbsUp size={14} color={t.like} fill={t.like} />
                 <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.bold, color: t.red }}>{post.likes_count}</Text>
               </View>
             </Pressable>

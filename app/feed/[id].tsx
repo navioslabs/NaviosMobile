@@ -41,11 +41,12 @@ import LazyMapView from "@/components/ui/LazyMapView";
 
 const walkTime = (d: number) => `徒歩${Math.max(1, Math.round(d / 80))}分`;
 
-const deadlineLabel = (timeLeft: number) => {
-  if (timeLeft <= 0) return "終了";
-  if (timeLeft < 60) return `あと${Math.ceil(timeLeft)}分`;
-  if (timeLeft < 1440) return `あと${Math.floor(timeLeft / 60)}時間`;
-  return `あと${Math.floor(timeLeft / 1440)}日`;
+const deadlineLabel = (timeLeft: number, category?: string) => {
+  const prefix = category === "event" ? "開催まで" : "掲載終了まで";
+  if (timeLeft <= 0) return "掲載終了";
+  if (timeLeft < 60) return `${prefix}あと${Math.ceil(timeLeft)}分`;
+  if (timeLeft < 1440) return `${prefix}あと${Math.floor(timeLeft / 60)}時間`;
+  return `${prefix}あと${Math.floor(timeLeft / 1440)}日`;
 };
 
 const urgencyColor = (timeLeft: number, t: any) => {
@@ -208,7 +209,7 @@ export default function FeedDetailScreen() {
             <View style={{ width: 1, height: 14, backgroundColor: t.border }} />
             <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.xs }}>
               <Timer size={14} color={dlColor} />
-              <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.bold, color: isExpired ? t.muted : t.text }}>{deadlineLabel(timeLeft)}</Text>
+              <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.bold, color: isExpired ? t.muted : t.text }}>{deadlineLabel(timeLeft, post.category)}</Text>
             </View>
           </View>
 
@@ -281,9 +282,9 @@ export default function FeedDetailScreen() {
           <View style={{ flexDirection: "row", alignItems: "center", paddingVertical: SPACE.md, marginBottom: SPACE.sm }}>
             <Pressable onPress={handleLike} style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: SPACE.xs, marginRight: SPACE.lg, opacity: pressed ? 0.7 : 1 })}>
               <Animated.View style={{ transform: [{ scale: likeScale }] }}>
-                <ThumbsUp size={22} fill={isLiked ? t.accent : "none"} color={isLiked ? t.accent : t.sub} />
+                <ThumbsUp size={22} fill={isLiked ? t.like : "none"} color={isLiked ? t.like : t.sub} />
               </Animated.View>
-              <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.semibold, color: isLiked ? t.accent : t.sub }}>{post.likes_count}</Text>
+              <Text style={{ fontSize: fs.sm, fontWeight: WEIGHT.semibold, color: isLiked ? t.like : t.sub }}>{post.likes_count}</Text>
             </Pressable>
             <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.xs, marginRight: SPACE.lg }}>
               <MessageCircle size={20} color={t.sub} />

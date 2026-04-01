@@ -2,14 +2,14 @@ import { useEffect, useRef } from "react";
 import { View, Text, StyleSheet, Animated } from "react-native";
 import { Tabs } from "expo-router";
 import * as Haptics from "expo-haptics";
-import { MessageCircle, Sparkles, Radio, Settings } from "@/lib/icons";
+import { MessageCircle, Search, Radio, Settings } from "@/lib/icons";
 import { makeTokens } from "@/constants/theme";
 import { useThemeStore } from "@/stores/themeStore";
 import { useBadgeStore } from "@/stores/badgeStore";
 import Header from "@/components/layout/Header";
 import Fab from "@/components/layout/Fab";
 
-/** 中央タブアイコン（スケール + グロー付き） */
+/** 中央タブアイコン（スケール付き） */
 function AiTabIcon({ focused, t }: { focused: boolean; t: ReturnType<typeof makeTokens> }) {
   const scale = useRef(new Animated.Value(1)).current;
 
@@ -24,23 +24,8 @@ function AiTabIcon({ focused, t }: { focused: boolean; t: ReturnType<typeof make
   }, [focused]);
 
   return (
-    <Animated.View
-      style={[
-        styles.centerIcon,
-        { transform: [{ scale }] },
-        {
-          backgroundColor: focused ? t.accent : t.surface2,
-          borderColor: focused ? "transparent" : t.border,
-          borderWidth: focused ? 0 : 1,
-          shadowColor: t.accent,
-          shadowOffset: { width: 0, height: 0 },
-          shadowOpacity: focused ? 0.4 : 0,
-          shadowRadius: focused ? 12 : 0,
-          elevation: focused ? 6 : 0,
-        },
-      ]}
-    >
-      <Sparkles size={20} color={focused ? "#000" : t.sub} />
+    <Animated.View style={{ transform: [{ scale }] }}>
+      <Search size={24} color={focused ? t.accent : t.sub} />
     </Animated.View>
   );
 }
@@ -124,14 +109,6 @@ export default function TabLayout() {
 }
 
 const styles = StyleSheet.create({
-  centerIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 14,
-    marginTop: -12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
   badge: {
     position: "absolute",
     top: -2,

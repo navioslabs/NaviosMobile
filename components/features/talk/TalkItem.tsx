@@ -245,10 +245,10 @@ function TalkItem({ talk, t }: TalkItemProps) {
                   style={({ pressed }) => ({ flexDirection: "row" as const, alignItems: "center" as const, gap: 3, minHeight: 28, opacity: pressed ? 0.6 : 1 })}
                 >
                   <Animated.View style={{ transform: [{ scale: likeScale }] }}>
-                    <ThumbsUp size={14} fill={isLiked ? t.accent : "none"} color={isLiked ? t.accent : t.muted} />
+                    <ThumbsUp size={14} fill={isLiked ? t.like : "none"} color={isLiked ? t.like : t.muted} />
                   </Animated.View>
                   {talk.likes_count > 0 && (
-                    <Text style={{ fontSize: fs.xxs, color: isLiked ? t.accent : t.muted }}>{talk.likes_count}</Text>
+                    <Text style={{ fontSize: fs.xxs, color: isLiked ? t.like : t.muted }}>{talk.likes_count}</Text>
                   )}
                 </Pressable>
               </View>

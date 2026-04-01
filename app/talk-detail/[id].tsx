@@ -196,8 +196,8 @@ export default function TalkDetailScreen() {
               onPress={handleLike}
               style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: SPACE.sm, opacity: pressed ? 0.7 : 1 })}
             >
-              <ThumbsUp size={20} fill={isLiked ? t.accent : "none"} color={isLiked ? t.accent : t.sub} />
-              <Text style={{ fontSize: fs.base, fontWeight: WEIGHT.semibold, color: isLiked ? t.red : t.sub }}>
+              <ThumbsUp size={20} fill={isLiked ? t.like : "none"} color={isLiked ? t.like : t.sub} />
+              <Text style={{ fontSize: fs.base, fontWeight: WEIGHT.semibold, color: isLiked ? t.like : t.sub }}>
                 {talk.likes_count}
               </Text>
             </Pressable>

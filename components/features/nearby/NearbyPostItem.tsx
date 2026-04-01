@@ -70,7 +70,7 @@ function NearbyPostItem({ post, t, featured, expired, isDark = true, index = 0, 
           {expired ? (
             <View style={{ position: "absolute", top: SPACE.sm, left: SPACE.sm, flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "rgba(100,100,120,0.9)", borderRadius: RADIUS.full, paddingHorizontal: SPACE.sm + 2, paddingVertical: SPACE.xs }}>
               <Clock size={12} color="#fff" />
-              <Text style={{ fontSize: fs.xxs, fontWeight: WEIGHT.extrabold, color: "#fff" }}>終了</Text>
+              <Text style={{ fontSize: fs.xxs, fontWeight: WEIGHT.extrabold, color: "#fff" }}>掲載終了</Text>
             </View>
           ) : (
             <View style={{ position: "absolute", top: SPACE.sm, left: SPACE.sm, flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "rgba(240,66,92,0.9)", borderRadius: RADIUS.full, paddingHorizontal: SPACE.sm + 2, paddingVertical: SPACE.xs }}>
@@ -121,7 +121,7 @@ function NearbyPostItem({ post, t, featured, expired, isDark = true, index = 0, 
       onPress={() => router.push(`/feed/${post.id}` as any)}
       onLongPress={onLongPress}
       delayLongPress={400}
-      accessibilityLabel={`${post.title}、${distLabel(distance)}、${walkTime(distance)}、マッチ度${matchScore}%${expired ? "、終了" : ""}`}
+      accessibilityLabel={`${post.title}、${distLabel(distance)}、${walkTime(distance)}、マッチ度${matchScore}%${expired ? "、掲載終了" : ""}`}
       accessibilityRole="button"
       style={({ pressed }) => ({
         flexDirection: "row" as const,
@@ -170,7 +170,7 @@ function NearbyPostItem({ post, t, featured, expired, isDark = true, index = 0, 
             {expired && (
               <View style={{ flexDirection: "row", alignItems: "center", gap: 3, backgroundColor: t.red + "18", borderRadius: RADIUS.full, paddingHorizontal: SPACE.sm, paddingVertical: 2 }}>
                 <Clock size={10} color={t.red} />
-                <Text style={{ fontSize: fs.xxs, fontWeight: WEIGHT.extrabold, color: t.red }}>終了</Text>
+                <Text style={{ fontSize: fs.xxs, fontWeight: WEIGHT.extrabold, color: t.red }}>掲載終了</Text>
               </View>
             )}
           </View>

@@ -17,6 +17,7 @@ export interface ThemeTokens {
   amber: string;
   purple: string;
   blue: string;
+  like: string;
   glow: string;
 }
 
@@ -40,6 +41,7 @@ export const makeTokens = (dark: boolean): ThemeTokens => ({
   amber: dark ? "#FFB840" : "#F5A623",
   purple: dark ? "#A084D4" : "#8B6FC0",
   blue: dark ? "#5EB0FF" : "#4A9EFF",
+  like: dark ? "#FFD233" : "#F5C518",
   glow: dark ? "rgba(0,232,176,0.28)" : "rgba(0,212,161,0.18)",
 });
 

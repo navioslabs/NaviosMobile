@@ -44,16 +44,17 @@ const maxDeadline = (): Date => {
 };
 
 /** 日付フォーマット */
-const fmtDeadline = (d: Date): string => {
+const fmtDeadline = (d: Date, category: CategoryId): string => {
   const mo = d.getMonth() + 1;
   const da = d.getDate();
   const h = d.getHours();
   const m = String(d.getMinutes()).padStart(2, "0");
+  const suffix = category === "event" ? "に開催終了" : "に掲載終了";
   const today = new Date();
-  if (da === today.getDate() && mo === today.getMonth() + 1) return `今日 ${h}:${m}まで`;
+  if (da === today.getDate() && mo === today.getMonth() + 1) return `今日 ${h}:${m}${suffix}`;
   const tmr = new Date(); tmr.setDate(tmr.getDate() + 1);
-  if (da === tmr.getDate() && mo === tmr.getMonth() + 1) return `明日 ${h}:${m}まで`;
-  return `${mo}/${da} ${h}:${m}まで`;
+  if (da === tmr.getDate() && mo === tmr.getMonth() + 1) return `明日 ${h}:${m}${suffix}`;
+  return `${mo}/${da} ${h}:${m}${suffix}`;
 };
 
 interface Props {
@@ -89,7 +90,9 @@ export default function DeadlineSelector({
       <Text style={[sectionLabelStyle, { marginBottom: SPACE.xs }]}>
         {DEADLINE_LABELS[category]} <Text style={{ color: t.red }}>*</Text>
       </Text>
-      <Text style={{ fontSize: fs.xxs, color: t.muted, marginBottom: SPACE.sm }}>最大2週間後まで設定できます</Text>
+      <Text style={{ fontSize: fs.xxs, color: t.muted, marginBottom: SPACE.sm }}>
+        {category === "event" ? "この日時を過ぎると掲載が終了します" : "この期限を過ぎると掲載が終了します"}（最大2週間後）
+      </Text>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: SPACE.sm }}>
         {QUICK_CHIPS.map((chip) => {
           const active = selectedChip === chip.id;
@@ -125,7 +128,7 @@ export default function DeadlineSelector({
       {deadline && (
         <View style={{ flexDirection: "row", alignItems: "center", gap: SPACE.sm, marginTop: SPACE.sm, paddingHorizontal: SPACE.xs }}>
           <Calendar size={14} color={t.accent} />
-          <Text style={{ fontSize: fs.base, fontWeight: WEIGHT.bold, color: t.accent }}>{fmtDeadline(deadline)}</Text>
+          <Text style={{ fontSize: fs.base, fontWeight: WEIGHT.bold, color: t.accent }}>{fmtDeadline(deadline, category)}</Text>
         </View>
       )}
       {error && <Text style={{ fontSize: fs.xxs, color: t.red, marginTop: SPACE.xs }}>{error}</Text>}

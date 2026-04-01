@@ -114,7 +114,7 @@ export default function CommentSection({
                     onPress={() => onLikeComment(c.id)}
                     style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: SPACE.xs, alignSelf: "flex-start" }}
                   >
-                    <ThumbsUp size={14} fill={isLiked ? t.accent : "none"} color={isLiked ? t.accent : t.muted} />
+                    <ThumbsUp size={14} fill={isLiked ? t.like : "none"} color={isLiked ? t.like : t.muted} />
                   </Pressable>
                 )}
               </View>

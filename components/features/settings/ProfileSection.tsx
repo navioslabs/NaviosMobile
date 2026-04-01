@@ -89,7 +89,7 @@ export default function ProfileSection({ t, isGuest, profile }: ProfileSectionPr
           <View style={{ width: "100%", gap: SPACE.sm, marginBottom: SPACE.xl }}>
             {[
               { icon: PenLine, text: "地域の情報を投稿できる", color: t.accent },
-              { icon: ThumbsUp, text: "気になる投稿にGoodできる", color: t.accent },
+              { icon: ThumbsUp, text: "気になる投稿にGoodできる", color: t.like },
               { icon: MessageSquare, text: "コメントで交流できる", color: t.blue },
             ].map((item) => (
               <View key={item.text} style={{ flexDirection: "row", alignItems: "center", gap: SPACE.md, paddingHorizontal: SPACE.md }}>
